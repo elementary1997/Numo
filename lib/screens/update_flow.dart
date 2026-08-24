@@ -17,7 +17,7 @@ Future<void> runUpdateFlow(BuildContext context, UpdateInfo info) async {
   }
 
   final progress = ValueNotifier<double?>(null);
-  var failed = false;
+  String? failure;
 
   // Диалог прогресса; закроется сам только при ошибке —
   // при успехе приложение завершится для подмены файлов.
@@ -54,11 +54,11 @@ Future<void> runUpdateFlow(BuildContext context, UpdateInfo info) async {
       assetUrl,
       onProgress: (value) => progress.value = value,
     );
-  } catch (_) {
-    failed = true;
+  } catch (e) {
+    failure = '$e';
   }
 
-  if (!failed) return; // не достижимо при успехе — приложение вышло
+  if (failure == null) return; // при успехе приложение уже вышло
 
   if (context.mounted) {
     Navigator.of(context, rootNavigator: true).pop(); // закрыть прогресс
@@ -66,6 +66,11 @@ Future<void> runUpdateFlow(BuildContext context, UpdateInfo info) async {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.updateFailed),
+        // Настоящая причина — чтобы проблему можно было понять,
+        // а не гадать по «что-то пошло не так».
+        content: Text(failure!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

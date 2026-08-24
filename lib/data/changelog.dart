@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.5.2',
+    itemsRu: [
+      'macOS: автообновление надёжно ставится в «Программы» и снимает карантин Gatekeeper',
+      'При неудачном обновлении показывается настоящая причина',
+    ],
+    itemsEn: [
+      'macOS: auto-update reliably installs into /Applications and clears Gatekeeper quarantine',
+      'Failed updates now show the actual reason',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.5.1',
     itemsRu: [
       'Боковая панель больше не пропадает при увеличенном масштабе интерфейса',

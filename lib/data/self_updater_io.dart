@@ -17,9 +17,21 @@ class SelfUpdater {
     final executable = File(Platform.resolvedExecutable);
     if (Platform.isMacOS) {
       // .../Numo.app/Contents/MacOS/numo → .../Numo.app
-      return executable.parent.parent.parent.path;
+      return macAppPathFor(executable.parent.parent.parent.path);
     }
     return executable.parent.path;
+  }
+
+  /// Куда ставить обновление на macOS. Если приложение скачано
+  /// браузером (с карантином) и запущено без переноса через Finder,
+  /// Gatekeeper выполняет его из случайного read-only пути
+  /// (App Translocation) — заменять надо не его, а «настоящую» копию,
+  /// поэтому в этом случае ставим в /Applications/Numo.app.
+  static String macAppPathFor(String appPath) {
+    if (appPath.contains('/AppTranslocation/')) {
+      return '/Applications/Numo.app';
+    }
+    return appPath;
   }
 
   /// Скачивает [assetUrl], готовит установку и завершает приложение.
@@ -86,7 +98,7 @@ if not errorlevel 1 (
   timeout /T 1 /NOBREAK >NUL
   goto waitloop
 )
-robocopy "${extractDir.path}" "$target" /E /IS /IT >NUL
+robocopy "${extractDir.path}" "$target" /E /IS /IT > "%TEMP%\\numo-update.log" 2>&1
 start "" "$target\\numo.exe"
 ''');
       await Process.start(
@@ -98,12 +110,19 @@ start "" "$target\\numo.exe"
     } else if (Platform.isMacOS) {
       // В архиве лежит Numo.app.
       final newApp = '${extractDir.path}/Numo.app';
+      if (!Directory(newApp).existsSync()) {
+        throw Exception('Numo.app not found in downloaded archive');
+      }
+      // Лог всей подмены — для диагностики, если обновление не встало.
       final script = File('${work.path}/update.sh');
       script.writeAsStringSync('''
 #!/bin/sh
+exec > /tmp/numo-update.log 2>&1
+set -x
 while kill -0 $pid 2>/dev/null; do sleep 0.5; done
 rm -rf "$target"
 ditto "$newApp" "$target"
+xattr -cr "$target" || true
 open "$target"
 ''');
       await Process.run('chmod', ['+x', script.path]);
@@ -113,6 +132,8 @@ open "$target"
       final script = File('${work.path}/update.sh');
       script.writeAsStringSync('''
 #!/bin/sh
+exec > /tmp/numo-update.log 2>&1
+set -x
 while kill -0 $pid 2>/dev/null; do sleep 0.5; done
 cp -rf "${extractDir.path}/." "$target/"
 chmod +x "$target/numo"

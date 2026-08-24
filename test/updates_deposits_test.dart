@@ -1,10 +1,28 @@
 import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:numo/data/self_updater_io.dart';
 import 'package:numo/data/update_service.dart';
 import 'package:numo/models/account.dart';
 
 void main() {
+  group('SelfUpdater.macAppPathFor', () {
+    test('транслоцированный путь заменяется на /Applications', () {
+      expect(
+        SelfUpdater.macAppPathFor(
+            '/private/var/folders/ab/xyz/T/AppTranslocation/1234-5678/d/Numo.app'),
+        '/Applications/Numo.app',
+      );
+    });
+
+    test('обычный путь остаётся как есть', () {
+      expect(SelfUpdater.macAppPathFor('/Applications/Numo.app'),
+          '/Applications/Numo.app');
+      expect(SelfUpdater.macAppPathFor('/Users/p/Apps/Numo.app'),
+          '/Users/p/Apps/Numo.app');
+    });
+  });
+
   group('platformAssetName', () {
     test('выбирает архив своей платформы', () {
       expect(platformAssetName(platformOverride: 'windows'),
