@@ -13,7 +13,10 @@ import 'data/repository.dart';
 import 'data/rules_repository.dart';
 import 'data/security_repository.dart';
 import 'data/sync_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'screens/lock.dart';
+import 'screens/onboarding.dart';
 import 'screens/sync_root.dart';
 import 'state/providers.dart';
 import 'screens/shell.dart';
@@ -30,6 +33,9 @@ Future<void> main() async {
   final rulesRepository = await RulesRepository.open(database);
   final securityRepository = await SecurityRepository.open();
   final syncService = await SyncService.open();
+  final onboarded = (await SharedPreferences.getInstance())
+          .getBool(onboardedKey) ??
+      false;
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   runApp(
@@ -43,6 +49,7 @@ Future<void> main() async {
         rulesRepositoryProvider.overrideWithValue(rulesRepository),
         securityRepositoryProvider.overrideWithValue(securityRepository),
         syncServiceProvider.overrideWithValue(syncService),
+        onboardedProvider.overrideWith((ref) => onboarded),
       ],
       child: const NumoApp(),
     ),
@@ -55,6 +62,7 @@ class NumoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locked = ref.watch(lockedProvider);
+    final onboarded = ref.watch(onboardedProvider);
     return MaterialApp(
       title: 'Numo',
       debugShowCheckedModeBanner: false,
@@ -68,7 +76,11 @@ class NumoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: locked ? const LockScreen() : const SyncRoot(child: HomeShell()),
+      home: locked
+          ? const LockScreen()
+          : !onboarded
+              ? const OnboardingScreen()
+              : const SyncRoot(child: HomeShell()),
     );
   }
 }

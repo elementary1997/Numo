@@ -310,6 +310,9 @@ final securityRepositoryProvider = Provider<SecurityRepository>(
 final lockedProvider = StateProvider<bool>(
     (ref) => ref.read(securityRepositoryProvider).hasPin);
 
+/// Пройден ли onboarding первого запуска (значение задаётся в main()).
+final onboardedProvider = StateProvider<bool>((ref) => true);
+
 final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
