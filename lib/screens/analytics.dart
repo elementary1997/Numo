@@ -1,0 +1,269 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import '../core/money.dart';
+import '../core/theme.dart';
+import '../models/category.dart';
+import '../state/providers.dart';
+import '../widgets/charts.dart';
+
+class AnalyticsScreen extends ConsumerWidget {
+  const AnalyticsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final month = ref.watch(selectedMonthProvider);
+    final stats = ref.watch(monthStatsProvider(month));
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final isCurrentMonth =
+        month.year == now.year && month.month == now.month;
+
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+        children: [
+          Text('Аналитика',
+              style: theme.textTheme.headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              IconButton.filledTonal(
+                onPressed: () => ref
+                    .read(selectedMonthProvider.notifier)
+                    .state = DateTime(month.year, month.month - 1),
+                icon: const Icon(Icons.chevron_left_rounded),
+              ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    toBeginningOfSentenceCase(
+                        DateFormat.yMMMM('ru').format(month)),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+              IconButton.filledTonal(
+                onPressed: isCurrentMonth
+                    ? null
+                    : () => ref
+                        .read(selectedMonthProvider.notifier)
+                        .state = DateTime(month.year, month.month + 1),
+                icon: const Icon(Icons.chevron_right_rounded),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _StatCard(
+                  label: 'Доходы',
+                  value: stats.income,
+                  color: NumoColors.mint,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatCard(
+                  label: 'Расходы',
+                  value: stats.expense,
+                  color: NumoColors.coral,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _StatCard(
+            label: stats.net >= 0 ? 'Накоплено за месяц' : 'Перерасход',
+            value: stats.net.abs(),
+            color: stats.net >= 0 ? NumoColors.sky : NumoColors.amber,
+          ),
+          const SizedBox(height: 20),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Расходы по дням',
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 120,
+                    child: DailyBars(
+                      values: stats.dailyExpense,
+                      color: NumoColors.violet,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      for (final d in [1, 8, 15, 22, stats.dailyExpense.length])
+                        Text('$d',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (stats.byCategory.isNotEmpty) ...[
+            Text('Топ категорий',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            for (final e in stats.byCategory.entries)
+              _CategoryRow(
+                category: Categories.byId(e.key),
+                value: e.value,
+                share: stats.expense > 0 ? e.value / stats.expense : 0,
+              ),
+          ] else
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'За этот месяц расходов нет',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatCard extends StatelessWidget {
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration:
+                      BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text(label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            FittedBox(
+              child: Text(
+                formatMoney(value),
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryRow extends StatelessWidget {
+  const _CategoryRow({
+    required this.category,
+    required this.value,
+    required this.share,
+  });
+
+  final TxCategory category;
+  final double value;
+  final double share;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: category.color.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(category.icon, color: category.color, size: 21),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        category.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Text(
+                      formatMoney(value),
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: share),
+                    duration: const Duration(milliseconds: 700),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, v, _) => LinearProgressIndicator(
+                      value: v,
+                      minHeight: 6,
+                      backgroundColor: theme.colorScheme.onSurface
+                          .withValues(alpha: 0.06),
+                      valueColor:
+                          AlwaysStoppedAnimation(category.color),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
