@@ -2,6 +2,11 @@
 cmake_minimum_required(VERSION 3.14)
 project(numo LANGUAGES CXX)
 
+# Новый MSVC (VS2026) превращает устаревший <experimental/coroutine>
+# в ошибку STL1011, а плагин local_auth_windows ещё использует его
+# через C++/WinRT. Подавляем до перехода плагина на C++20 <coroutine>.
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "numo")

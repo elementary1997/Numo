@@ -21,6 +21,10 @@ const changelog = <ChangelogEntry>[
     version: '1.2.0',
     itemsRu: [
       'Вход по биометрии: Touch ID, Windows Hello, отпечаток или Face ID — как альтернатива PIN',
+      'Брендовые иконки счетов: Сбер, Т-Банк, Альфа, ВТБ, Озон, Яндекс и другие',
+      'Цель можно привязать к счёту — пополнение делает реальный перевод со счёта-источника',
+      'Сумма операции показывается в валюте выбранного счёта',
+      'Исправлен доступ к сети на macOS: заработали курсы, проверка обновлений и AI-разбор',
       'Экран блокировки показывает столько точек, сколько цифр в вашем PIN',
       'Графики перерисованы: подписи без наложений, градиентные бары',
       'Категории и счета в горизонтальных списках листаются мышью',
@@ -29,6 +33,10 @@ const changelog = <ChangelogEntry>[
     ],
     itemsEn: [
       'Biometric unlock: Touch ID, Windows Hello, fingerprint or Face ID as a PIN alternative',
+      'Brand account icons: Sber, T-Bank, Alfa, VTB, Ozon, Yandex and more',
+      'Goals can link to an account — top-ups make a real transfer from a source account',
+      'Transaction amounts use the selected account currency',
+      'Fixed macOS network access: rates, update checks and AI review now work',
       'The lock screen shows exactly as many dots as your PIN has digits',
       'Charts redrawn: labels no longer overlap, gradient bars',
       'Horizontal lists (categories, accounts) scroll with the mouse',
