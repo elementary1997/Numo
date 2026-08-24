@@ -7,6 +7,7 @@ import 'core/theme.dart';
 import 'data/budgets_repository.dart';
 import 'data/categories_repository.dart';
 import 'data/database.dart';
+import 'data/recurring_repository.dart';
 import 'data/repository.dart';
 import 'state/providers.dart';
 import 'screens/shell.dart';
@@ -18,12 +19,16 @@ Future<void> main() async {
   final repository = await TransactionsRepository.open(database);
   final categoriesRepository = await CategoriesRepository.open(database);
   final budgetsRepository = await BudgetsRepository.open(database);
+  final recurringRepository = await RecurringRepository.open(database);
+  // Наступившие регулярные операции превращаются в реальные при запуске.
+  await recurringRepository.materialize(repository);
   runApp(
     ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repository),
         categoriesRepositoryProvider.overrideWithValue(categoriesRepository),
         budgetsRepositoryProvider.overrideWithValue(budgetsRepository),
+        recurringRepositoryProvider.overrideWithValue(recurringRepository),
       ],
       child: const NumoApp(),
     ),

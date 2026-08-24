@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:numo/data/budgets_repository.dart';
 import 'package:numo/data/categories_repository.dart';
+import 'package:numo/data/recurring_repository.dart';
 import 'package:numo/data/database.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/main.dart';
@@ -29,11 +30,13 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   if (transactions.isNotEmpty) await repo.saveAll(transactions);
   final categoriesRepo = await CategoriesRepository.open(db);
   final budgetsRepo = await BudgetsRepository.open(db);
+  final recurringRepo = await RecurringRepository.open(db);
   return ProviderScope(
     overrides: [
       repositoryProvider.overrideWithValue(repo),
       categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
       budgetsRepositoryProvider.overrideWithValue(budgetsRepo),
+      recurringRepositoryProvider.overrideWithValue(recurringRepo),
     ],
     child: const NumoApp(),
   );

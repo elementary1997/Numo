@@ -12,6 +12,7 @@ import 'add_transaction.dart';
 import 'backup_actions.dart';
 import 'budgets.dart';
 import 'categories.dart';
+import 'recurring.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -57,6 +58,9 @@ class DashboardScreen extends ConsumerWidget {
                   'budgets' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const BudgetsScreen())),
+                  'recurring' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const RecurringScreen())),
                   'export' => exportBackup(context, ref),
                   'import' => importBackup(context, ref),
                   _ => null,
@@ -75,6 +79,14 @@ class DashboardScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: Icon(Icons.track_changes_rounded),
                       title: Text('Бюджеты'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'recurring',
+                    child: ListTile(
+                      leading: Icon(Icons.autorenew_rounded),
+                      title: Text('Регулярные'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),

@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
+import '../data/recurring_repository.dart';
 import '../data/repository.dart';
 import '../models/category.dart';
+import '../models/recurring.dart';
 import '../models/transaction.dart';
 
 final repositoryProvider = Provider<TransactionsRepository>(
@@ -162,6 +164,44 @@ final balanceProvider = Provider<double>((ref) {
 final budgetsRepositoryProvider = Provider<BudgetsRepository>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
+
+final recurringRepositoryProvider = Provider<RecurringRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class RecurringNotifier extends Notifier<List<RecurringRule>> {
+  @override
+  List<RecurringRule> build() =>
+      ref.read(recurringRepositoryProvider).loadAll();
+
+  /// Сохраняет правило и сразу материализует наступившие даты,
+  /// чтобы операция появилась без перезапуска приложения.
+  Future<void> upsert(RecurringRule rule) async {
+    final repo = ref.read(recurringRepositoryProvider);
+    final exists = state.any((r) => r.id == rule.id);
+    await repo.saveAll([
+      if (exists)
+        for (final r in state) r.id == rule.id ? rule : r
+      else ...[
+        ...state,
+        rule,
+      ],
+    ]);
+    await repo.materialize(ref.read(repositoryProvider));
+    state = repo.loadAll();
+    ref.invalidate(transactionsProvider);
+  }
+
+  Future<void> remove(String id) async {
+    final repo = ref.read(recurringRepositoryProvider);
+    await repo.saveAll(state.where((r) => r.id != id).toList());
+    state = repo.loadAll();
+  }
+}
+
+final recurringProvider =
+    NotifierProvider<RecurringNotifier, List<RecurringRule>>(
+        RecurringNotifier.new);
 
 class BudgetsNotifier extends Notifier<Map<String, double>> {
   @override

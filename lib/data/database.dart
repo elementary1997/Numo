@@ -40,20 +40,44 @@ class BudgetRows extends Table {
   Set<Column<Object>> get primaryKey => {categoryId};
 }
 
-@DriftDatabase(tables: [TransactionRows, CategoryRows, BudgetRows])
+/// Правила регулярных операций: раз в месяц в заданный день.
+/// День больше длины месяца прижимается к последнему дню.
+class RecurringRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get type => text()();
+  RealColumn get amount => real()();
+  TextColumn get categoryId => text()();
+  TextColumn get note => text().withDefault(const Constant(''))();
+  IntColumn get dayOfMonth => integer()();
+  DateTimeColumn get startDate => dateTime()();
+
+  /// По какую дату включительно правило уже материализовано —
+  /// операции создаются только после неё, поэтому удалённые
+  /// пользователем сгенерированные операции не возрождаются.
+  DateTimeColumn get appliedThrough => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+@DriftDatabase(
+    tables: [TransactionRows, CategoryRows, BudgetRows, RecurringRows])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
   /// в тестах передаётся in-memory executor.
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (m, from, to) async {
           if (from < 2) {
             await m.createTable(budgetRows);
+          }
+          if (from < 3) {
+            await m.createTable(recurringRows);
           }
         },
       );

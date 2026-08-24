@@ -1036,6 +1036,530 @@ class BudgetRowsCompanion extends UpdateCompanion<BudgetRow> {
   }
 }
 
+class $RecurringRowsTable extends RecurringRows
+    with TableInfo<$RecurringRowsTable, RecurringRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecurringRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _dayOfMonthMeta = const VerificationMeta(
+    'dayOfMonth',
+  );
+  @override
+  late final GeneratedColumn<int> dayOfMonth = GeneratedColumn<int>(
+    'day_of_month',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _appliedThroughMeta = const VerificationMeta(
+    'appliedThrough',
+  );
+  @override
+  late final GeneratedColumn<DateTime> appliedThrough =
+      GeneratedColumn<DateTime>(
+        'applied_through',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    type,
+    amount,
+    categoryId,
+    note,
+    dayOfMonth,
+    startDate,
+    appliedThrough,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recurring_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecurringRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('day_of_month')) {
+      context.handle(
+        _dayOfMonthMeta,
+        dayOfMonth.isAcceptableOrUnknown(
+          data['day_of_month']!,
+          _dayOfMonthMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_dayOfMonthMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('applied_through')) {
+      context.handle(
+        _appliedThroughMeta,
+        appliedThrough.isAcceptableOrUnknown(
+          data['applied_through']!,
+          _appliedThroughMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecurringRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecurringRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      )!,
+      dayOfMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_of_month'],
+      )!,
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      appliedThrough: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}applied_through'],
+      ),
+    );
+  }
+
+  @override
+  $RecurringRowsTable createAlias(String alias) {
+    return $RecurringRowsTable(attachedDatabase, alias);
+  }
+}
+
+class RecurringRow extends DataClass implements Insertable<RecurringRow> {
+  final String id;
+  final String type;
+  final double amount;
+  final String categoryId;
+  final String note;
+  final int dayOfMonth;
+  final DateTime startDate;
+
+  /// По какую дату включительно правило уже материализовано —
+  /// операции создаются только после неё, поэтому удалённые
+  /// пользователем сгенерированные операции не возрождаются.
+  final DateTime? appliedThrough;
+  const RecurringRow({
+    required this.id,
+    required this.type,
+    required this.amount,
+    required this.categoryId,
+    required this.note,
+    required this.dayOfMonth,
+    required this.startDate,
+    this.appliedThrough,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    map['amount'] = Variable<double>(amount);
+    map['category_id'] = Variable<String>(categoryId);
+    map['note'] = Variable<String>(note);
+    map['day_of_month'] = Variable<int>(dayOfMonth);
+    map['start_date'] = Variable<DateTime>(startDate);
+    if (!nullToAbsent || appliedThrough != null) {
+      map['applied_through'] = Variable<DateTime>(appliedThrough);
+    }
+    return map;
+  }
+
+  RecurringRowsCompanion toCompanion(bool nullToAbsent) {
+    return RecurringRowsCompanion(
+      id: Value(id),
+      type: Value(type),
+      amount: Value(amount),
+      categoryId: Value(categoryId),
+      note: Value(note),
+      dayOfMonth: Value(dayOfMonth),
+      startDate: Value(startDate),
+      appliedThrough: appliedThrough == null && nullToAbsent
+          ? const Value.absent()
+          : Value(appliedThrough),
+    );
+  }
+
+  factory RecurringRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecurringRow(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      amount: serializer.fromJson<double>(json['amount']),
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      note: serializer.fromJson<String>(json['note']),
+      dayOfMonth: serializer.fromJson<int>(json['dayOfMonth']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      appliedThrough: serializer.fromJson<DateTime?>(json['appliedThrough']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'amount': serializer.toJson<double>(amount),
+      'categoryId': serializer.toJson<String>(categoryId),
+      'note': serializer.toJson<String>(note),
+      'dayOfMonth': serializer.toJson<int>(dayOfMonth),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'appliedThrough': serializer.toJson<DateTime?>(appliedThrough),
+    };
+  }
+
+  RecurringRow copyWith({
+    String? id,
+    String? type,
+    double? amount,
+    String? categoryId,
+    String? note,
+    int? dayOfMonth,
+    DateTime? startDate,
+    Value<DateTime?> appliedThrough = const Value.absent(),
+  }) => RecurringRow(
+    id: id ?? this.id,
+    type: type ?? this.type,
+    amount: amount ?? this.amount,
+    categoryId: categoryId ?? this.categoryId,
+    note: note ?? this.note,
+    dayOfMonth: dayOfMonth ?? this.dayOfMonth,
+    startDate: startDate ?? this.startDate,
+    appliedThrough: appliedThrough.present
+        ? appliedThrough.value
+        : this.appliedThrough,
+  );
+  RecurringRow copyWithCompanion(RecurringRowsCompanion data) {
+    return RecurringRow(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      note: data.note.present ? data.note.value : this.note,
+      dayOfMonth: data.dayOfMonth.present
+          ? data.dayOfMonth.value
+          : this.dayOfMonth,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      appliedThrough: data.appliedThrough.present
+          ? data.appliedThrough.value
+          : this.appliedThrough,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringRow(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('amount: $amount, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('note: $note, ')
+          ..write('dayOfMonth: $dayOfMonth, ')
+          ..write('startDate: $startDate, ')
+          ..write('appliedThrough: $appliedThrough')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    type,
+    amount,
+    categoryId,
+    note,
+    dayOfMonth,
+    startDate,
+    appliedThrough,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecurringRow &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.amount == this.amount &&
+          other.categoryId == this.categoryId &&
+          other.note == this.note &&
+          other.dayOfMonth == this.dayOfMonth &&
+          other.startDate == this.startDate &&
+          other.appliedThrough == this.appliedThrough);
+}
+
+class RecurringRowsCompanion extends UpdateCompanion<RecurringRow> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<double> amount;
+  final Value<String> categoryId;
+  final Value<String> note;
+  final Value<int> dayOfMonth;
+  final Value<DateTime> startDate;
+  final Value<DateTime?> appliedThrough;
+  final Value<int> rowid;
+  const RecurringRowsCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.dayOfMonth = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.appliedThrough = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecurringRowsCompanion.insert({
+    required String id,
+    required String type,
+    required double amount,
+    required String categoryId,
+    this.note = const Value.absent(),
+    required int dayOfMonth,
+    required DateTime startDate,
+    this.appliedThrough = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       type = Value(type),
+       amount = Value(amount),
+       categoryId = Value(categoryId),
+       dayOfMonth = Value(dayOfMonth),
+       startDate = Value(startDate);
+  static Insertable<RecurringRow> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<double>? amount,
+    Expression<String>? categoryId,
+    Expression<String>? note,
+    Expression<int>? dayOfMonth,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? appliedThrough,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (amount != null) 'amount': amount,
+      if (categoryId != null) 'category_id': categoryId,
+      if (note != null) 'note': note,
+      if (dayOfMonth != null) 'day_of_month': dayOfMonth,
+      if (startDate != null) 'start_date': startDate,
+      if (appliedThrough != null) 'applied_through': appliedThrough,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecurringRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? type,
+    Value<double>? amount,
+    Value<String>? categoryId,
+    Value<String>? note,
+    Value<int>? dayOfMonth,
+    Value<DateTime>? startDate,
+    Value<DateTime?>? appliedThrough,
+    Value<int>? rowid,
+  }) {
+    return RecurringRowsCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      amount: amount ?? this.amount,
+      categoryId: categoryId ?? this.categoryId,
+      note: note ?? this.note,
+      dayOfMonth: dayOfMonth ?? this.dayOfMonth,
+      startDate: startDate ?? this.startDate,
+      appliedThrough: appliedThrough ?? this.appliedThrough,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (dayOfMonth.present) {
+      map['day_of_month'] = Variable<int>(dayOfMonth.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (appliedThrough.present) {
+      map['applied_through'] = Variable<DateTime>(appliedThrough.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('amount: $amount, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('note: $note, ')
+          ..write('dayOfMonth: $dayOfMonth, ')
+          ..write('startDate: $startDate, ')
+          ..write('appliedThrough: $appliedThrough, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -1044,6 +1568,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
   );
   late final $CategoryRowsTable categoryRows = $CategoryRowsTable(this);
   late final $BudgetRowsTable budgetRows = $BudgetRowsTable(this);
+  late final $RecurringRowsTable recurringRows = $RecurringRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1052,6 +1577,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     transactionRows,
     categoryRows,
     budgetRows,
+    recurringRows,
   ];
 }
 
@@ -1645,6 +2171,269 @@ typedef $$BudgetRowsTableProcessedTableManager =
       BudgetRow,
       PrefetchHooks Function()
     >;
+typedef $$RecurringRowsTableCreateCompanionBuilder =
+    RecurringRowsCompanion Function({
+      required String id,
+      required String type,
+      required double amount,
+      required String categoryId,
+      Value<String> note,
+      required int dayOfMonth,
+      required DateTime startDate,
+      Value<DateTime?> appliedThrough,
+      Value<int> rowid,
+    });
+typedef $$RecurringRowsTableUpdateCompanionBuilder =
+    RecurringRowsCompanion Function({
+      Value<String> id,
+      Value<String> type,
+      Value<double> amount,
+      Value<String> categoryId,
+      Value<String> note,
+      Value<int> dayOfMonth,
+      Value<DateTime> startDate,
+      Value<DateTime?> appliedThrough,
+      Value<int> rowid,
+    });
+
+class $$RecurringRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $RecurringRowsTable> {
+  $$RecurringRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dayOfMonth => $composableBuilder(
+    column: $table.dayOfMonth,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get appliedThrough => $composableBuilder(
+    column: $table.appliedThrough,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RecurringRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $RecurringRowsTable> {
+  $$RecurringRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get dayOfMonth => $composableBuilder(
+    column: $table.dayOfMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get appliedThrough => $composableBuilder(
+    column: $table.appliedThrough,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RecurringRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $RecurringRowsTable> {
+  $$RecurringRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<int> get dayOfMonth => $composableBuilder(
+    column: $table.dayOfMonth,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get appliedThrough => $composableBuilder(
+    column: $table.appliedThrough,
+    builder: (column) => column,
+  );
+}
+
+class $$RecurringRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $RecurringRowsTable,
+          RecurringRow,
+          $$RecurringRowsTableFilterComposer,
+          $$RecurringRowsTableOrderingComposer,
+          $$RecurringRowsTableAnnotationComposer,
+          $$RecurringRowsTableCreateCompanionBuilder,
+          $$RecurringRowsTableUpdateCompanionBuilder,
+          (
+            RecurringRow,
+            BaseReferences<_$NumoDatabase, $RecurringRowsTable, RecurringRow>,
+          ),
+          RecurringRow,
+          PrefetchHooks Function()
+        > {
+  $$RecurringRowsTableTableManager(_$NumoDatabase db, $RecurringRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecurringRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecurringRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecurringRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<String> categoryId = const Value.absent(),
+                Value<String> note = const Value.absent(),
+                Value<int> dayOfMonth = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<DateTime?> appliedThrough = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecurringRowsCompanion(
+                id: id,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                note: note,
+                dayOfMonth: dayOfMonth,
+                startDate: startDate,
+                appliedThrough: appliedThrough,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String type,
+                required double amount,
+                required String categoryId,
+                Value<String> note = const Value.absent(),
+                required int dayOfMonth,
+                required DateTime startDate,
+                Value<DateTime?> appliedThrough = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => RecurringRowsCompanion.insert(
+                id: id,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                note: note,
+                dayOfMonth: dayOfMonth,
+                startDate: startDate,
+                appliedThrough: appliedThrough,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RecurringRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $RecurringRowsTable,
+      RecurringRow,
+      $$RecurringRowsTableFilterComposer,
+      $$RecurringRowsTableOrderingComposer,
+      $$RecurringRowsTableAnnotationComposer,
+      $$RecurringRowsTableCreateCompanionBuilder,
+      $$RecurringRowsTableUpdateCompanionBuilder,
+      (
+        RecurringRow,
+        BaseReferences<_$NumoDatabase, $RecurringRowsTable, RecurringRow>,
+      ),
+      RecurringRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -1655,4 +2444,6 @@ class $NumoDatabaseManager {
       $$CategoryRowsTableTableManager(_db, _db.categoryRows);
   $$BudgetRowsTableTableManager get budgetRows =>
       $$BudgetRowsTableTableManager(_db, _db.budgetRows);
+  $$RecurringRowsTableTableManager get recurringRows =>
+      $$RecurringRowsTableTableManager(_db, _db.recurringRows);
 }
