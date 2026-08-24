@@ -22,10 +22,40 @@ abstract final class NumoColors {
     end: Alignment.bottomRight,
     colors: [Color(0xFF7C5CFF), Color(0xFF4A2FE0), Color(0xFF2A1B8F)],
   );
+
+  /// Палитра акцентов для персонализации.
+  static const accentChoices = [
+    violet,
+    Color(0xFF2F6FED), // синий
+    Color(0xFF0FA47A), // изумруд
+    Color(0xFFE0564B), // коралл
+    Color(0xFFE08A00), // янтарь
+    Color(0xFFD84E8E), // розовый
+    Color(0xFF12A5B8), // бирюза
+    Color(0xFF6E56CF), // индиго
+    Color(0xFF5B7C0A), // олива
+    Color(0xFF3E4A5C), // графит
+  ];
 }
 
+/// Затемнение цвета для градиентов.
+Color _darken(Color color, double amount) {
+  final hsl = HSLColor.fromColor(color);
+  return hsl
+      .withLightness((hsl.lightness - amount).clamp(0.0, 1.0))
+      .toColor();
+}
+
+/// Фирменный градиент героя-карточки от акцентного цвета.
+LinearGradient numoHeroGradient(Color accent) => LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [accent, _darken(accent, 0.14), _darken(accent, 0.26)],
+    );
+
 abstract final class NumoTheme {
-  static ThemeData dark() => _build(
+  static ThemeData dark([Color accent = NumoColors.violet]) => _build(
+        accent: accent,
         brightness: Brightness.dark,
         background: NumoColors.inkDark,
         surface: NumoColors.surfaceDark,
@@ -34,7 +64,8 @@ abstract final class NumoTheme {
         muted: const Color(0xFF98989E),
       );
 
-  static ThemeData light() => _build(
+  static ThemeData light([Color accent = NumoColors.violet]) => _build(
+        accent: accent,
         brightness: Brightness.light,
         background: NumoColors.inkLight,
         surface: NumoColors.surfaceLight,
@@ -44,6 +75,7 @@ abstract final class NumoTheme {
       );
 
   static ThemeData _build({
+    required Color accent,
     required Brightness brightness,
     required Color background,
     required Color surface,
@@ -53,7 +85,7 @@ abstract final class NumoTheme {
   }) {
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: NumoColors.violet,
+      primary: accent,
       onPrimary: Colors.white,
       secondary: NumoColors.mint,
       onSecondary: const Color(0xFF06281A),
@@ -110,30 +142,26 @@ abstract final class NumoTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
-        indicatorColor: NumoColors.violet.withValues(alpha: 0.16),
+        indicatorColor: accent.withValues(alpha: 0.16),
         height: 68,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
-            color: states.contains(WidgetState.selected)
-                ? NumoColors.violet
-                : muted,
+            color: states.contains(WidgetState.selected) ? accent : muted,
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => textTheme.labelMedium?.copyWith(
             fontWeight: FontWeight.w700,
-            color: states.contains(WidgetState.selected)
-                ? NumoColors.violet
-                : muted,
+            color: states.contains(WidgetState.selected) ? accent : muted,
           ),
         ),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: NumoColors.violet,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: accent,
         foregroundColor: Colors.white,
         elevation: 1,
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
       ),

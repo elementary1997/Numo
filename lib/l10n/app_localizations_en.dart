@@ -824,6 +824,30 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get personalizationGroup => 'Personalization';
+
+  @override
+  String get accentColorTitle => 'Accent color';
+
+  @override
+  String get dataGroup => 'Data & security';
+
+  @override
+  String get statementsFolderTitle => 'Statements folder';
+
+  @override
+  String get statementsFolderExplainer =>
+      'Point Numo at the folder where you save bank statements — new files are detected on launch and offered for import.';
+
+  @override
+  String statementFound(String name) {
+    return 'New statement found: $name';
+  }
+
+  @override
+  String get importAction => 'Import';
+
+  @override
   String get csvHeaderDate => 'Date';
 
   @override

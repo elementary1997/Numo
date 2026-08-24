@@ -190,7 +190,7 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
     Color toneColor(InsightTone tone) => switch (tone) {
           InsightTone.good => NumoColors.mint,
           InsightTone.warn => NumoColors.amber,
-          InsightTone.neutral => NumoColors.violet,
+          InsightTone.neutral => theme.colorScheme.primary,
         };
     IconData toneIcon(InsightTone tone) => switch (tone) {
           InsightTone.good => Icons.trending_up_rounded,

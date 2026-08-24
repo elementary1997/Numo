@@ -171,7 +171,7 @@ class _DailyExpensesCardState extends State<_DailyExpensesCard> {
               height: 132,
               child: DailyBars(
                 values: daily,
-                color: NumoColors.violet,
+                color: Theme.of(context).colorScheme.primary,
                 selectedIndex: shown,
                 onBarTap: (i) => setState(() => _selected = i),
               ),

@@ -91,11 +91,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               width: 140,
                               height: 140,
                               decoration: BoxDecoration(
-                                gradient: NumoColors.heroGradient,
+                                gradient: numoHeroGradient(theme.colorScheme.primary),
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: NumoColors.violetDeep
+                                    color: theme.colorScheme.primary
                                         .withValues(alpha: 0.35),
                                     blurRadius: 30,
                                     offset: const Offset(0, 12),
@@ -139,7 +139,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(5),
                           color: i == _page
-                              ? NumoColors.violet
+                              ? theme.colorScheme.primary
                               : theme.colorScheme.onSurface
                                   .withValues(alpha: 0.15),
                         ),
@@ -160,7 +160,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 curve: Curves.easeOut,
                               ),
                       style: FilledButton.styleFrom(
-                        backgroundColor: NumoColors.violet,
+                        backgroundColor: theme.colorScheme.primary,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10)),
                         textStyle: theme.textTheme.titleMedium

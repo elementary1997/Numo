@@ -44,6 +44,7 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
+          _GroupTitle(context.l10n.personalizationGroup),
           group([
             item(
               icon: Icons.language_rounded,
@@ -56,6 +57,15 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => showThemeDialog(context, ref),
             ),
             item(
+              icon: Icons.palette_outlined,
+              title: context.l10n.accentColorTitle,
+              onTap: () => showAccentDialog(context, ref),
+            ),
+          ]),
+          const SizedBox(height: 14),
+          _GroupTitle(context.l10n.dataGroup),
+          group([
+            item(
               icon: Icons.lock_outline_rounded,
               title: context.l10n.menuSecurity,
               onTap: () => showSecurityDialog(context, ref),
@@ -64,6 +74,11 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.cloud_sync_outlined,
               title: context.l10n.menuSync,
               onTap: () => showSyncDialog(context, ref),
+            ),
+            item(
+              icon: Icons.folder_open_rounded,
+              title: context.l10n.statementsFolderTitle,
+              onTap: () => showStatementsFolderDialog(context, ref),
             ),
           ]),
           const SizedBox(height: 14),
@@ -103,6 +118,26 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Заголовок группы настроек.
+class _GroupTitle extends StatelessWidget {
+  const _GroupTitle(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
       ),
     );
   }

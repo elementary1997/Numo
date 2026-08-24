@@ -102,7 +102,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                     width: 72,
                     height: 72,
                     decoration: BoxDecoration(
-                      gradient: NumoColors.heroGradient,
+                      gradient: numoHeroGradient(theme.colorScheme.primary),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.lock_rounded,
@@ -139,7 +139,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: i < _entered.length
-                                ? NumoColors.violet
+                                ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurface
                                     .withValues(alpha: 0.12),
                           ),

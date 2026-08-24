@@ -33,7 +33,7 @@ class BudgetsScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: NumoColors.heroGradient,
+                gradient: numoHeroGradient(theme.colorScheme.primary),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(

@@ -337,7 +337,8 @@ class _SafeToSpendCard extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           child: Row(
             children: [
-              Icon(Icons.today_rounded, color: NumoColors.violet, size: 22),
+              Icon(Icons.today_rounded,
+                  color: theme.colorScheme.primary, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -413,16 +414,17 @@ class _BalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: NumoColors.heroGradient,
+        gradient: numoHeroGradient(theme.colorScheme.primary),
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: NumoColors.violetDeep.withValues(alpha: 0.35),
+            color: theme.colorScheme.primary.withValues(alpha: 0.30),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),

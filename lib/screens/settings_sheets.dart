@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/theme.dart';
 import '../data/seed_localization.dart';
 import '../data/sync_service.dart';
 import '../state/providers.dart';
@@ -204,6 +205,110 @@ Future<void> showThemeDialog(BuildContext context, WidgetRef ref) async {
   } else {
     await prefs.setString('numo.theme', newValue);
   }
+}
+
+/// Диалог выбора акцентного цвета.
+Future<void> showAccentDialog(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(accentColorProvider);
+  final chosen = await showDialog<int>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(context.l10n.accentColorTitle),
+      content: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          for (final color in NumoColors.accentChoices)
+            InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: () => Navigator.of(context).pop(color.toARGB32()),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: (current ?? NumoColors.violet.toARGB32()) ==
+                            color.toARGB32()
+                        ? Theme.of(context).colorScheme.onSurface
+                        : Colors.transparent,
+                    width: 2.5,
+                  ),
+                ),
+                child: (current ?? NumoColors.violet.toARGB32()) ==
+                        color.toARGB32()
+                    ? const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 20)
+                    : null,
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
+  if (chosen == null) return;
+  final isDefault = chosen == NumoColors.violet.toARGB32();
+  ref.read(accentColorProvider.notifier).state = isDefault ? null : chosen;
+  final prefs = await SharedPreferences.getInstance();
+  if (isDefault) {
+    await prefs.remove('numo.accent');
+  } else {
+    await prefs.setInt('numo.accent', chosen);
+  }
+}
+
+/// Диалог папки выписок: Numo при запуске находит в ней новые файлы
+/// и предлагает импорт (этап 2 банковской интеграции).
+Future<void> showStatementsFolderDialog(
+    BuildContext context, WidgetRef ref) async {
+  if (!SyncService.supported) {
+    _toast(context, context.l10n.syncWebUnavailable);
+    return;
+  }
+  final prefs = await SharedPreferences.getInstance();
+  final current = prefs.getString('numo.statements.dir');
+  if (!context.mounted) return;
+
+  final action = await showDialog<String>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(context.l10n.statementsFolderTitle),
+      content: Text(current == null
+          ? context.l10n.statementsFolderExplainer
+          : context.l10n.syncFolder(current)),
+      actions: [
+        if (current != null)
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('disable'),
+            child: Text(context.l10n.disable),
+          ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(context.l10n.close),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop('choose'),
+          child: Text(current == null
+              ? context.l10n.chooseFolder
+              : context.l10n.changeFolder),
+        ),
+      ],
+    ),
+  );
+
+  if (action == 'disable') {
+    await prefs.remove('numo.statements.dir');
+    await prefs.remove('numo.statements.lastScan');
+    return;
+  }
+  if (action != 'choose') return;
+  final dir = await getDirectoryPath();
+  if (dir == null) return;
+  await prefs.setString('numo.statements.dir', dir);
+  // Существующие файлы не считаем новыми.
+  await prefs.setString(
+      'numo.statements.lastScan', DateTime.now().toIso8601String());
 }
 
 /// Диалог настройки синхронизации через папку облака.

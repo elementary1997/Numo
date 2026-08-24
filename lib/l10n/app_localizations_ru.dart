@@ -824,6 +824,30 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get personalizationGroup => 'Персонализация';
+
+  @override
+  String get accentColorTitle => 'Акцентный цвет';
+
+  @override
+  String get dataGroup => 'Данные и безопасность';
+
+  @override
+  String get statementsFolderTitle => 'Папка выписок';
+
+  @override
+  String get statementsFolderExplainer =>
+      'Укажите папку, куда сохраняете выписки из банков — Numo при запуске сам найдёт новые файлы и предложит импорт.';
+
+  @override
+  String statementFound(String name) {
+    return 'Найдена новая выписка: $name';
+  }
+
+  @override
+  String get importAction => 'Импортировать';
+
+  @override
   String get csvHeaderDate => 'Дата';
 
   @override

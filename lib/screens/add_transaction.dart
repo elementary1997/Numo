@@ -412,7 +412,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
               child: FilledButton(
                 onPressed: canSave ? _save : null,
                 style: FilledButton.styleFrom(
-                  backgroundColor: NumoColors.violet,
+                  backgroundColor: theme.colorScheme.primary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   textStyle: theme.textTheme.titleMedium

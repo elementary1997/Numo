@@ -17,7 +17,10 @@ import '../core/l10n.dart';
 /// Импорт банковской выписки из CSV: выбор файла → маппинг колонок →
 /// предпросмотр с дедупликацией → импорт.
 class ImportCsvScreen extends ConsumerStatefulWidget {
-  const ImportCsvScreen({super.key});
+  const ImportCsvScreen({super.key, this.initialFilePath});
+
+  /// Файл, который открывается сразу (автоимпорт из папки выписок).
+  final String? initialFilePath;
 
   @override
   ConsumerState<ImportCsvScreen> createState() => _ImportCsvScreenState();
@@ -25,6 +28,18 @@ class ImportCsvScreen extends ConsumerStatefulWidget {
 
 class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
   List<List<String>>? _rows;
+
+  @override
+  void initState() {
+    super.initState();
+    final path = widget.initialFilePath;
+    if (path != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadFile(XFile(path));
+      });
+    }
+  }
+
   int? _dateColumn;
   int? _amountColumn;
   int? _noteColumn;
@@ -41,6 +56,10 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
           extensions: ['csv', 'txt', 'ofx', 'xlsx', 'pdf'])
     ]);
     if (file == null) return;
+    await _loadFile(file);
+  }
+
+  Future<void> _loadFile(XFile file) async {
     final bytes = await file.readAsBytes();
     final format = detectFormat(file.name, bytes);
     final rows = switch (format) {

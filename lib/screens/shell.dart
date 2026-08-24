@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../core/l10n.dart';
-import '../core/theme.dart';
 import 'accounts.dart';
 import 'add_transaction.dart';
 import 'analytics.dart';
@@ -113,9 +112,9 @@ class _HomeShellState extends State<HomeShell> {
                             style: const TextStyle(fontSize: 13)),
                         style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
-                          backgroundColor:
-                              NumoColors.violet.withValues(alpha: 0.12),
-                          foregroundColor: NumoColors.violetDeep,
+                          backgroundColor: theme.colorScheme.primary
+                              .withValues(alpha: 0.12),
+                          foregroundColor: theme.colorScheme.primary,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 8),
                           alignment: Alignment.centerLeft,
@@ -239,7 +238,8 @@ class _SidebarRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
             child: Row(
               children: [
-                Icon(destination.icon, size: 18, color: NumoColors.violet),
+                Icon(destination.icon,
+                    size: 18, color: theme.colorScheme.primary),
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(

@@ -52,6 +52,7 @@ Future<void> main() async {
   final onboarded = prefs.getBool(onboardedKey) ?? false;
   final localeOverride = prefs.getString('numo.locale');
   final themeOverride = prefs.getString('numo.theme');
+  final accentColor = prefs.getInt('numo.accent');
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   // Названия встроенных категорий/счёта следуют текущему языку.
@@ -75,6 +76,7 @@ Future<void> main() async {
         onboardedProvider.overrideWith((ref) => onboarded),
         localeOverrideProvider.overrideWith((ref) => localeOverride),
         themeOverrideProvider.overrideWith((ref) => themeOverride),
+        accentColorProvider.overrideWith((ref) => accentColor),
       ],
       child: const NumoApp(),
     ),
@@ -103,12 +105,15 @@ class NumoApp extends ConsumerWidget {
     final onboarded = ref.watch(onboardedProvider);
     final localeOverride = ref.watch(localeOverrideProvider);
     final themeOverride = ref.watch(themeOverrideProvider);
+    final accentValue = ref.watch(accentColorProvider);
+    final accent =
+        accentValue == null ? NumoColors.violet : Color(accentValue);
     return MaterialApp(
       title: 'Numo',
       scrollBehavior: const _NumoScrollBehavior(),
       debugShowCheckedModeBanner: false,
-      theme: NumoTheme.light(),
-      darkTheme: NumoTheme.dark(),
+      theme: NumoTheme.light(accent),
+      darkTheme: NumoTheme.dark(accent),
       themeMode: switch (themeOverride) {
         'light' => ThemeMode.light,
         'dark' => ThemeMode.dark,

@@ -18,6 +18,19 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.4.0',
+    itemsRu: [
+      'Официальные иконки банков: Сбер, Т-Банк, Альфа, ВТБ, Озон, Яндекс, МТС и другие',
+      'Персонализация: выбор акцентного цвета приложения',
+      'Папка выписок — новые файлы находятся сами и предлагаются к импорту',
+    ],
+    itemsEn: [
+      'Official bank icons: Sber, T-Bank, Alfa, VTB, Ozon, Yandex, MTS and more',
+      'Personalization: pick the app accent color',
+      'Statements folder — new files are detected and offered for import',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.3.0',
     itemsRu: [
       'Выбор валюты при вводе операции — конвертация в валюту счёта по курсу ЦБ',

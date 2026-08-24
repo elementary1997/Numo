@@ -1550,6 +1550,48 @@ abstract class AppLocalizations {
   /// **'{amount} {symbol} по курсу'**
   String convertedFrom(String amount, String symbol);
 
+  /// No description provided for @personalizationGroup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Персонализация'**
+  String get personalizationGroup;
+
+  /// No description provided for @accentColorTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Акцентный цвет'**
+  String get accentColorTitle;
+
+  /// No description provided for @dataGroup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные и безопасность'**
+  String get dataGroup;
+
+  /// No description provided for @statementsFolderTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Папка выписок'**
+  String get statementsFolderTitle;
+
+  /// No description provided for @statementsFolderExplainer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Укажите папку, куда сохраняете выписки из банков — Numo при запуске сам найдёт новые файлы и предложит импорт.'**
+  String get statementsFolderExplainer;
+
+  /// No description provided for @statementFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найдена новая выписка: {name}'**
+  String statementFound(String name);
+
+  /// No description provided for @importAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импортировать'**
+  String get importAction;
+
   /// No description provided for @csvHeaderDate.
   ///
   /// In ru, this message translates to:

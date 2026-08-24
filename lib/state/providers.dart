@@ -335,6 +335,9 @@ final localeOverrideProvider = StateProvider<String?>((ref) => null);
 /// Тема: 'light' | 'dark' | null — системная (начальное значение из main()).
 final themeOverrideProvider = StateProvider<String?>((ref) => null);
 
+/// Акцентный цвет (ARGB); null — фирменный фиолетовый.
+final accentColorProvider = StateProvider<int?>((ref) => null);
+
 final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );

@@ -9,7 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/l10n.dart';
 import '../data/changelog.dart';
+import '../data/statements_watcher.dart';
 import '../state/providers.dart';
+import 'import_csv.dart';
 
 /// Обвязка синхронизации вокруг приложения: при старте предлагает
 /// принять более новые данные из папки синхронизации, а изменения
@@ -30,7 +32,26 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _showWhatsNew();
       await _checkForNewer();
+      await _checkStatements();
     });
+  }
+
+  /// Новые файлы в папке выписок: предлагаем импорт первого из них.
+  Future<void> _checkStatements() async {
+    if (kIsWeb) return;
+    final found = await StatementsWatcher.scan();
+    if (found.isEmpty || !mounted) return;
+    final statement = found.first;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 10),
+      content: Text(context.l10n.statementFound(statement.name)),
+      action: SnackBarAction(
+        label: context.l10n.importAction,
+        onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) =>
+                ImportCsvScreen(initialFilePath: statement.path))),
+      ),
+    ));
   }
 
   /// После обновления показывает «Что нового» для текущей версии.

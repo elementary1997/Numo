@@ -8,7 +8,7 @@ import 'category.dart' show CategoryIcons;
 /// Поддерживаемые валюты счетов.
 abstract final class Currencies {
   static const rub = 'RUB';
-  static const supported = ['RUB', 'USD', 'EUR', 'CNY', 'KZT', 'AMD', 'RSD'];
+  static const supported = ['RUB', 'USD', 'EUR'];
 
   static String symbol(String code) => switch (code) {
         'RUB' => '₽',
