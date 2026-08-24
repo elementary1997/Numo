@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/accounts_repository.dart';
 import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
+import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
 import '../models/account.dart';
@@ -223,6 +224,13 @@ class AccountsNotifier extends Notifier<List<Account>> {
     ];
     await ref.read(accountsRepositoryProvider).saveAll(state);
   }
+
+  /// Полная замена данных — используется восстановлением из бэкапа.
+  /// Пустой список из старого бэкапа заменяется счётом по умолчанию.
+  Future<void> replaceAll(List<Account> accounts) async {
+    state = accounts.isEmpty ? [Accounts.main] : [...accounts];
+    await ref.read(accountsRepositoryProvider).saveAll(state);
+  }
 }
 
 final accountsProvider =
@@ -238,6 +246,95 @@ final accountBalanceProvider = Provider.family<double, String>(
         .watch(transactionsProvider)
         .where((t) => t.accountId == accountId)
         .fold(0.0, (sum, t) => sum + t.signedAmount));
+
+final ratesRepositoryProvider =
+    Provider<RatesRepository>((ref) => RatesRepository());
+
+/// Курсы ЦБ (кэш 24 часа); null — курсов нет и не было.
+final ratesProvider = FutureProvider<RatesSnapshot?>(
+    (ref) => ref.watch(ratesRepositoryProvider).load());
+
+/// Общий капитал в рублях по активным счетам.
+/// [approximate] — в сумме есть конвертация по курсу ЦБ;
+/// [unconverted] — валюты, для которых курса не нашлось
+/// (их счета в сумму не вошли).
+class NetWorth {
+  const NetWorth({
+    required this.value,
+    required this.approximate,
+    required this.unconverted,
+  });
+
+  final double value;
+  final bool approximate;
+  final List<String> unconverted;
+}
+
+/// Динамика капитала: значение на конец каждого из последних [days]
+/// дней (включая сегодня), в рублях по текущим курсам.
+final capitalSeriesProvider = Provider.family<List<double>, int>((ref, days) {
+  final txs = ref.watch(transactionsProvider);
+  final accounts = ref.watch(accountsProvider);
+  final rates = ref.watch(ratesProvider).valueOrNull;
+
+  double rateFor(String accountId) {
+    final currency = accounts.byId(accountId).currency;
+    return currency == 'RUB' ? 1 : (rates?.rubFor(currency) ?? 0);
+  }
+
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final start = today.subtract(Duration(days: days - 1));
+
+  // Стартовая точка — всё, что было до окна.
+  var running = txs
+      .where((t) => t.date.isBefore(start))
+      .fold(0.0, (sum, t) => sum + t.signedAmount * rateFor(t.accountId));
+
+  final byDay = <DateTime, double>{};
+  for (final t in txs) {
+    if (t.date.isBefore(start)) continue;
+    final day = DateTime(t.date.year, t.date.month, t.date.day);
+    byDay.update(
+        day, (v) => v + t.signedAmount * rateFor(t.accountId),
+        ifAbsent: () => t.signedAmount * rateFor(t.accountId));
+  }
+
+  final series = <double>[];
+  for (var i = 0; i < days; i++) {
+    final day = start.add(Duration(days: i));
+    running += byDay[day] ?? 0;
+    series.add(running);
+  }
+  return series;
+});
+
+final netWorthProvider = Provider<NetWorth>((ref) {
+  final accounts = ref.watch(activeAccountsProvider);
+  final rates = ref.watch(ratesProvider).valueOrNull;
+  var total = 0.0;
+  var approximate = false;
+  final unconverted = <String>[];
+  for (final account in accounts) {
+    final balance = ref.watch(accountBalanceProvider(account.id));
+    if (account.isRub) {
+      total += balance;
+      continue;
+    }
+    final rate = rates?.rubFor(account.currency);
+    if (rate == null) {
+      if (balance != 0) unconverted.add(account.currency);
+      continue;
+    }
+    total += balance * rate;
+    if (balance != 0) approximate = true;
+  }
+  return NetWorth(
+    value: total,
+    approximate: approximate,
+    unconverted: unconverted,
+  );
+});
 
 final budgetsRepositoryProvider = Provider<BudgetsRepository>(
   (ref) => throw UnimplementedError('overridden in main()'),
@@ -275,6 +372,13 @@ class RecurringNotifier extends Notifier<List<RecurringRule>> {
     await repo.saveAll(state.where((r) => r.id != id).toList());
     state = repo.loadAll();
   }
+
+  /// Полная замена данных — используется восстановлением из бэкапа.
+  Future<void> replaceAll(List<RecurringRule> rules) async {
+    final repo = ref.read(recurringRepositoryProvider);
+    await repo.saveAll(rules);
+    state = repo.loadAll();
+  }
 }
 
 final recurringProvider =
@@ -288,6 +392,12 @@ class BudgetsNotifier extends Notifier<Map<String, double>> {
 
   Future<void> setLimit(String categoryId, double? limit) async {
     await ref.read(budgetsRepositoryProvider).setLimit(categoryId, limit);
+    state = ref.read(budgetsRepositoryProvider).loadAll();
+  }
+
+  /// Полная замена данных — используется восстановлением из бэкапа.
+  Future<void> replaceAll(Map<String, double> budgets) async {
+    await ref.read(budgetsRepositoryProvider).replaceAll(budgets);
     state = ref.read(budgetsRepositoryProvider).loadAll();
   }
 }

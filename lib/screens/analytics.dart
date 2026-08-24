@@ -116,6 +116,8 @@ class AnalyticsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 20),
+          const _CapitalDynamicsCard(),
+          const SizedBox(height: 20),
           if (stats.byCategory.isNotEmpty) ...[
             Text('Топ категорий',
                 style: theme.textTheme.titleMedium
@@ -139,6 +141,57 @@ class AnalyticsScreen extends ConsumerWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// Динамика капитала за последние 90 дней.
+class _CapitalDynamicsCard extends ConsumerWidget {
+  const _CapitalDynamicsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final series = ref.watch(capitalSeriesProvider(90));
+    if (series.length < 2) return const SizedBox.shrink();
+
+    final minV = series.reduce((a, b) => a < b ? a : b);
+    final normalized = [for (final v in series) v - minV];
+    final trendUp = series.last >= series.first;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('Капитал, 90 дней',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const Spacer(),
+                Text(
+                  formatSigned((series.last - series.first).abs(),
+                      isExpense: !trendUp),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: trendUp ? NumoColors.mint : NumoColors.coral,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 90,
+              child: Sparkline(
+                values: normalized,
+                color: trendUp ? NumoColors.mint : NumoColors.coral,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

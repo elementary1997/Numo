@@ -40,6 +40,30 @@ class RecurringRule {
   String txIdFor(int year, int month) =>
       'rec-$id-$year-${month.toString().padLeft(2, '0')}';
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'type': type.name,
+        'amount': amount,
+        'categoryId': categoryId,
+        'note': note,
+        'dayOfMonth': dayOfMonth,
+        'startDate': startDate.toIso8601String(),
+        'appliedThrough': appliedThrough?.toIso8601String(),
+      };
+
+  factory RecurringRule.fromJson(Map<String, dynamic> json) => RecurringRule(
+        id: json['id'] as String,
+        type: TxType.values.byName(json['type'] as String),
+        amount: (json['amount'] as num).toDouble(),
+        categoryId: json['categoryId'] as String,
+        note: (json['note'] as String?) ?? '',
+        dayOfMonth: json['dayOfMonth'] as int,
+        startDate: DateTime.parse(json['startDate'] as String),
+        appliedThrough: json['appliedThrough'] == null
+            ? null
+            : DateTime.parse(json['appliedThrough'] as String),
+      );
+
   RecurringRule copyWith({
     TxType? type,
     double? amount,

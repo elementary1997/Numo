@@ -1,30 +1,49 @@
 import 'dart:convert';
 
+import '../models/account.dart';
 import '../models/category.dart';
+import '../models/recurring.dart';
 import '../models/transaction.dart';
 
-/// Формат бэкапа Numo: версионированный JSON со всеми данными.
-/// Версия позволяет читать старые бэкапы после смены схемы.
-abstract final class Backup {
-  static const version = 1;
+/// Полное содержимое бэкапа.
+class BackupData {
+  const BackupData({
+    required this.transactions,
+    required this.categories,
+    this.accounts = const [],
+    this.budgets = const {},
+    this.recurring = const [],
+  });
 
-  static String encode({
-    required List<Tx> transactions,
-    required List<TxCategory> categories,
-  }) {
+  final List<Tx> transactions;
+  final List<TxCategory> categories;
+  final List<Account> accounts;
+  final Map<String, double> budgets;
+  final List<RecurringRule> recurring;
+}
+
+/// Формат бэкапа Numo: версионированный JSON со всеми данными.
+/// v1 — операции и категории; v2 добавила счета, бюджеты и
+/// регулярные правила. Старые файлы читаются с пустыми новыми полями.
+abstract final class Backup {
+  static const version = 2;
+
+  static String encode(BackupData data) {
     return const JsonEncoder.withIndent('  ').convert({
       'app': 'numo',
       'version': version,
       'exportedAt': DateTime.now().toIso8601String(),
-      'categories': categories.map((c) => c.toJson()).toList(),
-      'transactions': transactions.map((t) => t.toJson()).toList(),
+      'categories': data.categories.map((c) => c.toJson()).toList(),
+      'transactions': data.transactions.map((t) => t.toJson()).toList(),
+      'accounts': data.accounts.map((a) => a.toJson()).toList(),
+      'budgets': data.budgets,
+      'recurring': data.recurring.map((r) => r.toJson()).toList(),
     });
   }
 
   /// Разбирает бэкап; бросает [FormatException] с человекочитаемым
   /// сообщением, если файл не похож на бэкап Numo.
-  static ({List<Tx> transactions, List<TxCategory> categories}) decode(
-      String raw) {
+  static BackupData decode(String raw) {
     final Object? data;
     try {
       data = jsonDecode(raw);
@@ -40,14 +59,23 @@ abstract final class Backup {
           'Бэкап создан более новой версией приложения (v$fileVersion)');
     }
     try {
-      final categories = (data['categories'] as List)
-          .map((e) => TxCategory.fromJson(e as Map<String, dynamic>))
-          .toList();
-      final transactions = (data['transactions'] as List)
-          .map((e) => Tx.fromJson(e as Map<String, dynamic>))
-          .toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
-      return (transactions: transactions, categories: categories);
+      return BackupData(
+        categories: (data['categories'] as List)
+            .map((e) => TxCategory.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        transactions: ((data['transactions'] as List)
+            .map((e) => Tx.fromJson(e as Map<String, dynamic>))
+            .toList())
+          ..sort((a, b) => b.date.compareTo(a.date)),
+        accounts: ((data['accounts'] as List?) ?? const [])
+            .map((e) => Account.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        budgets: ((data['budgets'] as Map<String, dynamic>?) ?? const {})
+            .map((k, v) => MapEntry(k, (v as num).toDouble())),
+        recurring: ((data['recurring'] as List?) ?? const [])
+            .map((e) => RecurringRule.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
     } catch (_) {
       throw const FormatException('Файл бэкапа повреждён');
     }

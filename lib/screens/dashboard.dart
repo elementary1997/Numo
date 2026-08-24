@@ -24,7 +24,7 @@ class DashboardScreen extends ConsumerWidget {
     final now = DateTime.now();
     final month = DateTime(now.year, now.month);
     final stats = ref.watch(monthStatsProvider(month));
-    final balance = ref.watch(balanceProvider);
+    final netWorth = ref.watch(netWorthProvider);
     final recent = ref.watch(transactionsProvider).take(5).toList();
     final categories = ref.watch(categoriesProvider);
     final theme = Theme.of(context);
@@ -124,7 +124,7 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _BalanceCard(balance: balance, stats: stats),
+          _BalanceCard(netWorth: netWorth, stats: stats),
           const SizedBox(height: 12),
           const _AccountsStrip(),
           const _SafeToSpendCard(),
@@ -324,9 +324,9 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _BalanceCard extends StatelessWidget {
-  const _BalanceCard({required this.balance, required this.stats});
+  const _BalanceCard({required this.netWorth, required this.stats});
 
-  final double balance;
+  final NetWorth netWorth;
   final MonthStats stats;
 
   @override
@@ -350,17 +350,19 @@ class _BalanceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Общий баланс',
+            netWorth.unconverted.isEmpty
+                ? 'Общий баланс'
+                : 'Общий баланс (без ${netWorth.unconverted.join(", ")})',
             style: textTheme.bodyMedium
                 ?.copyWith(color: Colors.white.withValues(alpha: 0.75)),
           ),
           const SizedBox(height: 6),
           TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: balance),
+            tween: Tween(begin: 0, end: netWorth.value),
             duration: const Duration(milliseconds: 900),
             curve: Curves.easeOutCubic,
             builder: (context, value, _) => Text(
-              formatMoney(value),
+              '${netWorth.approximate ? '≈ ' : ''}${formatMoney(value)}',
               style: textTheme.displaySmall?.copyWith(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,

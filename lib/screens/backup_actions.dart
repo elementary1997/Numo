@@ -7,8 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../data/backup.dart';
-import '../models/category.dart';
-import '../models/transaction.dart';
 import '../state/providers.dart';
 
 void _toast(BuildContext context, String message) {
@@ -19,10 +17,13 @@ void _toast(BuildContext context, String message) {
 
 /// Экспорт всех данных в JSON-файл через системный диалог сохранения.
 Future<void> exportBackup(BuildContext context, WidgetRef ref) async {
-  final json = Backup.encode(
+  final json = Backup.encode(BackupData(
     transactions: ref.read(transactionsProvider),
     categories: ref.read(categoriesProvider),
-  );
+    accounts: ref.read(accountsProvider),
+    budgets: ref.read(budgetsProvider),
+    recurring: ref.read(recurringProvider),
+  ));
   final suggested =
       'numo-backup-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.json';
 
@@ -56,7 +57,7 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   ]);
   if (file == null) return;
 
-  final ({List<Tx> transactions, List<TxCategory> categories}) parsed;
+  final BackupData parsed;
   try {
     parsed = Backup.decode(await file.readAsString());
   } on FormatException catch (e) {
@@ -89,6 +90,9 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   if (confirmed != true) return;
 
   await ref.read(categoriesProvider.notifier).replaceAll(parsed.categories);
+  await ref.read(accountsProvider.notifier).replaceAll(parsed.accounts);
+  await ref.read(budgetsProvider.notifier).replaceAll(parsed.budgets);
+  await ref.read(recurringProvider.notifier).replaceAll(parsed.recurring);
   await ref
       .read(transactionsProvider.notifier)
       .replaceAll(parsed.transactions);

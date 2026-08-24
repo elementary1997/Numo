@@ -21,6 +21,23 @@ class BudgetsRepository {
   /// categoryId → месячный лимит.
   Map<String, double> loadAll() => Map.unmodifiable(_cache);
 
+  /// Полная замена — используется восстановлением из бэкапа.
+  Future<void> replaceAll(Map<String, double> budgets) async {
+    _cache = {...budgets};
+    await _db.transaction(() async {
+      await _db.delete(_db.budgetRows).go();
+      await _db.batch((batch) {
+        batch.insertAll(_db.budgetRows, [
+          for (final entry in _cache.entries)
+            BudgetRowsCompanion(
+              categoryId: Value(entry.key),
+              monthlyLimit: Value(entry.value),
+            ),
+        ]);
+      });
+    });
+  }
+
   /// Установить лимит; `null` удаляет бюджет категории.
   Future<void> setLimit(String categoryId, double? limit) async {
     if (limit == null) {
