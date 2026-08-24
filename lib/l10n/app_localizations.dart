@@ -1520,6 +1520,12 @@ abstract class AppLocalizations {
   /// **'Понятно'**
   String get ok;
 
+  /// No description provided for @updateCheckFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось проверить обновления — проверьте доступ к сети'**
+  String get updateCheckFailed;
+
   /// No description provided for @csvHeaderDate.
   ///
   /// In ru, this message translates to:

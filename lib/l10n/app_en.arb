@@ -252,6 +252,7 @@
   "biometricsReason": "Unlock Numo",
   "whatsNewTitle": "What's new in {version}",
   "ok": "Got it",
+  "updateCheckFailed": "Could not check for updates — check your network access",
   "csvHeaderDate": "Date",
   "csvHeaderType": "Type",
   "csvHeaderAmount": "Amount",

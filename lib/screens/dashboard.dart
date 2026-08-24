@@ -294,10 +294,11 @@ class _AccountsStrip extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(a.title,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                  color:
-                                      theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            '${a.title} · ${accountKindLabel(context, a.kind)}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant),
+                          ),
                           Text(
                             formatMoneyIn(
                                 balance, Currencies.symbol(a.currency)),

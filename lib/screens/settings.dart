@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../core/l10n.dart';
 import '../models/account.dart';
 import '../models/category.dart';
+import '../data/update_service.dart';
 import '../state/providers.dart';
 import 'backup_actions.dart';
 import 'settings_sheets.dart';
@@ -178,10 +179,17 @@ class _UpdatesCardState extends ConsumerState<_UpdatesCard> {
 
   Future<void> _check() async {
     setState(() => _checking = true);
-    final info =
-        await ref.read(updateServiceProvider).check(force: true);
+    final result = await ref.read(updateServiceProvider).checkManually();
     if (!mounted) return;
     setState(() => _checking = false);
+    if (result.status == UpdateCheckStatus.failed) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+            SnackBar(content: Text(context.l10n.updateCheckFailed)));
+      return;
+    }
+    final info = result.info;
     if (info == null) {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()

@@ -805,6 +805,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ok => 'Got it';
 
   @override
+  String get updateCheckFailed =>
+      'Could not check for updates — check your network access';
+
+  @override
   String get csvHeaderDate => 'Date';
 
   @override

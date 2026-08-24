@@ -12,6 +12,17 @@ class UpdateInfo {
   final String url;
 }
 
+/// Результат ручной проверки: доступна версия / всё актуально /
+/// проверить не удалось (нет сети и т.п.).
+enum UpdateCheckStatus { available, upToDate, failed }
+
+class UpdateCheckResult {
+  const UpdateCheckResult(this.status, [this.info]);
+
+  final UpdateCheckStatus status;
+  final UpdateInfo? info;
+}
+
 /// Проверка обновлений через GitHub Releases (ADR-0010): анонимный GET
 /// `releases/latest` не чаще раза в сутки, сравнение semver с версией
 /// приложения. Любая ошибка сети приравнивается к «обновлений нет».
@@ -43,6 +54,33 @@ class UpdateService {
 
   Future<String> currentVersion() async =>
       (await PackageInfo.fromPlatform()).version;
+
+  /// Ручная проверка с различением «нет сети» и «нет обновлений».
+  Future<UpdateCheckResult> checkManually() async {
+    try {
+      final response = await _client.get(_url, headers: {
+        'Accept': 'application/vnd.github+json',
+      }).timeout(const Duration(seconds: 10));
+      if (response.statusCode != 200) {
+        return const UpdateCheckResult(UpdateCheckStatus.failed);
+      }
+      final json =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final version = (json['tag_name'] as String?)?.replaceFirst('v', '');
+      final url = json['html_url'] as String?;
+      if (version == null || url == null) {
+        return const UpdateCheckResult(UpdateCheckStatus.failed);
+      }
+      final current = await currentVersion();
+      if (isNewerVersion(version, current)) {
+        return UpdateCheckResult(
+            UpdateCheckStatus.available, UpdateInfo(version: version, url: url));
+      }
+      return const UpdateCheckResult(UpdateCheckStatus.upToDate);
+    } catch (_) {
+      return const UpdateCheckResult(UpdateCheckStatus.failed);
+    }
+  }
 
   /// null — обновлений нет (или проверка выключена/недоступна).
   /// [force] игнорирует выключатель и суточный кэш (ручная проверка).

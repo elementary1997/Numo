@@ -805,6 +805,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get ok => 'Понятно';
 
   @override
+  String get updateCheckFailed =>
+      'Не удалось проверить обновления — проверьте доступ к сети';
+
+  @override
   String get csvHeaderDate => 'Дата';
 
   @override
