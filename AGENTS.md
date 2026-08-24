@@ -29,16 +29,17 @@ YOU MUST: прогнать `make check` перед каждым коммитом
 
 Подробнее — `docs/architecture.md`. Кратко, поток данных в один конец:
 
-`TransactionsRepository` (JSON в shared_preferences) → Riverpod-провайдеры (`state/providers.dart`: список операций + производные `monthStatsProvider`, `balanceProvider`) → экраны (`screens/`) → переиспользуемые виджеты (`widgets/`).
+Репозитории (`TransactionsRepository`, `CategoriesRepository` поверх drift/SQLite, write-through кэш) → Riverpod-провайдеры (`state/providers.dart`: операции, категории + производные `monthStatsProvider`, `balanceProvider`) → экраны (`screens/`) → переиспользуемые виджеты (`widgets/`).
 
 - `lib/models/` — доменные типы (`Tx`, `TxCategory`). Сумма `Tx.amount` всегда положительная, знак определяет `TxType`; в баланс идёт `signedAmount`.
-- `lib/data/repository.dart` — ЕДИНСТВЕННАЯ точка чтения/записи хранилища.
+- `lib/data/database.dart` — схема drift (`NumoDatabase`); после её изменения запускать `dart run build_runner build --delete-conflicting-outputs` и поднимать `schemaVersion` с миграцией.
+- `lib/data/repository.dart`, `lib/data/categories_repository.dart` — ЕДИНСТВЕННЫЕ точки чтения/записи хранилища.
 - `lib/widgets/charts.dart` — все графики рисуются собственными `CustomPainter`.
 - `lib/core/` — тема (`NumoColors`, `NumoTheme`) и форматирование денег.
 
 ## Conventions
 
-- Императивно: НЕ ходить в shared_preferences напрямую из UI или провайдеров — только через `TransactionsRepository`.
+- Императивно: НЕ ходить в базу или shared_preferences напрямую из UI или провайдеров — только через репозитории (`lib/data/`).
 - НЕ добавлять чартовые библиотеки (fl_chart и т.п.) — графики пишем CustomPainter'ами в `lib/widgets/charts.dart`.
 - НЕ создавать сумму со знаком минус — расход выражается `TxType.expense`.
 - Цвета и градиенты — только из `NumoColors`; произвольные `Color(0x...)` в экранах не заводить.
@@ -59,8 +60,10 @@ YOU MUST: прогнать `make check` перед каждым коммитом
 
 ## Gotchas
 
-- **Ключ хранилища версионирован**: `numo.transactions.v1` в `repository.dart`. Меняешь схему JSON — поднимай версию и пиши миграцию, иначе у пользователя молча пропадут данные.
-- **Демо-данные**: при первом запуске репозиторий сидируется демо-операциями (`_demoData()`, флаг `numo.seeded.v1`). В тестах и при отладке хранилища это может удивить.
+- **Схема БД версионируется** `schemaVersion` в `database.dart`; изменение схемы — только вместе с drift-миграцией, иначе у пользователя молча пропадут данные. Легаси-JSON в shared_preferences (`numo.transactions.v1`, `numo.categories.v1`) переносится однократно, флаги `numo.*.migrated-to-drift.v1`.
+- **Web-ассеты drift**: `web/sqlite3.wasm` и `web/drift_worker.js` закоммичены и должны соответствовать версиям `sqlite3`/`drift` из pubspec.lock — при апгрейде drift скачать новые (см. ADR-0006).
+- **Демо-данные**: на чистой установке сидируются демо-операции (`TransactionsRepository.demoData()`). В тестах ставь флаг миграции, чтобы они не мешали.
+- **Headless-скриншоты web**: с `--virtual-time-budget` drift-воркер не успевает подняться и страница пустая — это артефакт; проверять через playwright-прогон с реальным ожиданием.
 - **`intl: any` в pubspec** — намеренно: точную версию диктует `flutter_localizations`. Не пиновать.
 - **google_fonts качает Manrope в рантайме** — без сети приложение падает на системный шрифт; это ожидаемо, не «баг».
 - **`initializeDateFormatting('ru')` обязателен до `runApp`** — иначе `DateFormat(..., 'ru')` бросает исключение.

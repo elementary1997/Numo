@@ -5,11 +5,11 @@
 ```mermaid
 flowchart TB
     subgraph storage["Хранилище"]
-        SP[("shared_preferences\nJSON, ключ numo.transactions.v1")]
+        SP[("drift / SQLite\nNumoDatabase: TransactionRows, CategoryRows")]
     end
 
     subgraph data["lib/data"]
-        REPO["TransactionsRepository\nloadAll / saveAll / сидирование демо"]
+        REPO["TransactionsRepository + CategoriesRepository\nwrite-through кэш, миграция legacy-JSON, сидирование"]
     end
 
     subgraph state["lib/state — Riverpod"]
@@ -41,7 +41,7 @@ flowchart TB
 | Слой | Код | Ответственность |
 |---|---|---|
 | Модели | `lib/models/` | `Tx` (операция: тип, положительная сумма, категория, дата, заметка), `TxCategory` (фиксированный набор в `Categories`) |
-| Данные | `lib/data/repository.dart` | Сериализация JSON ↔ `Tx`, единственная точка I/O, демо-сидирование первого запуска |
+| Данные | `lib/data/` | drift-схема (`database.dart`), репозитории с write-through кэшем — единственные точки I/O, миграция legacy-JSON, демо-сидирование |
 | Состояние | `lib/state/providers.dart` | `TransactionsNotifier` (add/remove с записью в репозиторий), производная аналитика месяца |
 | UI | `lib/screens/`, `lib/widgets/` | Экраны без бизнес-логики; графики — собственные `CustomPainter` |
 | Ядро | `lib/core/` | Тема (`NumoColors`, `NumoTheme`), форматирование денег |
@@ -49,11 +49,10 @@ flowchart TB
 ## Ключевые инварианты
 
 1. `Tx.amount > 0` всегда; знак несёт `TxType` (`signedAmount` — единственное место, где появляется минус).
-2. Схема хранения версионируется ключом (`...v1`); изменение формата = новый ключ + миграция.
+2. Схема БД версионируется `schemaVersion`; изменение схемы = drift-миграция.
 3. Провайдеры пересчитывают статистику из полного списка операций — кэшей, требующих инвалидации, нет.
 
-## Осознанные упрощения MVP (см. ADR)
+## Осознанные упрощения (см. ADR)
 
-- Хранилище — JSON в shared_preferences, а не SQLite: объёмы данных малы, интерфейс репозитория позволяет мигрировать на drift без изменения UI (ADR-0003).
-- Категории фиксированы в коде; пользовательские категории потребуют вынести их в хранилище.
-- Один счёт, одна валюта (₽).
+- Репозитории держат write-through кэш и пишут весь набор транзакцией (ADR-0006); пошаговые SQL-операции и индексы появятся вместе с ростом данных.
+- Один счёт, одна валюта (₽) — до v0.5 роадмапа.

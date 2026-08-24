@@ -1,5 +1,7 @@
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:numo/data/database.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:numo/state/providers.dart';
@@ -16,20 +18,25 @@ Tx tx(String id, double amount, {int day = 1}) => Tx(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  late NumoDatabase db;
   late ProviderContainer container;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({
-      // Хранилище уже «сидировано», чтобы демо-данные не мешали тестам.
-      'numo.seeded.v1': true,
+      // Миграция уже «прошла», чтобы демо-данные не мешали тестам.
+      'numo.transactions.migrated-to-drift.v1': true,
     });
-    final repo = await TransactionsRepository.open();
+    db = NumoDatabase(NativeDatabase.memory());
+    final repo = await TransactionsRepository.open(db);
     container = ProviderContainer(
       overrides: [repositoryProvider.overrideWithValue(repo)],
     );
   });
 
-  tearDown(() => container.dispose());
+  tearDown(() async {
+    container.dispose();
+    await db.close();
+  });
 
   test('add вставляет операцию и сохраняет сортировку по дате', () async {
     final notifier = container.read(transactionsProvider.notifier);
@@ -59,7 +66,7 @@ void main() {
     await notifier.add(tx('a', 100));
     await notifier.update(tx('a', 555));
 
-    final reloaded = await TransactionsRepository.open();
+    final reloaded = await TransactionsRepository.open(db);
     expect(reloaded.loadAll().single.amount, 555);
   });
 

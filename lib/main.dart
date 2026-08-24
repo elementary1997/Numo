@@ -5,6 +5,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme.dart';
 import 'data/categories_repository.dart';
+import 'data/database.dart';
 import 'data/repository.dart';
 import 'state/providers.dart';
 import 'screens/shell.dart';
@@ -12,8 +13,9 @@ import 'screens/shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ru');
-  final repository = await TransactionsRepository.open();
-  final categoriesRepository = await CategoriesRepository.open();
+  final database = NumoDatabase();
+  final repository = await TransactionsRepository.open(database);
+  final categoriesRepository = await CategoriesRepository.open(database);
   runApp(
     ProviderScope(
       overrides: [
