@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/money.dart';
+import '../models/category.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 import '../widgets/transaction_tile.dart';
@@ -11,19 +12,36 @@ import 'add_transaction.dart';
 enum _Filter { all, expense, income }
 
 final _filterProvider = StateProvider<_Filter>((ref) => _Filter.all);
+final _searchProvider = StateProvider<String>((ref) => '');
+final _rangeProvider = StateProvider<DateTimeRange?>((ref) => null);
 
 class TransactionsScreen extends ConsumerWidget {
   const TransactionsScreen({super.key});
 
+  bool _matches(Tx tx, String query) {
+    if (query.isEmpty) return true;
+    final q = query.toLowerCase();
+    return tx.note.toLowerCase().contains(q) ||
+        Categories.byId(tx.categoryId).title.toLowerCase().contains(q);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filter = ref.watch(_filterProvider);
+    final query = ref.watch(_searchProvider);
+    final range = ref.watch(_rangeProvider);
     final all = ref.watch(transactionsProvider);
-    final txs = switch (filter) {
-      _Filter.all => all,
-      _Filter.expense => all.where((t) => t.isExpense).toList(),
-      _Filter.income => all.where((t) => !t.isExpense).toList(),
-    };
+    final txs = all.where((t) {
+      final byType = switch (filter) {
+        _Filter.all => true,
+        _Filter.expense => t.isExpense,
+        _Filter.income => !t.isExpense,
+      };
+      final byRange = range == null ||
+          (!t.date.isBefore(range.start) &&
+              t.date.isBefore(range.end.add(const Duration(days: 1))));
+      return byType && byRange && _matches(t, query);
+    }).toList();
     final theme = Theme.of(context);
 
     // Группировка по дням: список пар (дата, операции дня).
@@ -49,16 +67,44 @@ class TransactionsScreen extends ConsumerWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SegmentedButton<_Filter>(
-              segments: const [
-                ButtonSegment(value: _Filter.all, label: Text('Все')),
-                ButtonSegment(value: _Filter.expense, label: Text('Расходы')),
-                ButtonSegment(value: _Filter.income, label: Text('Доходы')),
+            child: TextField(
+              onChanged: (v) => ref.read(_searchProvider.notifier).state = v,
+              decoration: InputDecoration(
+                hintText: 'Поиск по заметкам и категориям',
+                prefixIcon: const Icon(Icons.search_rounded),
+                filled: true,
+                fillColor: theme.colorScheme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+                isDense: true,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: SegmentedButton<_Filter>(
+                    segments: const [
+                      ButtonSegment(value: _Filter.all, label: Text('Все')),
+                      ButtonSegment(
+                          value: _Filter.expense, label: Text('Расходы')),
+                      ButtonSegment(
+                          value: _Filter.income, label: Text('Доходы')),
+                    ],
+                    selected: {filter},
+                    onSelectionChanged: (s) =>
+                        ref.read(_filterProvider.notifier).state = s.first,
+                    showSelectedIcon: false,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                _RangeChip(range: range),
               ],
-              selected: {filter},
-              onSelectionChanged: (s) =>
-                  ref.read(_filterProvider.notifier).state = s.first,
-              showSelectedIcon: false,
             ),
           ),
           const SizedBox(height: 8),
@@ -66,7 +112,9 @@ class TransactionsScreen extends ConsumerWidget {
             child: txs.isEmpty
                 ? Center(
                     child: Text(
-                      'Операций нет',
+                      query.isNotEmpty || range != null
+                          ? 'Ничего не найдено'
+                          : 'Операций нет',
                       style: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant),
                     ),
@@ -82,6 +130,48 @@ class TransactionsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Чип фильтра по периоду: открывает выбор диапазона дат,
+/// повторный тап по крестику сбрасывает фильтр.
+class _RangeChip extends ConsumerWidget {
+  const _RangeChip({required this.range});
+
+  final DateTimeRange? range;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = range != null;
+    final label = active
+        ? '${DateFormat('d MMM', 'ru').format(range!.start)} — '
+            '${DateFormat('d MMM', 'ru').format(range!.end)}'
+        : 'Период';
+
+    return InputChip(
+      avatar: active
+          ? null
+          : const Icon(Icons.calendar_month_rounded, size: 17),
+      label: Text(label,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+      selected: active,
+      showCheckmark: false,
+      onPressed: () async {
+        final now = DateTime.now();
+        final picked = await showDateRangePicker(
+          context: context,
+          firstDate: DateTime(2020),
+          lastDate: now,
+          initialDateRange: range,
+        );
+        if (picked != null) {
+          ref.read(_rangeProvider.notifier).state = picked;
+        }
+      },
+      onDeleted:
+          active ? () => ref.read(_rangeProvider.notifier).state = null : null,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     );
   }
 }
