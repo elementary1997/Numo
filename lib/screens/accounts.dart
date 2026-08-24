@@ -8,6 +8,8 @@ import '../core/theme.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
+import '../core/brands.dart';
+import '../widgets/account_avatar.dart';
 import '../widgets/breakdown_card.dart';
 import '../state/providers.dart';
 import '../core/l10n.dart';
@@ -127,15 +129,7 @@ class _AccountTile extends ConsumerWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onTap: () => showAccountEditor(context, initial: account),
-      leading: Container(
-        width: 46,
-        height: 46,
-        decoration: BoxDecoration(
-          color: account.color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Icon(account.icon, color: account.color, size: 23),
-      ),
+      leading: AccountAvatar(account: account),
       title: Text(account.title,
           style: theme.textTheme.bodyLarge
               ?.copyWith(fontWeight: FontWeight.w700)),
@@ -514,6 +508,35 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                       color: _iconKey == key
                           ? _color
                           : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                // Брендовые бейджи банков и сервисов: выбор бренда
+                // заодно красит счёт в фирменный цвет.
+                for (final brand in brands)
+                  _pickTile(
+                    theme: theme,
+                    selected: _iconKey == 'brand:${brand.key}',
+                    color: brand.background,
+                    onTap: () => setState(() {
+                      _iconKey = 'brand:${brand.key}';
+                      _color = brand.background;
+                    }),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: brand.background,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Text(
+                        brand.label,
+                        style: TextStyle(
+                          color: brand.foreground,
+                          fontWeight: FontWeight.w800,
+                          fontSize: brand.label.length > 1 ? 9 : 14,
+                        ),
+                      ),
                     ),
                   ),
               ],

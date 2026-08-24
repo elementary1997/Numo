@@ -155,7 +155,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuImportCsv.
   ///
   /// In ru, this message translates to:
-  /// **'Импорт CSV'**
+  /// **'Импорт выписок'**
   String get menuImportCsv;
 
   /// No description provided for @menuExportCsv.
@@ -1319,7 +1319,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiSectionTitle.
   ///
   /// In ru, this message translates to:
-  /// **'Разбор от Claude'**
+  /// **'AI-разбор'**
   String get aiSectionTitle;
 
   /// No description provided for @aiExplainer.
@@ -1525,6 +1525,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Не удалось проверить обновления — проверьте доступ к сети'**
   String get updateCheckFailed;
+
+  /// No description provided for @goalAccountLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Счёт цели'**
+  String get goalAccountLabel;
+
+  /// No description provided for @topUpFromAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Списать со счёта'**
+  String get topUpFromAccount;
 
   /// No description provided for @csvHeaderDate.
   ///

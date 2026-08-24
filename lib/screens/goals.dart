@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../core/l10n.dart';
 import '../core/money.dart';
 import '../core/theme.dart';
+import '../models/account.dart';
 import '../models/category.dart';
 import '../models/goal.dart';
 import '../state/providers.dart';
@@ -178,36 +179,81 @@ class _GoalCard extends ConsumerWidget {
 
   Future<void> _showTopUpDialog(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController();
+    final accounts = ref.read(activeAccountsProvider);
+    final goalAccount =
+        goal.accountId == null ? null : accounts.byId(goal.accountId!);
+    // Источник по умолчанию — первый счёт, отличный от счёта цели.
+    String? sourceId = accounts
+        .where((a) => a.id != goal.accountId)
+        .map((a) => a.id)
+        .firstOrNull;
+
     final amount = await showDialog<double>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(goal.title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(goal.title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: controller,
+                autofocus: true,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                ],
+                decoration:
+                    InputDecoration(labelText: context.l10n.topUpAmount),
+              ),
+              // Счёт-источник спрашиваем, когда у цели есть свой счёт:
+              // пополнение станет переводом источник → счёт цели.
+              if (goalAccount != null && accounts.length > 1) ...[
+                const SizedBox(height: 12),
+                DropdownMenu<String?>(
+                  initialSelection: sourceId,
+                  label: Text(context.l10n.topUpFromAccount),
+                  expandedInsets: EdgeInsets.zero,
+                  onSelected: (v) =>
+                      setDialogState(() => sourceId = v),
+                  dropdownMenuEntries: [
+                    DropdownMenuEntry(
+                        value: null, label: context.l10n.noneOption),
+                    for (final a in accounts)
+                      if (a.id != goal.accountId)
+                        DropdownMenuEntry(value: a.id, label: a.title),
+                  ],
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(
+                  double.tryParse(controller.text.replaceAll(',', '.'))),
+              child: Text(context.l10n.topUp),
+            ),
           ],
-          decoration:
-              InputDecoration(labelText: context.l10n.topUpAmount),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(
-                double.tryParse(controller.text.replaceAll(',', '.'))),
-            child: Text(context.l10n.topUp),
-          ),
-        ],
       ),
     );
     controller.dispose();
-    if (amount != null && amount > 0) {
-      await ref.read(goalsProvider.notifier).topUp(goal.id, amount);
+    if (amount == null || amount <= 0) return;
+
+    await ref.read(goalsProvider.notifier).topUp(goal.id, amount);
+    // Деньги реально переезжают между счетами.
+    if (goalAccount != null && sourceId != null) {
+      await ref.read(transactionsProvider.notifier).createTransfer(
+            from: accounts.byId(sourceId!),
+            to: goalAccount,
+            amountFrom: amount,
+            amountTo: amount,
+          );
     }
   }
 }
@@ -242,6 +288,7 @@ class _GoalEditorState extends ConsumerState<_GoalEditor> {
   late String _iconKey;
   late Color _color;
   DateTime? _deadline;
+  String? _accountId;
 
   bool get _isEditing => widget.initial != null;
 
@@ -259,6 +306,7 @@ class _GoalEditorState extends ConsumerState<_GoalEditor> {
     _iconKey = g?.iconKey ?? 'flag';
     _color = g?.color ?? NumoColors.mint;
     _deadline = g?.deadline;
+    _accountId = g?.accountId;
   }
 
   @override
@@ -281,6 +329,7 @@ class _GoalEditorState extends ConsumerState<_GoalEditor> {
           targetAmount: target,
           savedAmount: widget.initial?.savedAmount ?? 0,
           deadline: _deadline,
+          accountId: _accountId,
         ));
     if (mounted) Navigator.of(context).pop();
   }
@@ -401,6 +450,23 @@ class _GoalEditorState extends ConsumerState<_GoalEditor> {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Builder(builder: (context) {
+              final accounts = ref.watch(activeAccountsProvider);
+              if (accounts.isEmpty) return const SizedBox.shrink();
+              return DropdownMenu<String?>(
+                initialSelection: _accountId,
+                label: Text(context.l10n.goalAccountLabel),
+                expandedInsets: EdgeInsets.zero,
+                onSelected: (v) => setState(() => _accountId = v),
+                dropdownMenuEntries: [
+                  DropdownMenuEntry(
+                      value: null, label: context.l10n.noneOption),
+                  for (final a in accounts)
+                    DropdownMenuEntry(value: a.id, label: a.title),
+                ],
+              );
+            }),
             const SizedBox(height: 18),
             Text(context.l10n.iconLabel,
                 style: theme.textTheme.labelLarge

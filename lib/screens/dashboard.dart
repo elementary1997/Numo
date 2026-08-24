@@ -7,6 +7,7 @@ import '../core/theme.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../widgets/account_avatar.dart';
 import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
 import 'accounts.dart';
@@ -280,15 +281,7 @@ class _AccountsStrip extends ConsumerWidget {
                       horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: a.color.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(a.icon, color: a.color, size: 19),
-                      ),
+                      AccountAvatar(account: a, size: 38),
                       const SizedBox(width: 10),
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,

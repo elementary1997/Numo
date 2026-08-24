@@ -2544,6 +2544,17 @@ class $GoalRowsTable extends GoalRows with TableInfo<$GoalRowsTable, GoalRow> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2553,6 +2564,7 @@ class $GoalRowsTable extends GoalRows with TableInfo<$GoalRowsTable, GoalRow> {
     targetAmount,
     savedAmount,
     deadline,
+    accountId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2621,6 +2633,12 @@ class $GoalRowsTable extends GoalRows with TableInfo<$GoalRowsTable, GoalRow> {
         deadline.isAcceptableOrUnknown(data['deadline']!, _deadlineMeta),
       );
     }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
     return context;
   }
 
@@ -2658,6 +2676,10 @@ class $GoalRowsTable extends GoalRows with TableInfo<$GoalRowsTable, GoalRow> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}deadline'],
       ),
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      ),
     );
   }
 
@@ -2675,6 +2697,10 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
   final double targetAmount;
   final double savedAmount;
   final DateTime? deadline;
+
+  /// Счёт, на котором лежат деньги цели; пополнения делают перевод
+  /// на него с выбранного счёта-источника.
+  final String? accountId;
   const GoalRow({
     required this.id,
     required this.title,
@@ -2683,6 +2709,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
     required this.targetAmount,
     required this.savedAmount,
     this.deadline,
+    this.accountId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2695,6 +2722,9 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
     map['saved_amount'] = Variable<double>(savedAmount);
     if (!nullToAbsent || deadline != null) {
       map['deadline'] = Variable<DateTime>(deadline);
+    }
+    if (!nullToAbsent || accountId != null) {
+      map['account_id'] = Variable<String>(accountId);
     }
     return map;
   }
@@ -2710,6 +2740,9 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
       deadline: deadline == null && nullToAbsent
           ? const Value.absent()
           : Value(deadline),
+      accountId: accountId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(accountId),
     );
   }
 
@@ -2726,6 +2759,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
       targetAmount: serializer.fromJson<double>(json['targetAmount']),
       savedAmount: serializer.fromJson<double>(json['savedAmount']),
       deadline: serializer.fromJson<DateTime?>(json['deadline']),
+      accountId: serializer.fromJson<String?>(json['accountId']),
     );
   }
   @override
@@ -2739,6 +2773,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
       'targetAmount': serializer.toJson<double>(targetAmount),
       'savedAmount': serializer.toJson<double>(savedAmount),
       'deadline': serializer.toJson<DateTime?>(deadline),
+      'accountId': serializer.toJson<String?>(accountId),
     };
   }
 
@@ -2750,6 +2785,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
     double? targetAmount,
     double? savedAmount,
     Value<DateTime?> deadline = const Value.absent(),
+    Value<String?> accountId = const Value.absent(),
   }) => GoalRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -2758,6 +2794,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
     targetAmount: targetAmount ?? this.targetAmount,
     savedAmount: savedAmount ?? this.savedAmount,
     deadline: deadline.present ? deadline.value : this.deadline,
+    accountId: accountId.present ? accountId.value : this.accountId,
   );
   GoalRow copyWithCompanion(GoalRowsCompanion data) {
     return GoalRow(
@@ -2772,6 +2809,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
           ? data.savedAmount.value
           : this.savedAmount,
       deadline: data.deadline.present ? data.deadline.value : this.deadline,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
     );
   }
 
@@ -2784,7 +2822,8 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
           ..write('color: $color, ')
           ..write('targetAmount: $targetAmount, ')
           ..write('savedAmount: $savedAmount, ')
-          ..write('deadline: $deadline')
+          ..write('deadline: $deadline, ')
+          ..write('accountId: $accountId')
           ..write(')'))
         .toString();
   }
@@ -2798,6 +2837,7 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
     targetAmount,
     savedAmount,
     deadline,
+    accountId,
   );
   @override
   bool operator ==(Object other) =>
@@ -2809,7 +2849,8 @@ class GoalRow extends DataClass implements Insertable<GoalRow> {
           other.color == this.color &&
           other.targetAmount == this.targetAmount &&
           other.savedAmount == this.savedAmount &&
-          other.deadline == this.deadline);
+          other.deadline == this.deadline &&
+          other.accountId == this.accountId);
 }
 
 class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
@@ -2820,6 +2861,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
   final Value<double> targetAmount;
   final Value<double> savedAmount;
   final Value<DateTime?> deadline;
+  final Value<String?> accountId;
   final Value<int> rowid;
   const GoalRowsCompanion({
     this.id = const Value.absent(),
@@ -2829,6 +2871,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
     this.targetAmount = const Value.absent(),
     this.savedAmount = const Value.absent(),
     this.deadline = const Value.absent(),
+    this.accountId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   GoalRowsCompanion.insert({
@@ -2839,6 +2882,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
     required double targetAmount,
     this.savedAmount = const Value.absent(),
     this.deadline = const Value.absent(),
+    this.accountId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -2853,6 +2897,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
     Expression<double>? targetAmount,
     Expression<double>? savedAmount,
     Expression<DateTime>? deadline,
+    Expression<String>? accountId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2863,6 +2908,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
       if (targetAmount != null) 'target_amount': targetAmount,
       if (savedAmount != null) 'saved_amount': savedAmount,
       if (deadline != null) 'deadline': deadline,
+      if (accountId != null) 'account_id': accountId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2875,6 +2921,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
     Value<double>? targetAmount,
     Value<double>? savedAmount,
     Value<DateTime?>? deadline,
+    Value<String?>? accountId,
     Value<int>? rowid,
   }) {
     return GoalRowsCompanion(
@@ -2885,6 +2932,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
       targetAmount: targetAmount ?? this.targetAmount,
       savedAmount: savedAmount ?? this.savedAmount,
       deadline: deadline ?? this.deadline,
+      accountId: accountId ?? this.accountId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2913,6 +2961,9 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
     if (deadline.present) {
       map['deadline'] = Variable<DateTime>(deadline.value);
     }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2929,6 +2980,7 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
           ..write('targetAmount: $targetAmount, ')
           ..write('savedAmount: $savedAmount, ')
           ..write('deadline: $deadline, ')
+          ..write('accountId: $accountId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4310,6 +4362,7 @@ typedef $$GoalRowsTableCreateCompanionBuilder =
       required double targetAmount,
       Value<double> savedAmount,
       Value<DateTime?> deadline,
+      Value<String?> accountId,
       Value<int> rowid,
     });
 typedef $$GoalRowsTableUpdateCompanionBuilder =
@@ -4321,6 +4374,7 @@ typedef $$GoalRowsTableUpdateCompanionBuilder =
       Value<double> targetAmount,
       Value<double> savedAmount,
       Value<DateTime?> deadline,
+      Value<String?> accountId,
       Value<int> rowid,
     });
 
@@ -4365,6 +4419,11 @@ class $$GoalRowsTableFilterComposer
 
   ColumnFilters<DateTime> get deadline => $composableBuilder(
     column: $table.deadline,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4412,6 +4471,11 @@ class $$GoalRowsTableOrderingComposer
     column: $table.deadline,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GoalRowsTableAnnotationComposer
@@ -4447,6 +4511,9 @@ class $$GoalRowsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get deadline =>
       $composableBuilder(column: $table.deadline, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
 }
 
 class $$GoalRowsTableTableManager
@@ -4484,6 +4551,7 @@ class $$GoalRowsTableTableManager
                 Value<double> targetAmount = const Value.absent(),
                 Value<double> savedAmount = const Value.absent(),
                 Value<DateTime?> deadline = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GoalRowsCompanion(
                 id: id,
@@ -4493,6 +4561,7 @@ class $$GoalRowsTableTableManager
                 targetAmount: targetAmount,
                 savedAmount: savedAmount,
                 deadline: deadline,
+                accountId: accountId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4504,6 +4573,7 @@ class $$GoalRowsTableTableManager
                 required double targetAmount,
                 Value<double> savedAmount = const Value.absent(),
                 Value<DateTime?> deadline = const Value.absent(),
+                Value<String?> accountId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GoalRowsCompanion.insert(
                 id: id,
@@ -4513,6 +4583,7 @@ class $$GoalRowsTableTableManager
                 targetAmount: targetAmount,
                 savedAmount: savedAmount,
                 deadline: deadline,
+                accountId: accountId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

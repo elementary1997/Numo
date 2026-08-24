@@ -14,6 +14,7 @@ class Goal {
     required this.targetAmount,
     this.savedAmount = 0,
     this.deadline,
+    this.accountId,
   });
 
   final String id;
@@ -23,6 +24,9 @@ class Goal {
   final double targetAmount;
   final double savedAmount;
   final DateTime? deadline;
+
+  /// Счёт, на котором копятся деньги цели (опционально).
+  final String? accountId;
 
   IconData get icon => CategoryIcons.resolve(iconKey);
   double get progress =>
@@ -48,6 +52,7 @@ class Goal {
     double? targetAmount,
     double? savedAmount,
     DateTime? deadline,
+    String? accountId,
     bool clearDeadline = false,
   }) =>
       Goal(
@@ -58,6 +63,7 @@ class Goal {
         targetAmount: targetAmount ?? this.targetAmount,
         savedAmount: savedAmount ?? this.savedAmount,
         deadline: clearDeadline ? null : (deadline ?? this.deadline),
+        accountId: accountId ?? this.accountId,
       );
 
   Map<String, dynamic> toJson() => {
@@ -68,6 +74,7 @@ class Goal {
         'targetAmount': targetAmount,
         'savedAmount': savedAmount,
         'deadline': deadline?.toIso8601String(),
+        'accountId': accountId,
       };
 
   factory Goal.fromJson(Map<String, dynamic> json) => Goal(
@@ -80,5 +87,6 @@ class Goal {
         deadline: json['deadline'] == null
             ? null
             : DateTime.parse(json['deadline'] as String),
+        accountId: json['accountId'] as String?,
       );
 }

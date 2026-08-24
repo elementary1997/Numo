@@ -89,6 +89,10 @@ class GoalRows extends Table {
   RealColumn get savedAmount => real().withDefault(const Constant(0))();
   DateTimeColumn get deadline => dateTime().nullable()();
 
+  /// Счёт, на котором лежат деньги цели; пополнения делают перевод
+  /// на него с выбранного счёта-источника.
+  TextColumn get accountId => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -118,7 +122,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -144,6 +148,9 @@ class NumoDatabase extends _$NumoDatabase {
           }
           if (from < 7) {
             await m.createTable(goalRows);
+          }
+          if (from < 8) {
+            await m.addColumn(goalRows, goalRows.accountId);
           }
         },
       );

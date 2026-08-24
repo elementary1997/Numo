@@ -36,7 +36,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuRules => 'Автокатегории';
 
   @override
-  String get menuImportCsv => 'Импорт CSV';
+  String get menuImportCsv => 'Импорт выписок';
 
   @override
   String get menuExportCsv => 'Экспорт отчёта CSV';
@@ -679,7 +679,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get insightsTitle => 'Инсайты';
 
   @override
-  String get aiSectionTitle => 'Разбор от Claude';
+  String get aiSectionTitle => 'AI-разбор';
 
   @override
   String get aiExplainer =>
@@ -807,6 +807,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get updateCheckFailed =>
       'Не удалось проверить обновления — проверьте доступ к сети';
+
+  @override
+  String get goalAccountLabel => 'Счёт цели';
+
+  @override
+  String get topUpFromAccount => 'Списать со счёта';
 
   @override
   String get csvHeaderDate => 'Дата';

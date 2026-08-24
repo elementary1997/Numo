@@ -147,6 +147,9 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
     final theme = Theme.of(context);
     final canSave = _amount > 0 && _category != null;
     final isToday = DateUtils.isSameDay(_date, DateTime.now());
+    // Валюта операции = валюта выбранного счёта.
+    final currencySymbol = Currencies.symbol(
+        ref.watch(accountsProvider).byId(_accountId).currency);
 
     return Padding(
       padding:
@@ -193,7 +196,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                 ),
                 children: [
                   TextSpan(
-                    text: ' ₽',
+                    text: ' $currencySymbol',
                     style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w600,

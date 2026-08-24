@@ -24,6 +24,7 @@ class GoalsRepository {
           targetAmount: row.targetAmount,
           savedAmount: row.savedAmount,
           deadline: row.deadline,
+          accountId: row.accountId,
         ),
     ]);
   }
@@ -45,6 +46,7 @@ class GoalsRepository {
               targetAmount: Value(g.targetAmount),
               savedAmount: Value(g.savedAmount),
               deadline: Value(g.deadline),
+              accountId: Value(g.accountId),
             ),
         ]);
       });
