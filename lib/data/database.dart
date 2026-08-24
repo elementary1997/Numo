@@ -74,12 +74,23 @@ class RecurringRows extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Правила автокатегоризации: подстрока в описании → категория.
+class CategoryRuleRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get pattern => text()();
+  TextColumn get categoryId => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   TransactionRows,
   CategoryRows,
   BudgetRows,
   RecurringRows,
   AccountRows,
+  CategoryRuleRows,
 ])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
@@ -87,7 +98,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -101,6 +112,9 @@ class NumoDatabase extends _$NumoDatabase {
           if (from < 4) {
             await m.createTable(accountRows);
             await m.addColumn(transactionRows, transactionRows.accountId);
+          }
+          if (from < 5) {
+            await m.createTable(categoryRuleRows);
           }
         },
       );

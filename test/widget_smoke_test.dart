@@ -8,6 +8,7 @@ import 'package:numo/data/accounts_repository.dart';
 import 'package:numo/data/budgets_repository.dart';
 import 'package:numo/data/categories_repository.dart';
 import 'package:numo/data/recurring_repository.dart';
+import 'package:numo/data/rules_repository.dart';
 import 'package:numo/data/database.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/main.dart';
@@ -33,6 +34,7 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   final budgetsRepo = await BudgetsRepository.open(db);
   final recurringRepo = await RecurringRepository.open(db);
   final accountsRepo = await AccountsRepository.open(db);
+  final rulesRepo = await RulesRepository.open(db);
   return ProviderScope(
     overrides: [
       repositoryProvider.overrideWithValue(repo),
@@ -40,6 +42,7 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
       budgetsRepositoryProvider.overrideWithValue(budgetsRepo),
       recurringRepositoryProvider.overrideWithValue(recurringRepo),
       accountsRepositoryProvider.overrideWithValue(accountsRepo),
+      rulesRepositoryProvider.overrideWithValue(rulesRepo),
     ],
     child: const NumoApp(),
   );

@@ -2011,6 +2011,269 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
   }
 }
 
+class $CategoryRuleRowsTable extends CategoryRuleRows
+    with TableInfo<$CategoryRuleRowsTable, CategoryRuleRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CategoryRuleRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _patternMeta = const VerificationMeta(
+    'pattern',
+  );
+  @override
+  late final GeneratedColumn<String> pattern = GeneratedColumn<String>(
+    'pattern',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, pattern, categoryId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'category_rule_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CategoryRuleRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('pattern')) {
+      context.handle(
+        _patternMeta,
+        pattern.isAcceptableOrUnknown(data['pattern']!, _patternMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_patternMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CategoryRuleRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CategoryRuleRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      pattern: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pattern'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+    );
+  }
+
+  @override
+  $CategoryRuleRowsTable createAlias(String alias) {
+    return $CategoryRuleRowsTable(attachedDatabase, alias);
+  }
+}
+
+class CategoryRuleRow extends DataClass implements Insertable<CategoryRuleRow> {
+  final String id;
+  final String pattern;
+  final String categoryId;
+  const CategoryRuleRow({
+    required this.id,
+    required this.pattern,
+    required this.categoryId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['pattern'] = Variable<String>(pattern);
+    map['category_id'] = Variable<String>(categoryId);
+    return map;
+  }
+
+  CategoryRuleRowsCompanion toCompanion(bool nullToAbsent) {
+    return CategoryRuleRowsCompanion(
+      id: Value(id),
+      pattern: Value(pattern),
+      categoryId: Value(categoryId),
+    );
+  }
+
+  factory CategoryRuleRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CategoryRuleRow(
+      id: serializer.fromJson<String>(json['id']),
+      pattern: serializer.fromJson<String>(json['pattern']),
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'pattern': serializer.toJson<String>(pattern),
+      'categoryId': serializer.toJson<String>(categoryId),
+    };
+  }
+
+  CategoryRuleRow copyWith({String? id, String? pattern, String? categoryId}) =>
+      CategoryRuleRow(
+        id: id ?? this.id,
+        pattern: pattern ?? this.pattern,
+        categoryId: categoryId ?? this.categoryId,
+      );
+  CategoryRuleRow copyWithCompanion(CategoryRuleRowsCompanion data) {
+    return CategoryRuleRow(
+      id: data.id.present ? data.id.value : this.id,
+      pattern: data.pattern.present ? data.pattern.value : this.pattern,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryRuleRow(')
+          ..write('id: $id, ')
+          ..write('pattern: $pattern, ')
+          ..write('categoryId: $categoryId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, pattern, categoryId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CategoryRuleRow &&
+          other.id == this.id &&
+          other.pattern == this.pattern &&
+          other.categoryId == this.categoryId);
+}
+
+class CategoryRuleRowsCompanion extends UpdateCompanion<CategoryRuleRow> {
+  final Value<String> id;
+  final Value<String> pattern;
+  final Value<String> categoryId;
+  final Value<int> rowid;
+  const CategoryRuleRowsCompanion({
+    this.id = const Value.absent(),
+    this.pattern = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CategoryRuleRowsCompanion.insert({
+    required String id,
+    required String pattern,
+    required String categoryId,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       pattern = Value(pattern),
+       categoryId = Value(categoryId);
+  static Insertable<CategoryRuleRow> custom({
+    Expression<String>? id,
+    Expression<String>? pattern,
+    Expression<String>? categoryId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (pattern != null) 'pattern': pattern,
+      if (categoryId != null) 'category_id': categoryId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CategoryRuleRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? pattern,
+    Value<String>? categoryId,
+    Value<int>? rowid,
+  }) {
+    return CategoryRuleRowsCompanion(
+      id: id ?? this.id,
+      pattern: pattern ?? this.pattern,
+      categoryId: categoryId ?? this.categoryId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (pattern.present) {
+      map['pattern'] = Variable<String>(pattern.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CategoryRuleRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('pattern: $pattern, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -2021,6 +2284,9 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
   late final $BudgetRowsTable budgetRows = $BudgetRowsTable(this);
   late final $RecurringRowsTable recurringRows = $RecurringRowsTable(this);
   late final $AccountRowsTable accountRows = $AccountRowsTable(this);
+  late final $CategoryRuleRowsTable categoryRuleRows = $CategoryRuleRowsTable(
+    this,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2031,6 +2297,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     budgetRows,
     recurringRows,
     accountRows,
+    categoryRuleRows,
   ];
 }
 
@@ -3125,6 +3392,176 @@ typedef $$AccountRowsTableProcessedTableManager =
       AccountRow,
       PrefetchHooks Function()
     >;
+typedef $$CategoryRuleRowsTableCreateCompanionBuilder =
+    CategoryRuleRowsCompanion Function({
+      required String id,
+      required String pattern,
+      required String categoryId,
+      Value<int> rowid,
+    });
+typedef $$CategoryRuleRowsTableUpdateCompanionBuilder =
+    CategoryRuleRowsCompanion Function({
+      Value<String> id,
+      Value<String> pattern,
+      Value<String> categoryId,
+      Value<int> rowid,
+    });
+
+class $$CategoryRuleRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $CategoryRuleRowsTable> {
+  $$CategoryRuleRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pattern => $composableBuilder(
+    column: $table.pattern,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CategoryRuleRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $CategoryRuleRowsTable> {
+  $$CategoryRuleRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pattern => $composableBuilder(
+    column: $table.pattern,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CategoryRuleRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $CategoryRuleRowsTable> {
+  $$CategoryRuleRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get pattern =>
+      $composableBuilder(column: $table.pattern, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+}
+
+class $$CategoryRuleRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $CategoryRuleRowsTable,
+          CategoryRuleRow,
+          $$CategoryRuleRowsTableFilterComposer,
+          $$CategoryRuleRowsTableOrderingComposer,
+          $$CategoryRuleRowsTableAnnotationComposer,
+          $$CategoryRuleRowsTableCreateCompanionBuilder,
+          $$CategoryRuleRowsTableUpdateCompanionBuilder,
+          (
+            CategoryRuleRow,
+            BaseReferences<
+              _$NumoDatabase,
+              $CategoryRuleRowsTable,
+              CategoryRuleRow
+            >,
+          ),
+          CategoryRuleRow,
+          PrefetchHooks Function()
+        > {
+  $$CategoryRuleRowsTableTableManager(
+    _$NumoDatabase db,
+    $CategoryRuleRowsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CategoryRuleRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CategoryRuleRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CategoryRuleRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> pattern = const Value.absent(),
+                Value<String> categoryId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryRuleRowsCompanion(
+                id: id,
+                pattern: pattern,
+                categoryId: categoryId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String pattern,
+                required String categoryId,
+                Value<int> rowid = const Value.absent(),
+              }) => CategoryRuleRowsCompanion.insert(
+                id: id,
+                pattern: pattern,
+                categoryId: categoryId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CategoryRuleRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $CategoryRuleRowsTable,
+      CategoryRuleRow,
+      $$CategoryRuleRowsTableFilterComposer,
+      $$CategoryRuleRowsTableOrderingComposer,
+      $$CategoryRuleRowsTableAnnotationComposer,
+      $$CategoryRuleRowsTableCreateCompanionBuilder,
+      $$CategoryRuleRowsTableUpdateCompanionBuilder,
+      (
+        CategoryRuleRow,
+        BaseReferences<_$NumoDatabase, $CategoryRuleRowsTable, CategoryRuleRow>,
+      ),
+      CategoryRuleRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -3139,4 +3576,6 @@ class $NumoDatabaseManager {
       $$RecurringRowsTableTableManager(_db, _db.recurringRows);
   $$AccountRowsTableTableManager get accountRows =>
       $$AccountRowsTableTableManager(_db, _db.accountRows);
+  $$CategoryRuleRowsTableTableManager get categoryRuleRows =>
+      $$CategoryRuleRowsTableTableManager(_db, _db.categoryRuleRows);
 }

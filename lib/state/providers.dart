@@ -6,6 +6,8 @@ import '../data/categories_repository.dart';
 import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
+import '../data/rules_repository.dart';
+import '../models/category_rule.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/recurring.dart';
@@ -246,6 +248,56 @@ final accountBalanceProvider = Provider.family<double, String>(
         .watch(transactionsProvider)
         .where((t) => t.accountId == accountId)
         .fold(0.0, (sum, t) => sum + t.signedAmount));
+
+final rulesRepositoryProvider = Provider<RulesRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class RulesNotifier extends Notifier<List<CategoryRule>> {
+  @override
+  List<CategoryRule> build() => ref.read(rulesRepositoryProvider).loadAll();
+
+  Future<void> upsert(CategoryRule rule) async {
+    final exists = state.any((r) => r.id == rule.id);
+    state = exists
+        ? [for (final r in state) r.id == rule.id ? rule : r]
+        : [...state, rule];
+    await ref.read(rulesRepositoryProvider).saveAll(state);
+  }
+
+  Future<void> remove(String id) async {
+    state = state.where((r) => r.id != id).toList();
+    await ref.read(rulesRepositoryProvider).saveAll(state);
+  }
+
+  /// Применяет правила к существующим операциям (кроме переводов).
+  /// Возвращает число переклассифицированных операций.
+  Future<int> applyToExisting() async {
+    final txs = ref.read(transactionsProvider);
+    var changed = 0;
+    final updated = [
+      for (final t in txs)
+        if (!t.isTransfer &&
+            t.note.isNotEmpty &&
+            categorizeByRules(t.note, state) != null &&
+            categorizeByRules(t.note, state) != t.categoryId)
+          () {
+            changed++;
+            return t.copyWith(
+                categoryId: categorizeByRules(t.note, state));
+          }()
+        else
+          t,
+    ];
+    if (changed > 0) {
+      await ref.read(transactionsProvider.notifier).replaceAll(updated);
+    }
+    return changed;
+  }
+}
+
+final rulesProvider = NotifierProvider<RulesNotifier, List<CategoryRule>>(
+    RulesNotifier.new);
 
 final ratesRepositoryProvider =
     Provider<RatesRepository>((ref) => RatesRepository());

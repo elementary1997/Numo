@@ -14,7 +14,9 @@ import 'add_transaction.dart';
 import 'backup_actions.dart';
 import 'budgets.dart';
 import 'categories.dart';
+import 'import_csv.dart';
 import 'recurring.dart';
+import 'rules.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -66,6 +68,13 @@ class DashboardScreen extends ConsumerWidget {
                   'accounts' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const AccountsScreen())),
+                  'rules' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const RulesScreen())),
+                  'import-csv' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const ImportCsvScreen())),
+                  'export-csv' => exportCsv(context, ref),
                   'export' => exportBackup(context, ref),
                   'import' => importBackup(context, ref),
                   _ => null,
@@ -104,10 +113,34 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                   PopupMenuItem(
+                    value: 'rules',
+                    child: ListTile(
+                      leading: Icon(Icons.auto_fix_high_rounded),
+                      title: Text('Автокатегории'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'import-csv',
+                    child: ListTile(
+                      leading: Icon(Icons.table_view_rounded),
+                      title: Text('Импорт выписки CSV'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'export-csv',
+                    child: ListTile(
+                      leading: Icon(Icons.grid_on_rounded),
+                      title: Text('Экспорт отчёта CSV'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
                     value: 'export',
                     child: ListTile(
                       leading: Icon(Icons.upload_file_rounded),
-                      title: Text('Экспорт данных'),
+                      title: Text('Бэкап (JSON)'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -115,7 +148,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'import',
                     child: ListTile(
                       leading: Icon(Icons.download_rounded),
-                      title: Text('Импорт данных'),
+                      title: Text('Восстановить из бэкапа'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),

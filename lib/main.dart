@@ -10,6 +10,7 @@ import 'data/categories_repository.dart';
 import 'data/database.dart';
 import 'data/recurring_repository.dart';
 import 'data/repository.dart';
+import 'data/rules_repository.dart';
 import 'state/providers.dart';
 import 'screens/shell.dart';
 
@@ -22,6 +23,7 @@ Future<void> main() async {
   final budgetsRepository = await BudgetsRepository.open(database);
   final recurringRepository = await RecurringRepository.open(database);
   final accountsRepository = await AccountsRepository.open(database);
+  final rulesRepository = await RulesRepository.open(database);
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   runApp(
@@ -32,6 +34,7 @@ Future<void> main() async {
         budgetsRepositoryProvider.overrideWithValue(budgetsRepository),
         recurringRepositoryProvider.overrideWithValue(recurringRepository),
         accountsRepositoryProvider.overrideWithValue(accountsRepository),
+        rulesRepositoryProvider.overrideWithValue(rulesRepository),
       ],
       child: const NumoApp(),
     ),
