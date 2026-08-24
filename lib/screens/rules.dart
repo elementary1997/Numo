@@ -95,7 +95,7 @@ class RulesScreen extends ConsumerWidget {
     final controller = TextEditingController(text: initial?.pattern ?? '');
     final categories = ref
         .read(categoriesProvider)
-        .where((c) => !c.archived && c.id != Categories.transfer.id)
+        .where((c) => !c.archived && !Categories.systemIds.contains(c.id))
         .toList();
     var categoryId = initial?.categoryId ?? categories.first.id;
 

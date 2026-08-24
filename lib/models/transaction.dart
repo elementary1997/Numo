@@ -27,6 +27,13 @@ class Tx {
   /// но исключается из статистики доходов/расходов.
   bool get isTransfer => categoryId == 'transfer';
 
+  /// Корректировка баланса (начальный баланс и сверки) —
+  /// тоже вне статистики доходов/расходов.
+  bool get isAdjustment => categoryId == 'adjustment';
+
+  /// Не участвует в статистике доходов/расходов.
+  bool get isSystem => isTransfer || isAdjustment;
+
   /// Вклад операции в баланс: расходы со знаком минус.
   double get signedAmount => isExpense ? -amount : amount;
 

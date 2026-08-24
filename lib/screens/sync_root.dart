@@ -58,6 +58,7 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     await ref.read(accountsProvider.notifier).replaceAll(data.accounts);
     await ref.read(budgetsProvider.notifier).replaceAll(data.budgets);
     await ref.read(recurringProvider.notifier).replaceAll(data.recurring);
+    await ref.read(goalsProvider.notifier).replaceAll(data.goals);
     await ref
         .read(transactionsProvider.notifier)
         .replaceAll(data.transactions);
@@ -75,6 +76,7 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     ref.listen(accountsProvider, (_, __) => schedule());
     ref.listen(budgetsProvider, (_, __) => schedule());
     ref.listen(recurringProvider, (_, __) => schedule());
+    ref.listen(goalsProvider, (_, __) => schedule());
 
     // Ненавязчивое уведомление о вышедшей версии (раз при старте).
     if (!kIsWeb) {

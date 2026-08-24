@@ -91,6 +91,12 @@ DateTime? parseStatementDate(String raw) {
   if (s.isEmpty) return null;
   final iso = DateTime.tryParse(s);
   if (iso != null) return iso;
+  // Серийная дата Excel (дней с 30.12.1899) — так xlsx хранит даты.
+  final serial = double.tryParse(s);
+  if (serial != null && serial > 20000 && serial < 80000) {
+    return DateTime(1899, 12, 30)
+        .add(Duration(milliseconds: (serial * 86400000).round()));
+  }
   final match = RegExp(
           r'^(\d{1,2})[./](\d{1,2})[./](\d{2,4})(?:[ T](\d{1,2}):(\d{2}))?')
       .firstMatch(s);

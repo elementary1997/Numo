@@ -2467,6 +2467,474 @@ class CategoryRuleRowsCompanion extends UpdateCompanion<CategoryRuleRow> {
   }
 }
 
+class $GoalRowsTable extends GoalRows with TableInfo<$GoalRowsTable, GoalRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GoalRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconKeyMeta = const VerificationMeta(
+    'iconKey',
+  );
+  @override
+  late final GeneratedColumn<String> iconKey = GeneratedColumn<String>(
+    'icon_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _targetAmountMeta = const VerificationMeta(
+    'targetAmount',
+  );
+  @override
+  late final GeneratedColumn<double> targetAmount = GeneratedColumn<double>(
+    'target_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _savedAmountMeta = const VerificationMeta(
+    'savedAmount',
+  );
+  @override
+  late final GeneratedColumn<double> savedAmount = GeneratedColumn<double>(
+    'saved_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _deadlineMeta = const VerificationMeta(
+    'deadline',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deadline = GeneratedColumn<DateTime>(
+    'deadline',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    iconKey,
+    color,
+    targetAmount,
+    savedAmount,
+    deadline,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'goal_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GoalRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('icon_key')) {
+      context.handle(
+        _iconKeyMeta,
+        iconKey.isAcceptableOrUnknown(data['icon_key']!, _iconKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconKeyMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorMeta);
+    }
+    if (data.containsKey('target_amount')) {
+      context.handle(
+        _targetAmountMeta,
+        targetAmount.isAcceptableOrUnknown(
+          data['target_amount']!,
+          _targetAmountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_targetAmountMeta);
+    }
+    if (data.containsKey('saved_amount')) {
+      context.handle(
+        _savedAmountMeta,
+        savedAmount.isAcceptableOrUnknown(
+          data['saved_amount']!,
+          _savedAmountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('deadline')) {
+      context.handle(
+        _deadlineMeta,
+        deadline.isAcceptableOrUnknown(data['deadline']!, _deadlineMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GoalRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GoalRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      iconKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_key'],
+      )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      )!,
+      targetAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}target_amount'],
+      )!,
+      savedAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}saved_amount'],
+      )!,
+      deadline: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deadline'],
+      ),
+    );
+  }
+
+  @override
+  $GoalRowsTable createAlias(String alias) {
+    return $GoalRowsTable(attachedDatabase, alias);
+  }
+}
+
+class GoalRow extends DataClass implements Insertable<GoalRow> {
+  final String id;
+  final String title;
+  final String iconKey;
+  final int color;
+  final double targetAmount;
+  final double savedAmount;
+  final DateTime? deadline;
+  const GoalRow({
+    required this.id,
+    required this.title,
+    required this.iconKey,
+    required this.color,
+    required this.targetAmount,
+    required this.savedAmount,
+    this.deadline,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['icon_key'] = Variable<String>(iconKey);
+    map['color'] = Variable<int>(color);
+    map['target_amount'] = Variable<double>(targetAmount);
+    map['saved_amount'] = Variable<double>(savedAmount);
+    if (!nullToAbsent || deadline != null) {
+      map['deadline'] = Variable<DateTime>(deadline);
+    }
+    return map;
+  }
+
+  GoalRowsCompanion toCompanion(bool nullToAbsent) {
+    return GoalRowsCompanion(
+      id: Value(id),
+      title: Value(title),
+      iconKey: Value(iconKey),
+      color: Value(color),
+      targetAmount: Value(targetAmount),
+      savedAmount: Value(savedAmount),
+      deadline: deadline == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadline),
+    );
+  }
+
+  factory GoalRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GoalRow(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      iconKey: serializer.fromJson<String>(json['iconKey']),
+      color: serializer.fromJson<int>(json['color']),
+      targetAmount: serializer.fromJson<double>(json['targetAmount']),
+      savedAmount: serializer.fromJson<double>(json['savedAmount']),
+      deadline: serializer.fromJson<DateTime?>(json['deadline']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'iconKey': serializer.toJson<String>(iconKey),
+      'color': serializer.toJson<int>(color),
+      'targetAmount': serializer.toJson<double>(targetAmount),
+      'savedAmount': serializer.toJson<double>(savedAmount),
+      'deadline': serializer.toJson<DateTime?>(deadline),
+    };
+  }
+
+  GoalRow copyWith({
+    String? id,
+    String? title,
+    String? iconKey,
+    int? color,
+    double? targetAmount,
+    double? savedAmount,
+    Value<DateTime?> deadline = const Value.absent(),
+  }) => GoalRow(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    iconKey: iconKey ?? this.iconKey,
+    color: color ?? this.color,
+    targetAmount: targetAmount ?? this.targetAmount,
+    savedAmount: savedAmount ?? this.savedAmount,
+    deadline: deadline.present ? deadline.value : this.deadline,
+  );
+  GoalRow copyWithCompanion(GoalRowsCompanion data) {
+    return GoalRow(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
+      color: data.color.present ? data.color.value : this.color,
+      targetAmount: data.targetAmount.present
+          ? data.targetAmount.value
+          : this.targetAmount,
+      savedAmount: data.savedAmount.present
+          ? data.savedAmount.value
+          : this.savedAmount,
+      deadline: data.deadline.present ? data.deadline.value : this.deadline,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GoalRow(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('color: $color, ')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('savedAmount: $savedAmount, ')
+          ..write('deadline: $deadline')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    title,
+    iconKey,
+    color,
+    targetAmount,
+    savedAmount,
+    deadline,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GoalRow &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.iconKey == this.iconKey &&
+          other.color == this.color &&
+          other.targetAmount == this.targetAmount &&
+          other.savedAmount == this.savedAmount &&
+          other.deadline == this.deadline);
+}
+
+class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> iconKey;
+  final Value<int> color;
+  final Value<double> targetAmount;
+  final Value<double> savedAmount;
+  final Value<DateTime?> deadline;
+  final Value<int> rowid;
+  const GoalRowsCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.color = const Value.absent(),
+    this.targetAmount = const Value.absent(),
+    this.savedAmount = const Value.absent(),
+    this.deadline = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GoalRowsCompanion.insert({
+    required String id,
+    required String title,
+    required String iconKey,
+    required int color,
+    required double targetAmount,
+    this.savedAmount = const Value.absent(),
+    this.deadline = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       iconKey = Value(iconKey),
+       color = Value(color),
+       targetAmount = Value(targetAmount);
+  static Insertable<GoalRow> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? iconKey,
+    Expression<int>? color,
+    Expression<double>? targetAmount,
+    Expression<double>? savedAmount,
+    Expression<DateTime>? deadline,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (iconKey != null) 'icon_key': iconKey,
+      if (color != null) 'color': color,
+      if (targetAmount != null) 'target_amount': targetAmount,
+      if (savedAmount != null) 'saved_amount': savedAmount,
+      if (deadline != null) 'deadline': deadline,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GoalRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? iconKey,
+    Value<int>? color,
+    Value<double>? targetAmount,
+    Value<double>? savedAmount,
+    Value<DateTime?>? deadline,
+    Value<int>? rowid,
+  }) {
+    return GoalRowsCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      iconKey: iconKey ?? this.iconKey,
+      color: color ?? this.color,
+      targetAmount: targetAmount ?? this.targetAmount,
+      savedAmount: savedAmount ?? this.savedAmount,
+      deadline: deadline ?? this.deadline,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (iconKey.present) {
+      map['icon_key'] = Variable<String>(iconKey.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (targetAmount.present) {
+      map['target_amount'] = Variable<double>(targetAmount.value);
+    }
+    if (savedAmount.present) {
+      map['saved_amount'] = Variable<double>(savedAmount.value);
+    }
+    if (deadline.present) {
+      map['deadline'] = Variable<DateTime>(deadline.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GoalRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('color: $color, ')
+          ..write('targetAmount: $targetAmount, ')
+          ..write('savedAmount: $savedAmount, ')
+          ..write('deadline: $deadline, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -2480,6 +2948,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
   late final $CategoryRuleRowsTable categoryRuleRows = $CategoryRuleRowsTable(
     this,
   );
+  late final $GoalRowsTable goalRows = $GoalRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2491,6 +2960,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     recurringRows,
     accountRows,
     categoryRuleRows,
+    goalRows,
   ];
 }
 
@@ -3831,6 +4301,242 @@ typedef $$CategoryRuleRowsTableProcessedTableManager =
       CategoryRuleRow,
       PrefetchHooks Function()
     >;
+typedef $$GoalRowsTableCreateCompanionBuilder =
+    GoalRowsCompanion Function({
+      required String id,
+      required String title,
+      required String iconKey,
+      required int color,
+      required double targetAmount,
+      Value<double> savedAmount,
+      Value<DateTime?> deadline,
+      Value<int> rowid,
+    });
+typedef $$GoalRowsTableUpdateCompanionBuilder =
+    GoalRowsCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String> iconKey,
+      Value<int> color,
+      Value<double> targetAmount,
+      Value<double> savedAmount,
+      Value<DateTime?> deadline,
+      Value<int> rowid,
+    });
+
+class $$GoalRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $GoalRowsTable> {
+  $$GoalRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deadline => $composableBuilder(
+    column: $table.deadline,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GoalRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $GoalRowsTable> {
+  $$GoalRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deadline => $composableBuilder(
+    column: $table.deadline,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GoalRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $GoalRowsTable> {
+  $$GoalRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get iconKey =>
+      $composableBuilder(column: $table.iconKey, builder: (column) => column);
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<double> get targetAmount => $composableBuilder(
+    column: $table.targetAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get savedAmount => $composableBuilder(
+    column: $table.savedAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get deadline =>
+      $composableBuilder(column: $table.deadline, builder: (column) => column);
+}
+
+class $$GoalRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $GoalRowsTable,
+          GoalRow,
+          $$GoalRowsTableFilterComposer,
+          $$GoalRowsTableOrderingComposer,
+          $$GoalRowsTableAnnotationComposer,
+          $$GoalRowsTableCreateCompanionBuilder,
+          $$GoalRowsTableUpdateCompanionBuilder,
+          (GoalRow, BaseReferences<_$NumoDatabase, $GoalRowsTable, GoalRow>),
+          GoalRow,
+          PrefetchHooks Function()
+        > {
+  $$GoalRowsTableTableManager(_$NumoDatabase db, $GoalRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GoalRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GoalRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GoalRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<int> color = const Value.absent(),
+                Value<double> targetAmount = const Value.absent(),
+                Value<double> savedAmount = const Value.absent(),
+                Value<DateTime?> deadline = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GoalRowsCompanion(
+                id: id,
+                title: title,
+                iconKey: iconKey,
+                color: color,
+                targetAmount: targetAmount,
+                savedAmount: savedAmount,
+                deadline: deadline,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                required String iconKey,
+                required int color,
+                required double targetAmount,
+                Value<double> savedAmount = const Value.absent(),
+                Value<DateTime?> deadline = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GoalRowsCompanion.insert(
+                id: id,
+                title: title,
+                iconKey: iconKey,
+                color: color,
+                targetAmount: targetAmount,
+                savedAmount: savedAmount,
+                deadline: deadline,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GoalRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $GoalRowsTable,
+      GoalRow,
+      $$GoalRowsTableFilterComposer,
+      $$GoalRowsTableOrderingComposer,
+      $$GoalRowsTableAnnotationComposer,
+      $$GoalRowsTableCreateCompanionBuilder,
+      $$GoalRowsTableUpdateCompanionBuilder,
+      (GoalRow, BaseReferences<_$NumoDatabase, $GoalRowsTable, GoalRow>),
+      GoalRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -3847,4 +4553,6 @@ class $NumoDatabaseManager {
       $$AccountRowsTableTableManager(_db, _db.accountRows);
   $$CategoryRuleRowsTableTableManager get categoryRuleRows =>
       $$CategoryRuleRowsTableTableManager(_db, _db.categoryRuleRows);
+  $$GoalRowsTableTableManager get goalRows =>
+      $$GoalRowsTableTableManager(_db, _db.goalRows);
 }

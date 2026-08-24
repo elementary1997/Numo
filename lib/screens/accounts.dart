@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../core/money.dart';
 import '../models/account.dart';
 import '../models/category.dart';
+import '../models/transaction.dart';
 import '../widgets/breakdown_card.dart';
 import '../state/providers.dart';
 import '../core/l10n.dart';
@@ -194,6 +195,7 @@ class _AccountEditor extends ConsumerStatefulWidget {
 
 class _AccountEditorState extends ConsumerState<_AccountEditor> {
   late final TextEditingController _title;
+  late final TextEditingController _balance;
   late final TextEditingController _rate;
   late String _iconKey;
   late Color _color;
@@ -209,6 +211,14 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     super.initState();
     final a = widget.initial;
     _title = TextEditingController(text: a?.title ?? '');
+    final currentBalance =
+        a == null ? 0.0 : ref.read(accountBalanceProvider(a.id));
+    _balance = TextEditingController(
+        text: a == null
+            ? ''
+            : currentBalance == currentBalance.roundToDouble()
+                ? currentBalance.toStringAsFixed(0)
+                : currentBalance.toStringAsFixed(2).replaceAll('.', ','));
     _rate = TextEditingController(
         text: a?.rate == null
             ? ''
@@ -226,6 +236,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
   @override
   void dispose() {
     _title.dispose();
+    _balance.dispose();
     _rate.dispose();
     super.dispose();
   }
@@ -263,6 +274,27 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
       closesAt: isDeposit ? _closesAt : null,
     );
     await ref.read(accountsProvider.notifier).upsert(account);
+
+    // Введённый баланс отличается от фактического — создаём системную
+    // корректировку, не влияющую на статистику доходов/расходов.
+    final entered =
+        double.tryParse(_balance.text.replaceAll(' ', '').replaceAll(',', '.'));
+    if (entered != null) {
+      final current = widget.initial == null
+          ? 0.0
+          : ref.read(accountBalanceProvider(account.id));
+      final diff = entered - current;
+      if (diff.abs() >= 0.01) {
+        await ref.read(transactionsProvider.notifier).add(Tx(
+              id: 'adj-${DateTime.now().microsecondsSinceEpoch}',
+              type: diff > 0 ? TxType.income : TxType.expense,
+              amount: diff.abs(),
+              categoryId: Categories.adjustment.id,
+              date: DateTime.now(),
+              accountId: account.id,
+            ));
+      }
+    }
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -331,6 +363,26 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                   ],
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _balance,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[-0-9., ]')),
+              ],
+              decoration: InputDecoration(
+                labelText:
+                    '${context.l10n.accountBalanceLabel}, ${Currencies.symbol(_currency)}',
+                filled: true,
+                fillColor: theme.colorScheme.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+                isDense: true,
+              ),
             ),
             const SizedBox(height: 14),
             SegmentedButton<AccountKind>(

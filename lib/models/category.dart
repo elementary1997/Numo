@@ -34,6 +34,10 @@ abstract final class CategoryIcons {
     'swap': Icons.swap_horiz_rounded,
     'cash': Icons.payments_rounded,
     'card': Icons.credit_card_rounded,
+    'tune': Icons.tune_rounded,
+    'flag': Icons.flag_rounded,
+    'beach': Icons.beach_access_rounded,
+    'home2': Icons.cottage_rounded,
   };
 
   static IconData resolve(String key) =>
@@ -200,6 +204,18 @@ abstract final class Categories {
     color: Color(0xFF8E8AA6),
   );
 
+  /// Системная категория корректировок баланса (начальный баланс,
+  /// сверка со счётом в банке) — вне статистики, как и переводы.
+  static const adjustment = TxCategory(
+    id: 'adjustment',
+    title: 'Корректировка',
+    iconKey: 'tune',
+    color: Color(0xFF8E8AA6),
+  );
+
+  /// Служебные категории, скрытые из выбора и статистики.
+  static const systemIds = {'transfer', 'adjustment'};
+
   /// Английский встроенный набор — те же id/иконки/цвета.
   static List<TxCategory> get defaultsEn => [
         for (final c in defaults)
@@ -225,6 +241,7 @@ abstract final class Categories {
     'freelance': 'Side income',
     'gifts': 'Gifts',
     'transfer': 'Transfer',
+    'adjustment': 'Adjustment',
   };
 
   /// Набор для сидирования по языку системы.
@@ -260,6 +277,7 @@ abstract final class Categories {
     freelance,
     gifts,
     transfer,
+    adjustment,
   ];
 }
 

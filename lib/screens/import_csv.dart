@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../core/money.dart';
 import '../data/csv.dart';
 import '../data/statement_import.dart';
+import '../data/statement_parsers.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
@@ -33,10 +36,19 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
 
   Future<void> _pickFile() async {
     final file = await openFile(acceptedTypeGroups: const [
-      XTypeGroup(label: 'CSV', extensions: ['csv', 'txt'])
+      XTypeGroup(
+          label: 'Statements',
+          extensions: ['csv', 'txt', 'ofx', 'xlsx'])
     ]);
     if (file == null) return;
-    final rows = Csv.parse(await file.readAsString());
+    final bytes = await file.readAsBytes();
+    final rows = switch (detectFormat(file.name, bytes)) {
+      StatementFormat.ofx =>
+        parseOfx(utf8.decode(bytes, allowMalformed: true)),
+      StatementFormat.xlsx => parseXlsx(bytes),
+      StatementFormat.csv =>
+        Csv.parse(utf8.decode(bytes, allowMalformed: true)),
+    };
     if (rows.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

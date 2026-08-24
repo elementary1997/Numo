@@ -297,7 +297,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importStatementTitle => 'Statement import';
 
   @override
-  String get chooseCsvPrompt => 'Choose a CSV bank statement file';
+  String get chooseCsvPrompt =>
+      'Choose a bank statement file — CSV, OFX or Excel (XLSX)';
 
   @override
   String get chooseFile => 'Choose file';
@@ -626,6 +627,133 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoCheckUpdates => 'Check automatically';
+
+  @override
+  String get accountBalanceLabel => 'Balance';
+
+  @override
+  String get menuGoals => 'Goals';
+
+  @override
+  String get newGoal => 'New goal';
+
+  @override
+  String get editGoal => 'Edit goal';
+
+  @override
+  String get targetAmountLabel => 'Target amount, ₽';
+
+  @override
+  String get deadlineLabel => 'Deadline';
+
+  @override
+  String get topUp => 'Top up';
+
+  @override
+  String get topUpAmount => 'Top-up amount, ₽';
+
+  @override
+  String savedOfTarget(String saved, String target) {
+    return '$saved of $target';
+  }
+
+  @override
+  String perMonthNeeded(String amount) {
+    return '≈ $amount per month to make the deadline';
+  }
+
+  @override
+  String get goalReached => 'Goal reached!';
+
+  @override
+  String get goalsEmptyHint =>
+      'A vacation, an emergency fund, new hardware — set a goal, log top-ups, and Numo tracks progress and the pace you need.';
+
+  @override
+  String get deleteGoal => 'Delete goal';
+
+  @override
+  String get menuAi => 'AI insights';
+
+  @override
+  String get insightsTitle => 'Insights';
+
+  @override
+  String get aiSectionTitle => 'Claude\'s review';
+
+  @override
+  String get aiExplainer =>
+      'Connect your Anthropic API key and Claude will review your recent finances: patterns, risks and concrete advice. Summary data is sent only when you ask.';
+
+  @override
+  String get aiSetKey => 'Set API key';
+
+  @override
+  String get aiKeyLabel => 'Anthropic API key';
+
+  @override
+  String get aiModelLabel => 'Model';
+
+  @override
+  String get aiRun => 'Run review';
+
+  @override
+  String get aiConsentTitle => 'Send data?';
+
+  @override
+  String get aiConsentBody =>
+      'A summary will be sent to the Anthropic API: category and monthly totals, account balances and budgets. Transaction notes are not sent. The request uses your key.';
+
+  @override
+  String get aiSend => 'Send';
+
+  @override
+  String aiError(String error) {
+    return 'Failed: $error';
+  }
+
+  @override
+  String insSavingsRate(String percent) {
+    return 'You are saving $percent% of this month\'s income';
+  }
+
+  @override
+  String insOverspend(String amount) {
+    return 'Expenses exceed income by $amount';
+  }
+
+  @override
+  String insTopCategory(String category, String amount, String percent) {
+    return 'Biggest category — $category: $amount ($percent% of spending)';
+  }
+
+  @override
+  String insCategoryUp(String category, String percent) {
+    return '$category: spending up $percent% vs last month';
+  }
+
+  @override
+  String insCategoryDown(String category, String percent) {
+    return '$category: spending down $percent% vs last month';
+  }
+
+  @override
+  String insRunRate(String daily, String projected) {
+    return 'Average pace — $daily per day; on track for ≈ $projected this month';
+  }
+
+  @override
+  String insBiggestTx(String title, String amount) {
+    return 'Largest expense: $title — $amount';
+  }
+
+  @override
+  String get insBudgetsOk => 'All budgets within limits';
+
+  @override
+  String insBudgetsOver(int count) {
+    return 'Budgets exceeded: $count';
+  }
 
   @override
   String get csvHeaderDate => 'Date';

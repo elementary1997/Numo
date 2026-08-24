@@ -641,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @chooseCsvPrompt.
   ///
   /// In ru, this message translates to:
-  /// **'Выберите CSV-файл выписки из банка'**
+  /// **'Выберите файл выписки из банка — CSV, OFX или Excel (XLSX)'**
   String get chooseCsvPrompt;
 
   /// No description provided for @chooseFile.
@@ -1225,6 +1225,210 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Проверять автоматически'**
   String get autoCheckUpdates;
+
+  /// No description provided for @accountBalanceLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Баланс'**
+  String get accountBalanceLabel;
+
+  /// No description provided for @menuGoals.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цели'**
+  String get menuGoals;
+
+  /// No description provided for @newGoal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая цель'**
+  String get newGoal;
+
+  /// No description provided for @editGoal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить цель'**
+  String get editGoal;
+
+  /// No description provided for @targetAmountLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Целевая сумма, ₽'**
+  String get targetAmountLabel;
+
+  /// No description provided for @deadlineLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Срок'**
+  String get deadlineLabel;
+
+  /// No description provided for @topUp.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пополнить'**
+  String get topUp;
+
+  /// No description provided for @topUpAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма пополнения, ₽'**
+  String get topUpAmount;
+
+  /// No description provided for @savedOfTarget.
+  ///
+  /// In ru, this message translates to:
+  /// **'{saved} из {target}'**
+  String savedOfTarget(String saved, String target);
+
+  /// No description provided for @perMonthNeeded.
+  ///
+  /// In ru, this message translates to:
+  /// **'≈ {amount} в месяц, чтобы успеть к сроку'**
+  String perMonthNeeded(String amount);
+
+  /// No description provided for @goalReached.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цель достигнута!'**
+  String get goalReached;
+
+  /// No description provided for @goalsEmptyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отпуск, подушка безопасности, новая техника — задайте цель и отмечайте пополнения, а Numo посчитает прогресс и нужный темп.'**
+  String get goalsEmptyHint;
+
+  /// No description provided for @deleteGoal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить цель'**
+  String get deleteGoal;
+
+  /// No description provided for @menuAi.
+  ///
+  /// In ru, this message translates to:
+  /// **'AI-аналитика'**
+  String get menuAi;
+
+  /// No description provided for @insightsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Инсайты'**
+  String get insightsTitle;
+
+  /// No description provided for @aiSectionTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разбор от Claude'**
+  String get aiSectionTitle;
+
+  /// No description provided for @aiExplainer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подключите свой API-ключ Anthropic — Claude разберёт ваши финансы за последние месяцы: паттерны, риски и конкретные советы. Сводные данные отправляются только по вашей команде.'**
+  String get aiExplainer;
+
+  /// No description provided for @aiSetKey.
+  ///
+  /// In ru, this message translates to:
+  /// **'Указать API-ключ'**
+  String get aiSetKey;
+
+  /// No description provided for @aiKeyLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'API-ключ Anthropic'**
+  String get aiKeyLabel;
+
+  /// No description provided for @aiModelLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модель'**
+  String get aiModelLabel;
+
+  /// No description provided for @aiRun.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сделать разбор'**
+  String get aiRun;
+
+  /// No description provided for @aiConsentTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить данные?'**
+  String get aiConsentTitle;
+
+  /// No description provided for @aiConsentBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'В Anthropic API уйдёт сводка: суммы по категориям и месяцам, балансы счетов и бюджеты. Заметки к операциям не отправляются. Запрос выполняется с вашим ключом.'**
+  String get aiConsentBody;
+
+  /// No description provided for @aiSend.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить'**
+  String get aiSend;
+
+  /// No description provided for @aiError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не получилось: {error}'**
+  String aiError(String error);
+
+  /// No description provided for @insSavingsRate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы откладываете {percent}% дохода в этом месяце'**
+  String insSavingsRate(String percent);
+
+  /// No description provided for @insOverspend.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расходы превышают доходы на {amount}'**
+  String insOverspend(String amount);
+
+  /// No description provided for @insTopCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Крупнейшая категория — {category}: {amount} ({percent}% расходов)'**
+  String insTopCategory(String category, String amount, String percent);
+
+  /// No description provided for @insCategoryUp.
+  ///
+  /// In ru, this message translates to:
+  /// **'{category}: траты выросли на {percent}% к прошлому месяцу'**
+  String insCategoryUp(String category, String percent);
+
+  /// No description provided for @insCategoryDown.
+  ///
+  /// In ru, this message translates to:
+  /// **'{category}: траты снизились на {percent}% к прошлому месяцу'**
+  String insCategoryDown(String category, String percent);
+
+  /// No description provided for @insRunRate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Средний темп — {daily} в день; к концу месяца выйдет ≈ {projected}'**
+  String insRunRate(String daily, String projected);
+
+  /// No description provided for @insBiggestTx.
+  ///
+  /// In ru, this message translates to:
+  /// **'Самая крупная трата: {title} — {amount}'**
+  String insBiggestTx(String title, String amount);
+
+  /// No description provided for @insBudgetsOk.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все бюджеты в пределах лимитов'**
+  String get insBudgetsOk;
+
+  /// No description provided for @insBudgetsOver.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бюджетов превышено: {count}'**
+  String insBudgetsOver(int count);
 
   /// No description provided for @csvHeaderDate.
   ///

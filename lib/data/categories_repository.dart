@@ -25,10 +25,14 @@ class CategoriesRepository {
     final rows = await db.select(db.categoryRows).get();
     if (rows.isNotEmpty) {
       final repo = CategoriesRepository._(db, rows.map(_fromRow).toList());
-      // Системная категория переводов появилась позже — дозаводим её
-      // пользователям, сидированным до её появления.
-      if (!repo._cache.any((c) => c.id == Categories.transfer.id)) {
-        await repo.saveAll([...repo._cache, Categories.transfer]);
+      // Системные категории появлялись позже — дозаводим их
+      // пользователям, сидированным до их появления.
+      final missing = [
+        for (final c in [Categories.transfer, Categories.adjustment])
+          if (!repo._cache.any((existing) => existing.id == c.id)) c,
+      ];
+      if (missing.isNotEmpty) {
+        await repo.saveAll([...repo._cache, ...missing]);
       }
       return repo;
     }

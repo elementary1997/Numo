@@ -79,6 +79,20 @@ class RecurringRows extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Цели накоплений: прогресс к целевой сумме, опциональный срок.
+class GoalRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get iconKey => text()();
+  IntColumn get color => integer()();
+  RealColumn get targetAmount => real()();
+  RealColumn get savedAmount => real().withDefault(const Constant(0))();
+  DateTimeColumn get deadline => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// Правила автокатегоризации: подстрока в описании → категория.
 class CategoryRuleRows extends Table {
   TextColumn get id => text()();
@@ -96,6 +110,7 @@ class CategoryRuleRows extends Table {
   RecurringRows,
   AccountRows,
   CategoryRuleRows,
+  GoalRows,
 ])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
@@ -103,7 +118,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -126,6 +141,9 @@ class NumoDatabase extends _$NumoDatabase {
             await m.addColumn(accountRows, accountRows.rate);
             await m.addColumn(accountRows, accountRows.openedAt);
             await m.addColumn(accountRows, accountRows.closesAt);
+          }
+          if (from < 7) {
+            await m.createTable(goalRows);
           }
         },
       );

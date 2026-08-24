@@ -13,7 +13,7 @@ class CategoriesScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider);
     final expense = categories
-        .where((c) => !c.isIncome && c.id != Categories.transfer.id)
+        .where((c) => !c.isIncome && !Categories.systemIds.contains(c.id))
         .toList();
     final income = categories.where((c) => c.isIncome).toList();
     final now = DateTime.now();

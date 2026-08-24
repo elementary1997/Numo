@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/accounts_repository.dart';
 import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
+import '../data/goals_repository.dart';
 import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
@@ -12,6 +13,7 @@ import '../data/security_repository.dart';
 import '../data/sync_service.dart';
 import '../data/update_service.dart';
 import '../models/category_rule.dart';
+import '../models/goal.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/recurring.dart';
@@ -68,7 +70,7 @@ final activeCategoriesProvider =
         .where((c) =>
             c.isIncome == isIncome &&
             !c.archived &&
-            c.id != Categories.transfer.id)
+            !Categories.systemIds.contains(c.id))
         .toList());
 
 class TransactionsNotifier extends Notifier<List<Tx>> {
@@ -181,7 +183,7 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
   final daily = List<double>.filled(daysInMonth, 0);
 
   for (final t in txs) {
-    if (t.isTransfer) continue; // переводы — не доход и не расход
+    if (t.isSystem) continue; // переводы/корректировки — вне статистики
     if (t.isExpense) {
       expense += t.amount;
       byCategory.update(t.categoryId, (v) => v + t.amount,
@@ -340,7 +342,47 @@ BackupData collectBackupData(T Function<T>(ProviderListenable<T>) read) =>
       accounts: read(accountsProvider),
       budgets: read(budgetsProvider),
       recurring: read(recurringProvider),
+      goals: read(goalsProvider),
     );
+
+final goalsRepositoryProvider = Provider<GoalsRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class GoalsNotifier extends Notifier<List<Goal>> {
+  @override
+  List<Goal> build() => ref.read(goalsRepositoryProvider).loadAll();
+
+  Future<void> upsert(Goal goal) async {
+    final exists = state.any((g) => g.id == goal.id);
+    state = exists
+        ? [for (final g in state) g.id == goal.id ? goal : g]
+        : [...state, goal];
+    await ref.read(goalsRepositoryProvider).saveAll(state);
+  }
+
+  Future<void> topUp(String id, double amount) async {
+    state = [
+      for (final g in state)
+        g.id == id ? g.copyWith(savedAmount: g.savedAmount + amount) : g,
+    ];
+    await ref.read(goalsRepositoryProvider).saveAll(state);
+  }
+
+  Future<void> remove(String id) async {
+    state = state.where((g) => g.id != id).toList();
+    await ref.read(goalsRepositoryProvider).saveAll(state);
+  }
+
+  /// Полная замена данных — используется восстановлением из бэкапа.
+  Future<void> replaceAll(List<Goal> goals) async {
+    state = [...goals];
+    await ref.read(goalsRepositoryProvider).saveAll(state);
+  }
+}
+
+final goalsProvider =
+    NotifierProvider<GoalsNotifier, List<Goal>>(GoalsNotifier.new);
 
 final updateServiceProvider =
     Provider<UpdateService>((ref) => UpdateService());

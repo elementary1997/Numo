@@ -7,7 +7,9 @@ import 'add_transaction.dart';
 import 'analytics.dart';
 import 'budgets.dart';
 import 'categories.dart';
+import 'ai_insights.dart';
 import 'dashboard.dart';
+import 'goals.dart';
 import 'import_csv.dart';
 import 'recurring.dart';
 import 'rules.dart';
@@ -38,12 +40,16 @@ final _destinations = <_Destination>[
       (_) => const TransactionsScreen()),
   _Destination(Icons.bar_chart_rounded, (c) => c.l10n.navAnalytics,
       (_) => const AnalyticsScreen()),
+  _Destination(Icons.auto_awesome_rounded, (c) => c.l10n.menuAi,
+      (_) => const AiInsightsScreen()),
   _Destination(Icons.account_balance_wallet_rounded,
       (c) => c.l10n.menuAccounts, (_) => const AccountsScreen()),
   _Destination(Icons.sell_rounded, (c) => c.l10n.menuCategories,
       (_) => const CategoriesScreen()),
   _Destination(Icons.track_changes_rounded, (c) => c.l10n.menuBudgets,
       (_) => const BudgetsScreen()),
+  _Destination(Icons.flag_rounded, (c) => c.l10n.menuGoals,
+      (_) => const GoalsScreen()),
   _Destination(Icons.autorenew_rounded, (c) => c.l10n.menuRecurring,
       (_) => const RecurringScreen()),
   _Destination(Icons.auto_fix_high_rounded, (c) => c.l10n.menuRules,
@@ -55,7 +61,7 @@ final _destinations = <_Destination>[
 ];
 
 /// Индексы, после которых в сайдбаре рисуется разделитель.
-const _sidebarDividersAfter = {2, 8};
+const _sidebarDividersAfter = {3, 10};
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});

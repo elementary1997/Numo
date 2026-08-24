@@ -8,6 +8,7 @@ import 'data/accounts_repository.dart';
 import 'data/budgets_repository.dart';
 import 'data/categories_repository.dart';
 import 'data/database.dart';
+import 'data/goals_repository.dart';
 import 'data/recurring_repository.dart';
 import 'data/repository.dart';
 import 'data/rules_repository.dart';
@@ -40,6 +41,7 @@ Future<void> main() async {
   final accountsRepository =
       await AccountsRepository.open(database, seedLocale: seedLocale);
   final rulesRepository = await RulesRepository.open(database);
+  final goalsRepository = await GoalsRepository.open(database);
   final securityRepository = await SecurityRepository.open();
   final syncService = await SyncService.open();
   final prefs = await SharedPreferences.getInstance();
@@ -63,6 +65,7 @@ Future<void> main() async {
         recurringRepositoryProvider.overrideWithValue(recurringRepository),
         accountsRepositoryProvider.overrideWithValue(accountsRepository),
         rulesRepositoryProvider.overrideWithValue(rulesRepository),
+        goalsRepositoryProvider.overrideWithValue(goalsRepository),
         securityRepositoryProvider.overrideWithValue(securityRepository),
         syncServiceProvider.overrideWithValue(syncService),
         onboardedProvider.overrideWith((ref) => onboarded),

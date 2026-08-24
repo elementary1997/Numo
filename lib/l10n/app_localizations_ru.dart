@@ -297,7 +297,8 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importStatementTitle => 'Импорт выписки';
 
   @override
-  String get chooseCsvPrompt => 'Выберите CSV-файл выписки из банка';
+  String get chooseCsvPrompt =>
+      'Выберите файл выписки из банка — CSV, OFX или Excel (XLSX)';
 
   @override
   String get chooseFile => 'Выбрать файл';
@@ -626,6 +627,133 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get autoCheckUpdates => 'Проверять автоматически';
+
+  @override
+  String get accountBalanceLabel => 'Баланс';
+
+  @override
+  String get menuGoals => 'Цели';
+
+  @override
+  String get newGoal => 'Новая цель';
+
+  @override
+  String get editGoal => 'Изменить цель';
+
+  @override
+  String get targetAmountLabel => 'Целевая сумма, ₽';
+
+  @override
+  String get deadlineLabel => 'Срок';
+
+  @override
+  String get topUp => 'Пополнить';
+
+  @override
+  String get topUpAmount => 'Сумма пополнения, ₽';
+
+  @override
+  String savedOfTarget(String saved, String target) {
+    return '$saved из $target';
+  }
+
+  @override
+  String perMonthNeeded(String amount) {
+    return '≈ $amount в месяц, чтобы успеть к сроку';
+  }
+
+  @override
+  String get goalReached => 'Цель достигнута!';
+
+  @override
+  String get goalsEmptyHint =>
+      'Отпуск, подушка безопасности, новая техника — задайте цель и отмечайте пополнения, а Numo посчитает прогресс и нужный темп.';
+
+  @override
+  String get deleteGoal => 'Удалить цель';
+
+  @override
+  String get menuAi => 'AI-аналитика';
+
+  @override
+  String get insightsTitle => 'Инсайты';
+
+  @override
+  String get aiSectionTitle => 'Разбор от Claude';
+
+  @override
+  String get aiExplainer =>
+      'Подключите свой API-ключ Anthropic — Claude разберёт ваши финансы за последние месяцы: паттерны, риски и конкретные советы. Сводные данные отправляются только по вашей команде.';
+
+  @override
+  String get aiSetKey => 'Указать API-ключ';
+
+  @override
+  String get aiKeyLabel => 'API-ключ Anthropic';
+
+  @override
+  String get aiModelLabel => 'Модель';
+
+  @override
+  String get aiRun => 'Сделать разбор';
+
+  @override
+  String get aiConsentTitle => 'Отправить данные?';
+
+  @override
+  String get aiConsentBody =>
+      'В Anthropic API уйдёт сводка: суммы по категориям и месяцам, балансы счетов и бюджеты. Заметки к операциям не отправляются. Запрос выполняется с вашим ключом.';
+
+  @override
+  String get aiSend => 'Отправить';
+
+  @override
+  String aiError(String error) {
+    return 'Не получилось: $error';
+  }
+
+  @override
+  String insSavingsRate(String percent) {
+    return 'Вы откладываете $percent% дохода в этом месяце';
+  }
+
+  @override
+  String insOverspend(String amount) {
+    return 'Расходы превышают доходы на $amount';
+  }
+
+  @override
+  String insTopCategory(String category, String amount, String percent) {
+    return 'Крупнейшая категория — $category: $amount ($percent% расходов)';
+  }
+
+  @override
+  String insCategoryUp(String category, String percent) {
+    return '$category: траты выросли на $percent% к прошлому месяцу';
+  }
+
+  @override
+  String insCategoryDown(String category, String percent) {
+    return '$category: траты снизились на $percent% к прошлому месяцу';
+  }
+
+  @override
+  String insRunRate(String daily, String projected) {
+    return 'Средний темп — $daily в день; к концу месяца выйдет ≈ $projected';
+  }
+
+  @override
+  String insBiggestTx(String title, String amount) {
+    return 'Самая крупная трата: $title — $amount';
+  }
+
+  @override
+  String get insBudgetsOk => 'Все бюджеты в пределах лимитов';
+
+  @override
+  String insBudgetsOver(int count) {
+    return 'Бюджетов превышено: $count';
+  }
 
   @override
   String get csvHeaderDate => 'Дата';

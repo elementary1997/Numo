@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../models/account.dart';
 import '../models/category.dart';
+import '../models/goal.dart';
 import '../models/recurring.dart';
 import '../models/transaction.dart';
 
@@ -13,6 +14,7 @@ class BackupData {
     this.accounts = const [],
     this.budgets = const {},
     this.recurring = const [],
+    this.goals = const [],
   });
 
   final List<Tx> transactions;
@@ -20,13 +22,15 @@ class BackupData {
   final List<Account> accounts;
   final Map<String, double> budgets;
   final List<RecurringRule> recurring;
+  final List<Goal> goals;
 }
 
 /// Формат бэкапа Numo: версионированный JSON со всеми данными.
 /// v1 — операции и категории; v2 добавила счета, бюджеты и
-/// регулярные правила. Старые файлы читаются с пустыми новыми полями.
+/// регулярные правила; v3 — цели. Старые файлы читаются с пустыми
+/// новыми полями.
 abstract final class Backup {
-  static const version = 2;
+  static const version = 3;
 
   static String encode(BackupData data) {
     return const JsonEncoder.withIndent('  ').convert({
@@ -38,6 +42,7 @@ abstract final class Backup {
       'accounts': data.accounts.map((a) => a.toJson()).toList(),
       'budgets': data.budgets,
       'recurring': data.recurring.map((r) => r.toJson()).toList(),
+      'goals': data.goals.map((g) => g.toJson()).toList(),
     });
   }
 
@@ -74,6 +79,9 @@ abstract final class Backup {
             .map((k, v) => MapEntry(k, (v as num).toDouble())),
         recurring: ((data['recurring'] as List?) ?? const [])
             .map((e) => RecurringRule.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        goals: ((data['goals'] as List?) ?? const [])
+            .map((e) => Goal.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
     } catch (_) {

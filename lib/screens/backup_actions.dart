@@ -144,6 +144,7 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   await ref.read(accountsProvider.notifier).replaceAll(parsed.accounts);
   await ref.read(budgetsProvider.notifier).replaceAll(parsed.budgets);
   await ref.read(recurringProvider.notifier).replaceAll(parsed.recurring);
+  await ref.read(goalsProvider.notifier).replaceAll(parsed.goals);
   await ref
       .read(transactionsProvider.notifier)
       .replaceAll(parsed.transactions);

@@ -12,7 +12,9 @@ import '../widgets/transaction_tile.dart';
 import 'accounts.dart';
 import 'add_transaction.dart';
 import 'backup_actions.dart';
+import 'ai_insights.dart';
 import 'budgets.dart';
+import 'goals.dart';
 import 'categories.dart';
 import 'import_csv.dart';
 import 'recurring.dart';
@@ -66,6 +68,12 @@ class DashboardScreen extends ConsumerWidget {
                   'budgets' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const BudgetsScreen())),
+                  'goals' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const GoalsScreen())),
+                  'ai' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const AiInsightsScreen())),
                   'recurring' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const RecurringScreen())),
@@ -100,6 +108,22 @@ class DashboardScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: Icon(Icons.track_changes_rounded),
                       title: Text(context.l10n.menuBudgets),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'goals',
+                    child: ListTile(
+                      leading: const Icon(Icons.flag_rounded),
+                      title: Text(context.l10n.menuGoals),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'ai',
+                    child: ListTile(
+                      leading: const Icon(Icons.auto_awesome_rounded),
+                      title: Text(context.l10n.menuAi),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
