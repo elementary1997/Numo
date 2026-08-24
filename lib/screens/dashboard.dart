@@ -17,6 +17,7 @@ import 'categories.dart';
 import 'import_csv.dart';
 import 'recurring.dart';
 import 'rules.dart';
+import 'settings_sheets.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -74,6 +75,8 @@ class DashboardScreen extends ConsumerWidget {
                   'import-csv' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const ImportCsvScreen())),
+                  'security' => showSecurityDialog(context, ref),
+                  'sync' => showSyncDialog(context, ref),
                   'export-csv' => exportCsv(context, ref),
                   'export' => exportBackup(context, ref),
                   'import' => importBackup(context, ref),
@@ -133,6 +136,22 @@ class DashboardScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: Icon(Icons.grid_on_rounded),
                       title: Text('Экспорт отчёта CSV'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'security',
+                    child: ListTile(
+                      leading: Icon(Icons.lock_outline_rounded),
+                      title: Text('Защита (PIN)'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'sync',
+                    child: ListTile(
+                      leading: Icon(Icons.cloud_sync_outlined),
+                      title: Text('Синхронизация'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),

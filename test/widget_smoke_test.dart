@@ -9,6 +9,8 @@ import 'package:numo/data/budgets_repository.dart';
 import 'package:numo/data/categories_repository.dart';
 import 'package:numo/data/recurring_repository.dart';
 import 'package:numo/data/rules_repository.dart';
+import 'package:numo/data/security_repository.dart';
+import 'package:numo/data/sync_service.dart';
 import 'package:numo/data/database.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/main.dart';
@@ -35,8 +37,12 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   final recurringRepo = await RecurringRepository.open(db);
   final accountsRepo = await AccountsRepository.open(db);
   final rulesRepo = await RulesRepository.open(db);
+  final securityRepo = await SecurityRepository.open();
+  final syncService = await SyncService.open();
   return ProviderScope(
     overrides: [
+      securityRepositoryProvider.overrideWithValue(securityRepo),
+      syncServiceProvider.overrideWithValue(syncService),
       repositoryProvider.overrideWithValue(repo),
       categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
       budgetsRepositoryProvider.overrideWithValue(budgetsRepo),

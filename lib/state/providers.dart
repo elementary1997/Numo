@@ -6,7 +6,10 @@ import '../data/categories_repository.dart';
 import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
+import '../data/backup.dart';
 import '../data/rules_repository.dart';
+import '../data/security_repository.dart';
+import '../data/sync_service.dart';
 import '../models/category_rule.dart';
 import '../models/account.dart';
 import '../models/category.dart';
@@ -298,6 +301,29 @@ class RulesNotifier extends Notifier<List<CategoryRule>> {
 
 final rulesProvider = NotifierProvider<RulesNotifier, List<CategoryRule>>(
     RulesNotifier.new);
+
+final securityRepositoryProvider = Provider<SecurityRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+/// Заблокировано ли приложение (true при старте, если задан PIN).
+final lockedProvider = StateProvider<bool>(
+    (ref) => ref.read(securityRepositoryProvider).hasPin);
+
+final syncServiceProvider = Provider<SyncService>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+/// Снимок всех данных для бэкапа/синхронизации.
+/// Принимает `ref.read` — работает и с [Ref], и с WidgetRef.
+BackupData collectBackupData(T Function<T>(ProviderListenable<T>) read) =>
+    BackupData(
+      transactions: read(transactionsProvider),
+      categories: read(categoriesProvider),
+      accounts: read(accountsProvider),
+      budgets: read(budgetsProvider),
+      recurring: read(recurringProvider),
+    );
 
 final ratesRepositoryProvider =
     Provider<RatesRepository>((ref) => RatesRepository());

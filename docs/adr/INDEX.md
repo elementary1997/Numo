@@ -9,3 +9,4 @@
 | [0005](0005-file-selector-for-backup.md) | file_selector для экспорта/импорта бэкапа | accepted |
 | [0006](0006-drift-migration-executed.md) | Хранилище переведено на drift/SQLite | accepted |
 | [0007](0007-cbr-rates-first-network-call.md) | Курсы ЦБ РФ — первый сетевой вызов | accepted |
+| [0008](0008-privacy-and-sync.md) | PIN локально, sync через облако пользователя | accepted |

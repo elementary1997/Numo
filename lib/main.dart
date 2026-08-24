@@ -11,6 +11,10 @@ import 'data/database.dart';
 import 'data/recurring_repository.dart';
 import 'data/repository.dart';
 import 'data/rules_repository.dart';
+import 'data/security_repository.dart';
+import 'data/sync_service.dart';
+import 'screens/lock.dart';
+import 'screens/sync_root.dart';
 import 'state/providers.dart';
 import 'screens/shell.dart';
 
@@ -24,6 +28,8 @@ Future<void> main() async {
   final recurringRepository = await RecurringRepository.open(database);
   final accountsRepository = await AccountsRepository.open(database);
   final rulesRepository = await RulesRepository.open(database);
+  final securityRepository = await SecurityRepository.open();
+  final syncService = await SyncService.open();
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   runApp(
@@ -35,6 +41,8 @@ Future<void> main() async {
         recurringRepositoryProvider.overrideWithValue(recurringRepository),
         accountsRepositoryProvider.overrideWithValue(accountsRepository),
         rulesRepositoryProvider.overrideWithValue(rulesRepository),
+        securityRepositoryProvider.overrideWithValue(securityRepository),
+        syncServiceProvider.overrideWithValue(syncService),
       ],
       child: const NumoApp(),
     ),
@@ -46,6 +54,7 @@ class NumoApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locked = ref.watch(lockedProvider);
     return MaterialApp(
       title: 'Numo',
       debugShowCheckedModeBanner: false,
@@ -59,7 +68,7 @@ class NumoApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const HomeShell(),
+      home: locked ? const LockScreen() : const SyncRoot(child: HomeShell()),
     );
   }
 }

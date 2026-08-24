@@ -20,13 +20,7 @@ void _toast(BuildContext context, String message) {
 
 /// Экспорт всех данных в JSON-файл через системный диалог сохранения.
 Future<void> exportBackup(BuildContext context, WidgetRef ref) async {
-  final json = Backup.encode(BackupData(
-    transactions: ref.read(transactionsProvider),
-    categories: ref.read(categoriesProvider),
-    accounts: ref.read(accountsProvider),
-    budgets: ref.read(budgetsProvider),
-    recurring: ref.read(recurringProvider),
-  ));
+  final json = Backup.encode(collectBackupData(ref.read));
   final suggested =
       'numo-backup-${DateFormat('yyyy-MM-dd').format(DateTime.now())}.json';
 
