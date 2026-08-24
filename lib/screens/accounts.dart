@@ -521,23 +521,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                       _iconKey = 'brand:${brand.key}';
                       _color = brand.background;
                     }),
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: brand.background,
-                        borderRadius: BorderRadius.circular(7),
-                      ),
-                      child: Text(
-                        brand.label,
-                        style: TextStyle(
-                          color: brand.foreground,
-                          fontWeight: FontWeight.w800,
-                          fontSize: brand.label.length > 1 ? 9 : 14,
-                        ),
-                      ),
-                    ),
+                    child: BrandBadge(brand: brand, size: 30),
                   ),
               ],
             ),

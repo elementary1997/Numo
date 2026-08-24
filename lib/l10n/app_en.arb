@@ -6,7 +6,7 @@
 
   "menuTooltip": "Menu",
   "menuCategories": "Categories",
-  "menuBudgets": "Budgets",
+  "menuBudgets": "Limits",
   "menuRecurring": "Recurring",
   "menuAccounts": "Accounts",
   "menuRules": "Auto-categories",
@@ -255,6 +255,8 @@
   "updateCheckFailed": "Could not check for updates — check your network access",
   "goalAccountLabel": "Goal account",
   "topUpFromAccount": "Take from account",
+  "currencyNoRate": "No exchange rate available — use the account currency or wait for rates to load",
+  "convertedFrom": "{amount} {symbol} converted",
   "csvHeaderDate": "Date",
   "csvHeaderType": "Type",
   "csvHeaderAmount": "Amount",

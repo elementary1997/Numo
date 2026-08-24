@@ -131,7 +131,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuBudgets.
   ///
   /// In ru, this message translates to:
-  /// **'Бюджеты'**
+  /// **'Лимиты'**
   String get menuBudgets;
 
   /// No description provided for @menuRecurring.
@@ -1421,13 +1421,13 @@ abstract class AppLocalizations {
   /// No description provided for @insBudgetsOk.
   ///
   /// In ru, this message translates to:
-  /// **'Все бюджеты в пределах лимитов'**
+  /// **'Все лимиты соблюдены'**
   String get insBudgetsOk;
 
   /// No description provided for @insBudgetsOver.
   ///
   /// In ru, this message translates to:
-  /// **'Бюджетов превышено: {count}'**
+  /// **'Лимитов превышено: {count}'**
   String insBudgetsOver(int count);
 
   /// No description provided for @accountTypeCard.
@@ -1537,6 +1537,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Списать со счёта'**
   String get topUpFromAccount;
+
+  /// No description provided for @currencyNoRate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет курса для конвертации — выберите валюту счёта или подождите загрузки курсов'**
+  String get currencyNoRate;
+
+  /// No description provided for @convertedFrom.
+  ///
+  /// In ru, this message translates to:
+  /// **'{amount} {symbol} по курсу'**
+  String convertedFrom(String amount, String symbol);
 
   /// No description provided for @csvHeaderDate.
   ///

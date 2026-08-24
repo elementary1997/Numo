@@ -124,10 +124,13 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
 
-    // Сумма 250 на кастомной клавиатуре.
+    // Сумма 250 на кастомной клавиатуре (pump после каждого тапа —
+    // текст суммы и клавиша с той же цифрой не должны совпадать).
     await tester.tap(find.text('2'));
+    await tester.pump();
     await tester.tap(find.text('5'));
-    await tester.tap(find.text('0'));
+    await tester.pump();
+    await tester.tap(find.text('0').last);
     await tester.pump();
 
     await tester.tap(find.text('Продукты'));

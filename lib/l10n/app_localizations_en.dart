@@ -24,7 +24,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuCategories => 'Categories';
 
   @override
-  String get menuBudgets => 'Budgets';
+  String get menuBudgets => 'Limits';
 
   @override
   String get menuRecurring => 'Recurring';
@@ -813,6 +813,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get topUpFromAccount => 'Take from account';
+
+  @override
+  String get currencyNoRate =>
+      'No exchange rate available — use the account currency or wait for rates to load';
+
+  @override
+  String convertedFrom(String amount, String symbol) {
+    return '$amount $symbol converted';
+  }
 
   @override
   String get csvHeaderDate => 'Date';

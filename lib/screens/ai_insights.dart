@@ -231,10 +231,6 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
               ),
             ),
           const SizedBox(height: 18),
-          Text(context.l10n.aiSectionTitle,
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 10),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),

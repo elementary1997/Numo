@@ -18,6 +18,21 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.3.0',
+    itemsRu: [
+      'Выбор валюты при вводе операции — конвертация в валюту счёта по курсу ЦБ',
+      'Узнаваемые значки банков: Сбер, Т-Банк, МТС, Озон, Совкомбанк, Яндекс',
+      'Цель с привязанным счётом обновляется сама от его баланса',
+      '«Бюджеты» стали «Лимитами»',
+    ],
+    itemsEn: [
+      'Pick a currency while entering a transaction — converted to the account currency at CBR rates',
+      'Recognizable bank logos: Sber, T-Bank, MTS, Ozon, Sovcombank, Yandex',
+      'Goals linked to an account now track its balance automatically',
+      'Budgets renamed to Limits',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.2.0',
     itemsRu: [
       'Вход по биометрии: Touch ID, Windows Hello, отпечаток или Face ID — как альтернатива PIN',

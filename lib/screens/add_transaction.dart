@@ -44,6 +44,9 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
   TxCategory? _category;
   DateTime _date = DateTime.now();
   late String _accountId;
+
+  /// Валюта ввода; null — валюта выбранного счёта.
+  String? _currencyOverride;
   final _noteController = TextEditingController();
 
   bool get _isEditing => widget.initial != null;
@@ -105,18 +108,59 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
     }
   }
 
+  Future<void> _pickCurrency() async {
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: Text(context.l10n.currencyLabel),
+        children: [
+          for (final c in Currencies.supported)
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop(c),
+              child: Text('$c ${Currencies.symbol(c)}'),
+            ),
+        ],
+      ),
+    );
+    if (chosen != null) setState(() => _currencyOverride = chosen);
+  }
+
   Future<void> _save() async {
     final category = _category;
     if (_amount <= 0 || category == null) return;
+
+    // Ввод в чужой валюте конвертируется в валюту счёта по курсу ЦБ.
+    final accountCurrency =
+        ref.read(accountsProvider).byId(_accountId).currency;
+    final inputCurrency = _currencyOverride ?? accountCurrency;
+    var amount = _amount;
+    var note = _noteController.text.trim();
+    if (inputCurrency != accountCurrency) {
+      final rates = ref.read(ratesProvider).valueOrNull;
+      final from = rates?.rubFor(inputCurrency);
+      final to = rates?.rubFor(accountCurrency);
+      if (from == null || to == null || to == 0) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(
+              SnackBar(content: Text(context.l10n.currencyNoRate)));
+        return;
+      }
+      amount = _amount * from / to;
+      final original =
+          formatMoneyIn(_amount, Currencies.symbol(inputCurrency));
+      note = note.isEmpty ? '($original)' : '$note ($original)';
+    }
+
     final tx = Tx(
       id: widget.initial?.id ??
           DateTime.now().microsecondsSinceEpoch.toString(),
       type: _type,
-      amount: _amount,
+      amount: amount,
       categoryId: category.id,
       date: _date,
       accountId: _accountId,
-      note: _noteController.text.trim(),
+      note: note,
     );
     final notifier = ref.read(transactionsProvider.notifier);
     await (_isEditing ? notifier.update(tx) : notifier.add(tx));
@@ -147,9 +191,10 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
     final theme = Theme.of(context);
     final canSave = _amount > 0 && _category != null;
     final isToday = DateUtils.isSameDay(_date, DateTime.now());
-    // Валюта операции = валюта выбранного счёта.
-    final currencySymbol = Currencies.symbol(
-        ref.watch(accountsProvider).byId(_accountId).currency);
+    final accountCurrency =
+        ref.watch(accountsProvider).byId(_accountId).currency;
+    final inputCurrency = _currencyOverride ?? accountCurrency;
+    final currencySymbol = Currencies.symbol(inputCurrency);
 
     return Padding(
       padding:
@@ -184,26 +229,48 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
               showSelectedIcon: false,
             ),
             const SizedBox(height: 20),
-            Text.rich(
-              TextSpan(
-                text: _raw,
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -1,
-                  color: _type == TxType.expense
-                      ? theme.colorScheme.onSurface
-                      : NumoColors.mint,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  _raw,
+                  style: theme.textTheme.displayMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                    color: _type == TxType.expense
+                        ? theme.colorScheme.onSurface
+                        : NumoColors.mint,
+                  ),
                 ),
-                children: [
-                  TextSpan(
-                    text: ' $currencySymbol',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                const SizedBox(width: 6),
+                // Валюта ввода: тап — выбрать другую, сумма
+                // сконвертируется в валюту счёта по курсу ЦБ.
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: _pickCurrency,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          currencySymbol,
+                          style:
+                              theme.textTheme.headlineMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down_rounded,
+                            color: theme.colorScheme.onSurfaceVariant),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Builder(builder: (context) {

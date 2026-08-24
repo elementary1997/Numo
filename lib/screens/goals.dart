@@ -60,7 +60,14 @@ class _GoalCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final monthly = goal.monthlyNeeded();
+    // Цель с привязанным счётом живёт от его баланса: пополнили счёт —
+    // прогресс обновился сам, ручные пополнения не нужны.
+    final linked = goal.accountId != null;
+    final effective = linked
+        ? goal.copyWith(
+            savedAmount: ref.watch(accountBalanceProvider(goal.accountId!)))
+        : goal;
+    final monthly = effective.monthlyNeeded();
 
     return Card(
       child: InkWell(
@@ -94,15 +101,15 @@ class _GoalCard extends ConsumerWidget {
                                 ?.copyWith(fontWeight: FontWeight.w700)),
                         Text(
                           context.l10n.savedOfTarget(
-                              formatMoney(goal.savedAmount),
-                              formatMoney(goal.targetAmount)),
+                              formatMoney(effective.savedAmount),
+                              formatMoney(effective.targetAmount)),
                           style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant),
                         ),
                       ],
                     ),
                   ),
-                  if (goal.reached)
+                  if (effective.reached)
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
@@ -118,7 +125,7 @@ class _GoalCard extends ConsumerWidget {
                         ),
                       ),
                     )
-                  else
+                  else if (!linked)
                     FilledButton.tonal(
                       onPressed: () => _showTopUpDialog(context, ref),
                       style: FilledButton.styleFrom(
@@ -137,7 +144,7 @@ class _GoalCard extends ConsumerWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: goal.progress),
+                  tween: Tween(begin: 0, end: effective.progress),
                   duration: const Duration(milliseconds: 700),
                   curve: Curves.easeOutCubic,
                   builder: (context, v, _) => LinearProgressIndicator(
@@ -146,7 +153,7 @@ class _GoalCard extends ConsumerWidget {
                     backgroundColor:
                         theme.colorScheme.onSurface.withValues(alpha: 0.06),
                     valueColor: AlwaysStoppedAnimation(
-                        goal.reached ? NumoColors.mint : goal.color),
+                        effective.reached ? NumoColors.mint : goal.color),
                   ),
                 ),
               ),
@@ -154,7 +161,7 @@ class _GoalCard extends ConsumerWidget {
               Row(
                 children: [
                   Text(
-                    '${(goal.progress * 100).round()}%',
+                    '${(effective.progress * 100).round()}%',
                     style: theme.textTheme.bodySmall
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),

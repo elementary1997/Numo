@@ -24,7 +24,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuCategories => 'Категории';
 
   @override
-  String get menuBudgets => 'Бюджеты';
+  String get menuBudgets => 'Лимиты';
 
   @override
   String get menuRecurring => 'Регулярные';
@@ -748,11 +748,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get insBudgetsOk => 'Все бюджеты в пределах лимитов';
+  String get insBudgetsOk => 'Все лимиты соблюдены';
 
   @override
   String insBudgetsOver(int count) {
-    return 'Бюджетов превышено: $count';
+    return 'Лимитов превышено: $count';
   }
 
   @override
@@ -813,6 +813,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get topUpFromAccount => 'Списать со счёта';
+
+  @override
+  String get currencyNoRate =>
+      'Нет курса для конвертации — выберите валюту счёта или подождите загрузки курсов';
+
+  @override
+  String convertedFrom(String amount, String symbol) {
+    return '$amount $symbol по курсу';
+  }
 
   @override
   String get csvHeaderDate => 'Дата';
