@@ -30,14 +30,33 @@ class CategoryRows extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [TransactionRows, CategoryRows])
+/// Месячные лимиты трат по категориям. Лимит один и действует
+/// каждый месяц; отсутствие строки = бюджета на категорию нет.
+class BudgetRows extends Table {
+  TextColumn get categoryId => text()();
+  RealColumn get monthlyLimit => real()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {categoryId};
+}
+
+@DriftDatabase(tables: [TransactionRows, CategoryRows, BudgetRows])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
   /// в тестах передаётся in-memory executor.
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(budgetRows);
+          }
+        },
+      );
 
   static QueryExecutor _open() => driftDatabase(
         name: 'numo',

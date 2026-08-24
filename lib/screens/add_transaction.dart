@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
@@ -112,7 +113,25 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
     );
     final notifier = ref.read(transactionsProvider.notifier);
     await (_isEditing ? notifier.update(tx) : notifier.add(tx));
-    if (mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+
+    // Предупредить, если операция пробила месячный лимит категории.
+    if (tx.isExpense) {
+      final budget = ref
+          .read(budgetProgressProvider)
+          .where((b) => b.category.id == tx.categoryId)
+          .firstOrNull;
+      if (budget != null && budget.overspent) {
+        ScaffoldMessenger.of(context)
+          ..clearSnackBars()
+          ..showSnackBar(SnackBar(
+            content: Text(
+                'Лимит «${budget.category.title}» превышен: '
+                '${formatMoney(budget.spent)} из ${formatMoney(budget.limit)}'),
+          ));
+      }
+    }
+    Navigator.of(context).pop();
   }
 
   @override

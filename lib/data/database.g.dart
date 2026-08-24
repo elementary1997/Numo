@@ -812,6 +812,230 @@ class CategoryRowsCompanion extends UpdateCompanion<CategoryRow> {
   }
 }
 
+class $BudgetRowsTable extends BudgetRows
+    with TableInfo<$BudgetRowsTable, BudgetRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BudgetRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+    'category_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _monthlyLimitMeta = const VerificationMeta(
+    'monthlyLimit',
+  );
+  @override
+  late final GeneratedColumn<double> monthlyLimit = GeneratedColumn<double>(
+    'monthly_limit',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [categoryId, monthlyLimit];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'budget_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<BudgetRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryIdMeta);
+    }
+    if (data.containsKey('monthly_limit')) {
+      context.handle(
+        _monthlyLimitMeta,
+        monthlyLimit.isAcceptableOrUnknown(
+          data['monthly_limit']!,
+          _monthlyLimitMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_monthlyLimitMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {categoryId};
+  @override
+  BudgetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BudgetRow(
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_id'],
+      )!,
+      monthlyLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}monthly_limit'],
+      )!,
+    );
+  }
+
+  @override
+  $BudgetRowsTable createAlias(String alias) {
+    return $BudgetRowsTable(attachedDatabase, alias);
+  }
+}
+
+class BudgetRow extends DataClass implements Insertable<BudgetRow> {
+  final String categoryId;
+  final double monthlyLimit;
+  const BudgetRow({required this.categoryId, required this.monthlyLimit});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['category_id'] = Variable<String>(categoryId);
+    map['monthly_limit'] = Variable<double>(monthlyLimit);
+    return map;
+  }
+
+  BudgetRowsCompanion toCompanion(bool nullToAbsent) {
+    return BudgetRowsCompanion(
+      categoryId: Value(categoryId),
+      monthlyLimit: Value(monthlyLimit),
+    );
+  }
+
+  factory BudgetRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BudgetRow(
+      categoryId: serializer.fromJson<String>(json['categoryId']),
+      monthlyLimit: serializer.fromJson<double>(json['monthlyLimit']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'categoryId': serializer.toJson<String>(categoryId),
+      'monthlyLimit': serializer.toJson<double>(monthlyLimit),
+    };
+  }
+
+  BudgetRow copyWith({String? categoryId, double? monthlyLimit}) => BudgetRow(
+    categoryId: categoryId ?? this.categoryId,
+    monthlyLimit: monthlyLimit ?? this.monthlyLimit,
+  );
+  BudgetRow copyWithCompanion(BudgetRowsCompanion data) {
+    return BudgetRow(
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      monthlyLimit: data.monthlyLimit.present
+          ? data.monthlyLimit.value
+          : this.monthlyLimit,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BudgetRow(')
+          ..write('categoryId: $categoryId, ')
+          ..write('monthlyLimit: $monthlyLimit')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(categoryId, monthlyLimit);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BudgetRow &&
+          other.categoryId == this.categoryId &&
+          other.monthlyLimit == this.monthlyLimit);
+}
+
+class BudgetRowsCompanion extends UpdateCompanion<BudgetRow> {
+  final Value<String> categoryId;
+  final Value<double> monthlyLimit;
+  final Value<int> rowid;
+  const BudgetRowsCompanion({
+    this.categoryId = const Value.absent(),
+    this.monthlyLimit = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BudgetRowsCompanion.insert({
+    required String categoryId,
+    required double monthlyLimit,
+    this.rowid = const Value.absent(),
+  }) : categoryId = Value(categoryId),
+       monthlyLimit = Value(monthlyLimit);
+  static Insertable<BudgetRow> custom({
+    Expression<String>? categoryId,
+    Expression<double>? monthlyLimit,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (categoryId != null) 'category_id': categoryId,
+      if (monthlyLimit != null) 'monthly_limit': monthlyLimit,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BudgetRowsCompanion copyWith({
+    Value<String>? categoryId,
+    Value<double>? monthlyLimit,
+    Value<int>? rowid,
+  }) {
+    return BudgetRowsCompanion(
+      categoryId: categoryId ?? this.categoryId,
+      monthlyLimit: monthlyLimit ?? this.monthlyLimit,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (monthlyLimit.present) {
+      map['monthly_limit'] = Variable<double>(monthlyLimit.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BudgetRowsCompanion(')
+          ..write('categoryId: $categoryId, ')
+          ..write('monthlyLimit: $monthlyLimit, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -819,6 +1043,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     this,
   );
   late final $CategoryRowsTable categoryRows = $CategoryRowsTable(this);
+  late final $BudgetRowsTable budgetRows = $BudgetRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -826,6 +1051,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     transactionRows,
     categoryRows,
+    budgetRows,
   ];
 }
 
@@ -1275,6 +1501,150 @@ typedef $$CategoryRowsTableProcessedTableManager =
       CategoryRow,
       PrefetchHooks Function()
     >;
+typedef $$BudgetRowsTableCreateCompanionBuilder =
+    BudgetRowsCompanion Function({
+      required String categoryId,
+      required double monthlyLimit,
+      Value<int> rowid,
+    });
+typedef $$BudgetRowsTableUpdateCompanionBuilder =
+    BudgetRowsCompanion Function({
+      Value<String> categoryId,
+      Value<double> monthlyLimit,
+      Value<int> rowid,
+    });
+
+class $$BudgetRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $BudgetRowsTable> {
+  $$BudgetRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$BudgetRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $BudgetRowsTable> {
+  $$BudgetRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$BudgetRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $BudgetRowsTable> {
+  $$BudgetRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get monthlyLimit => $composableBuilder(
+    column: $table.monthlyLimit,
+    builder: (column) => column,
+  );
+}
+
+class $$BudgetRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $BudgetRowsTable,
+          BudgetRow,
+          $$BudgetRowsTableFilterComposer,
+          $$BudgetRowsTableOrderingComposer,
+          $$BudgetRowsTableAnnotationComposer,
+          $$BudgetRowsTableCreateCompanionBuilder,
+          $$BudgetRowsTableUpdateCompanionBuilder,
+          (
+            BudgetRow,
+            BaseReferences<_$NumoDatabase, $BudgetRowsTable, BudgetRow>,
+          ),
+          BudgetRow,
+          PrefetchHooks Function()
+        > {
+  $$BudgetRowsTableTableManager(_$NumoDatabase db, $BudgetRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BudgetRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BudgetRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BudgetRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> categoryId = const Value.absent(),
+                Value<double> monthlyLimit = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => BudgetRowsCompanion(
+                categoryId: categoryId,
+                monthlyLimit: monthlyLimit,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String categoryId,
+                required double monthlyLimit,
+                Value<int> rowid = const Value.absent(),
+              }) => BudgetRowsCompanion.insert(
+                categoryId: categoryId,
+                monthlyLimit: monthlyLimit,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$BudgetRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $BudgetRowsTable,
+      BudgetRow,
+      $$BudgetRowsTableFilterComposer,
+      $$BudgetRowsTableOrderingComposer,
+      $$BudgetRowsTableAnnotationComposer,
+      $$BudgetRowsTableCreateCompanionBuilder,
+      $$BudgetRowsTableUpdateCompanionBuilder,
+      (BudgetRow, BaseReferences<_$NumoDatabase, $BudgetRowsTable, BudgetRow>),
+      BudgetRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -1283,4 +1653,6 @@ class $NumoDatabaseManager {
       $$TransactionRowsTableTableManager(_db, _db.transactionRows);
   $$CategoryRowsTableTableManager get categoryRows =>
       $$CategoryRowsTableTableManager(_db, _db.categoryRows);
+  $$BudgetRowsTableTableManager get budgetRows =>
+      $$BudgetRowsTableTableManager(_db, _db.budgetRows);
 }

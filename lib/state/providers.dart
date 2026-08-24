@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
 import '../data/repository.dart';
 import '../models/category.dart';
@@ -156,4 +157,71 @@ final balanceProvider = Provider<double>((ref) {
   return ref
       .watch(transactionsProvider)
       .fold(0.0, (sum, t) => sum + t.signedAmount);
+});
+
+final budgetsRepositoryProvider = Provider<BudgetsRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class BudgetsNotifier extends Notifier<Map<String, double>> {
+  @override
+  Map<String, double> build() =>
+      ref.read(budgetsRepositoryProvider).loadAll();
+
+  Future<void> setLimit(String categoryId, double? limit) async {
+    await ref.read(budgetsRepositoryProvider).setLimit(categoryId, limit);
+    state = ref.read(budgetsRepositoryProvider).loadAll();
+  }
+}
+
+final budgetsProvider = NotifierProvider<BudgetsNotifier, Map<String, double>>(
+    BudgetsNotifier.new);
+
+/// Прогресс бюджета одной категории в текущем месяце.
+class BudgetProgress {
+  const BudgetProgress({
+    required this.category,
+    required this.limit,
+    required this.spent,
+  });
+
+  final TxCategory category;
+  final double limit;
+  final double spent;
+
+  double get share => limit <= 0 ? 0 : spent / limit;
+  bool get nearLimit => share >= 0.8 && share < 1;
+  bool get overspent => share >= 1;
+}
+
+/// Бюджеты текущего месяца с прогрессом, по убыванию заполненности.
+final budgetProgressProvider = Provider<List<BudgetProgress>>((ref) {
+  final budgets = ref.watch(budgetsProvider);
+  if (budgets.isEmpty) return const [];
+  final now = DateTime.now();
+  final stats = ref.watch(monthStatsProvider(DateTime(now.year, now.month)));
+  final categories = ref.watch(categoriesProvider);
+  final progress = [
+    for (final entry in budgets.entries)
+      BudgetProgress(
+        category: categories.byId(entry.key),
+        limit: entry.value,
+        spent: stats.byCategory[entry.key] ?? 0,
+      ),
+  ]..sort((a, b) => b.share.compareTo(a.share));
+  return progress;
+});
+
+/// «Безопасно тратить сегодня»: остаток суммарного бюджета месяца,
+/// поделённый на оставшиеся дни. null — бюджеты не настроены.
+final safeToSpendTodayProvider = Provider<double?>((ref) {
+  final progress = ref.watch(budgetProgressProvider);
+  if (progress.isEmpty) return null;
+  final totalLimit = progress.fold(0.0, (sum, b) => sum + b.limit);
+  final totalSpent = progress.fold(0.0, (sum, b) => sum + b.spent);
+  final now = DateTime.now();
+  final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+  final daysLeft = daysInMonth - now.day + 1;
+  final remaining = totalLimit - totalSpent;
+  return remaining <= 0 ? 0 : remaining / daysLeft;
 });

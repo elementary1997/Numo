@@ -10,6 +10,7 @@ import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction.dart';
 import 'backup_actions.dart';
+import 'budgets.dart';
 import 'categories.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -53,6 +54,9 @@ class DashboardScreen extends ConsumerWidget {
                   'categories' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const CategoriesScreen())),
+                  'budgets' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const BudgetsScreen())),
                   'export' => exportBackup(context, ref),
                   'import' => importBackup(context, ref),
                   _ => null,
@@ -63,6 +67,14 @@ class DashboardScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: Icon(Icons.sell_outlined),
                       title: Text('Категории'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'budgets',
+                    child: ListTile(
+                      leading: Icon(Icons.track_changes_rounded),
+                      title: Text('Бюджеты'),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -88,7 +100,9 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _BalanceCard(balance: balance, stats: stats),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
+          const _SafeToSpendCard(),
+          const SizedBox(height: 8),
           if (stats.byCategory.isNotEmpty) ...[
             _SectionHeader(title: 'Структура трат'),
             const SizedBox(height: 12),
@@ -115,6 +129,82 @@ class DashboardScreen extends ConsumerWidget {
                   onTap: () => showAddTransactionSheet(context, initial: t),
                 )),
         ],
+      ),
+    );
+  }
+}
+
+/// Компактная карточка «безопасно тратить сегодня» с предупреждением
+/// о категориях на грани лимита; скрыта, пока бюджеты не настроены.
+class _SafeToSpendCard extends ConsumerWidget {
+  const _SafeToSpendCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final safeToday = ref.watch(safeToSpendTodayProvider);
+    if (safeToday == null) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final warnings = ref
+        .watch(budgetProgressProvider)
+        .where((b) => b.nearLimit || b.overspent)
+        .toList();
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const BudgetsScreen())),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.today_rounded, color: NumoColors.violet, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Безопасно тратить сегодня',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      formatMoney(safeToday),
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+              ),
+              if (warnings.isNotEmpty)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: (warnings.any((b) => b.overspent)
+                            ? NumoColors.coral
+                            : NumoColors.amber)
+                        .withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    warnings.any((b) => b.overspent)
+                        ? 'Лимит превышен'
+                        : 'Близко к лимиту',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: warnings.any((b) => b.overspent)
+                          ? NumoColors.coral
+                          : NumoColors.amber,
+                    ),
+                  ),
+                )
+              else
+                Icon(Icons.chevron_right_rounded,
+                    color: theme.colorScheme.onSurfaceVariant),
+            ],
+          ),
+        ),
       ),
     );
   }
