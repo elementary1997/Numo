@@ -4,14 +4,41 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 
 /// Минимальное извлечение текста из PDF (ADR-0012): FlateDecode-потоки,
-/// текстовые операторы Tj/TJ/' и ToUnicode CMap для кириллицы. Этого
-/// достаточно для текстовых выписок (Сбербанк и большинство банков);
-/// сканы и экзотические кодировки не поддерживаются.
+/// текстовые операторы Tj/TJ/' и ToUnicode CMap для кириллицы.
+///
+/// В настоящих банковских PDF (СберБанк) несколько шрифтов, у каждого —
+/// своя таблица ToUnicode, поэтому перекодировка ведётся по активному
+/// шрифту (оператор Tf): объекты → шрифты страницы → CMap каждого.
+/// Объекты внутри /ObjStm тоже разбираются. Сканы не поддерживаются.
 String extractPdfText(Uint8List bytes) {
   final data = latin1.decode(bytes, allowInvalid: true);
-  final cmap = <int, String>{};
-  final contents = <String>[];
 
+  // --- Заголовки объектов «N 0 obj»: по позиции потока находим хозяина.
+  final headers = <({int num, int pos, int end})>[];
+  for (final m in RegExp(r'(\d+)\s+0\s+obj\b').allMatches(data)) {
+    headers.add((num: int.parse(m.group(1)!), pos: m.start, end: m.end));
+  }
+  int? ownerOf(int pos) {
+    ({int num, int pos, int end})? best;
+    for (final h in headers) {
+      if (h.pos < pos && (best == null || h.pos > best.pos)) best = h;
+    }
+    return best?.num;
+  }
+
+  // Текст словаря объекта — от заголовка до stream/endobj.
+  final dicts = <int, String>{};
+  for (final h in headers) {
+    var end = data.length;
+    for (final stop in ['stream', 'endobj']) {
+      final idx = data.indexOf(stop, h.end);
+      if (idx != -1 && idx < end) end = idx;
+    }
+    dicts[h.num] = data.substring(h.end, end);
+  }
+
+  // --- Потоки: раскодировать, привязать к объектам.
+  final streams = <int, String>{};
   var searchFrom = 0;
   while (true) {
     final streamStart = data.indexOf('stream', searchFrom);
@@ -45,18 +72,97 @@ String extractPdfText(Uint8List bytes) {
       }
     }
     final text = latin1.decode(decoded, allowInvalid: true);
-    if (text.contains('beginbfchar') || text.contains('beginbfrange')) {
-      _parseCmap(text, cmap);
-    } else if (text.contains('BT') &&
-        (text.contains('Tj') || text.contains('TJ'))) {
-      contents.add(text);
+    // Потоки вне объектов (упрощённые PDF) получают синтетический
+    // ключ — работают через общий запасной CMap.
+    final owner = ownerOf(streamStart) ?? -(streams.length + 1);
+    streams[owner] = text;
+
+    // Объекты, упакованные в /ObjStm: словари шрифтов и страниц.
+    if (dict.contains('/ObjStm')) {
+      final first =
+          int.tryParse(RegExp(r'/First\s+(\d+)').firstMatch(dict)?.group(1) ??
+              '');
+      if (first != null && first <= text.length) {
+        final pairs = RegExp(r'\d+')
+            .allMatches(text.substring(0, first))
+            .map((m) => int.parse(m.group(0)!))
+            .toList();
+        for (var i = 0; i + 1 < pairs.length; i += 2) {
+          final embeddedNum = pairs[i];
+          final start = first + pairs[i + 1];
+          final end = i + 3 < pairs.length
+              ? first + pairs[i + 3]
+              : text.length;
+          if (start <= text.length && start < end) {
+            dicts[embeddedNum] = text.substring(
+                start, end.clamp(start, text.length));
+          }
+        }
+      }
     }
   }
 
+  // --- CMap каждого ToUnicode-потока по номеру объекта.
+  final cmapByObj = <int, Map<int, String>>{};
+  final merged = <int, String>{}; // общий запасной вариант
+  streams.forEach((objNum, text) {
+    if (text.contains('beginbfchar') || text.contains('beginbfrange')) {
+      final cmap = <int, String>{};
+      _parseCmap(text, cmap);
+      cmapByObj[objNum] = cmap;
+      cmap.forEach((k, v) => merged.putIfAbsent(k, () => v));
+    }
+  });
+
+  // --- Шрифт → его CMap (по ссылке /ToUnicode N 0 R).
+  final fontCmap = <int, Map<int, String>>{};
+  dicts.forEach((objNum, dict) {
+    if (!dict.contains('/Font')) return;
+    final ref = RegExp(r'/ToUnicode\s+(\d+)\s+0\s+R').firstMatch(dict);
+    if (ref == null) return;
+    final cmap = cmapByObj[int.parse(ref.group(1)!)];
+    if (cmap != null) fontCmap[objNum] = cmap;
+  });
+
+  // --- Страницы: имена шрифтов ресурсов + контент-потоки.
   final buffer = StringBuffer();
-  for (final content in contents) {
-    _extractFromContent(content, cmap, buffer);
-  }
+  final usedContents = <int>{};
+  dicts.forEach((objNum, dict) {
+    if (!RegExp(r'/Type\s*/Page\b').hasMatch(dict)) return;
+
+    var resources = dict;
+    final resRef = RegExp(r'/Resources\s+(\d+)\s+0\s+R').firstMatch(dict);
+    if (resRef != null) {
+      resources = dicts[int.parse(resRef.group(1)!)] ?? '';
+    }
+    final fontsByName = <String, Map<int, String>>{};
+    for (final m in RegExp(r'/(\w+)\s+(\d+)\s+0\s+R')
+        .allMatches(resources)) {
+      final cmap = fontCmap[int.parse(m.group(2)!)];
+      if (cmap != null) fontsByName[m.group(1)!] = cmap;
+    }
+
+    for (final m
+        in RegExp(r'/Contents\s+((?:\[[^\]]*\])|(?:\d+\s+0\s+R))')
+            .allMatches(dict)) {
+      for (final ref in RegExp(r'(\d+)\s+0\s+R').allMatches(m.group(1)!)) {
+        final contentNum = int.parse(ref.group(1)!);
+        final content = streams[contentNum];
+        if (content == null || !usedContents.add(contentNum)) continue;
+        _extractFromContent(content, fontsByName, merged, buffer);
+      }
+    }
+  });
+  if (buffer.isNotEmpty) return buffer.toString();
+
+  // Запасной путь: страницы не разобрались — как раньше, все текстовые
+  // потоки с общим CMap.
+  streams.forEach((objNum, text) {
+    if (text.contains('BT') &&
+        (text.contains('Tj') || text.contains('TJ'))) {
+      _extractFromContent(text, const {}, merged, buffer);
+    }
+  });
   return buffer.toString();
 }
 
@@ -94,10 +200,18 @@ void _parseCmap(String text, Map<int, String> cmap) {
   }
 }
 
-/// Текстовые операторы контент-потока: строки Tj/TJ/', переводы
-/// строк на Td/TD/T*.
+/// Текстовые операторы контент-потока: строки Tj/TJ/', переводы строк
+/// на Td/TD/T*. Активный CMap переключается оператором Tf по имени
+/// шрифта из ресурсов страницы; [fallback] — общий CMap, если шрифт
+/// не распознан.
 void _extractFromContent(
-    String content, Map<int, String> cmap, StringBuffer out) {
+  String content,
+  Map<String, Map<int, String>> fontsByName,
+  Map<int, String> fallback,
+  StringBuffer out,
+) {
+  var cmap = fallback;
+
   String decodeHex(String hex) {
     // Сначала двухбайтовые коды (CID-шрифты), затем однобайтовые.
     if (cmap.isNotEmpty && hex.length % 4 == 0) {
@@ -143,12 +257,28 @@ void _extractFromContent(
             'n' => 0x0A,
             'r' => 0x0D,
             't' => 0x09,
+            'b' => 0x08,
+            'f' => 0x0C,
             _ => next.codeUnitAt(0),
           });
         }
       } else {
         bytes.add(c.codeUnitAt(0));
       }
+    }
+    // CID-шрифт: строка — последовательность двухбайтовых кодов.
+    if (bytes.length.isEven && cmap.keys.any((k) => k > 0xFF)) {
+      final sb = StringBuffer();
+      var allKnown = true;
+      for (var i = 0; i + 2 <= bytes.length; i += 2) {
+        final mapped = cmap[(bytes[i] << 8) | bytes[i + 1]];
+        if (mapped == null) {
+          allKnown = false;
+          break;
+        }
+        sb.write(mapped);
+      }
+      if (allKnown) return sb.toString();
     }
     final sb = StringBuffer();
     for (final code in bytes) {
@@ -157,11 +287,14 @@ void _extractFromContent(
     return sb.toString();
   }
 
+  // Литеральные строки могут содержать сбалансированные скобки без
+  // экранирования — «(МСК)», «(Ozon)»; поддерживаем один уровень.
   final token = RegExp(
-    r'\((?:[^()\\]|\\.)*\)|<[0-9A-Fa-f\s]+>|\[|\]|[A-Za-z\*][A-Za-z\*]?|[-+]?[\d.]+',
+    r'\((?:[^()\\]|\\.|\((?:[^()\\]|\\.)*\))*\)|<[0-9A-Fa-f\s]+>|/[\w.#]+|\[|\]|[A-Za-z\*][A-Za-z\*]?|[-+]?[\d.]+',
     dotAll: true,
   );
   final pendingStrings = <String>[];
+  String? lastName;
   for (final match in token.allMatches(content)) {
     final t = match.group(0)!;
     if (t.startsWith('(')) {
@@ -169,10 +302,17 @@ void _extractFromContent(
     } else if (t.startsWith('<')) {
       pendingStrings
           .add(decodeHex(t.replaceAll(RegExp(r'[<>\s]'), '')));
+    } else if (t.startsWith('/')) {
+      lastName = t.substring(1);
+    } else if (t == 'Tf') {
+      cmap = fontsByName[lastName] ?? fallback;
+      pendingStrings.clear();
     } else if (t == 'Tj' || t == 'TJ' || t == "'") {
       out.writeAll(pendingStrings);
       pendingStrings.clear();
-    } else if (t == 'Td' || t == 'TD' || t == 'T*') {
+    } else if (t == 'Td' || t == 'TD' || t == 'T*' || t == 'Tm') {
+      // Tm — новая текстовая матрица: генераторы (СберБанк) позицио-
+      // нируют каждый фрагмент ею, а не Td.
       if (out.isNotEmpty) out.write('\n');
       pendingStrings.clear();
     } else if (t == 'BT' || t == 'ET') {

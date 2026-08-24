@@ -166,6 +166,9 @@ List<List<String>> parsePdfStatement(Uint8List bytes) {
   final text = extractPdfText(bytes);
   if (text.trim().isEmpty) return const [];
 
+  final sber = parseSberCardStatement(text);
+  if (sber.isNotEmpty) return sber;
+
   final rows = <List<String>>[
     ['Date', 'Amount', 'Description'],
   ];
@@ -209,6 +212,62 @@ List<List<String>> parsePdfStatement(Uint8List bytes) {
     }
 
     rows.add([date.group(0)!, signed, description]);
+  }
+  return rows.length > 1 ? rows : const [];
+}
+
+/// Выписка по счёту карты СберБанка: каждая операция — дата и время,
+/// категория, сумма, затем дата обработки, код авторизации и описание
+/// продавца. Знаков нет; приход распознаётся по категории.
+List<List<String>> parseSberCardStatement(String text) {
+  final flat = text.replaceAll('\n', ' ');
+  final op = RegExp(
+    r'(\d{2}\.\d{2}\.\d{4})\s*(\d{2}:\d{2})\s*(.+?)\s*'
+    r'(\d[\d\s ]*,\d{2})\s*'
+    r'(\d{2}\.\d{2}\.\d{4})\s*(\d{6})\s*(.*?)'
+    r'(?=\d{2}\.\d{2}\.\d{4}\s*\d{2}:\d{2}|$)',
+    dotAll: true,
+  );
+
+  const incomeMarkers = [
+    'пополнение',
+    'зачисление',
+    'возврат',
+    'капитализация',
+    'входящий',
+  ];
+
+  final rows = <List<String>>[
+    ['Date', 'Amount', 'Description'],
+  ];
+  for (final m in op.allMatches(flat)) {
+    final category = m.group(3)!.replaceAll(RegExp(r'\s+'), ' ').trim();
+    // Совпадение похоже на операцию, только если «категория» короткая
+    // и без служебного текста колонтитулов.
+    if (category.length > 60 || category.contains('Страница')) continue;
+
+    final normalized = m
+        .group(4)!
+        .replaceAll(RegExp(r'[\s ]'), '')
+        .replaceAll(',', '.');
+    final lower = category.toLowerCase();
+    final isIncome = incomeMarkers.any(lower.contains);
+    final signed = isIncome ? normalized : '-$normalized';
+
+    var description = m
+        .group(7)!
+        .split(RegExp('Продолжение на|Индивидуальная выписка|Дата формирования'))
+        .first
+        .replaceAll(RegExp(r'Операция по карте\s*\*+\d+\.?'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (description.endsWith('.')) {
+      description = description.substring(0, description.length - 1);
+    }
+    description =
+        description.isEmpty ? category : '$category · $description';
+
+    rows.add([m.group(1)!, signed, description]);
   }
   return rows.length > 1 ? rows : const [];
 }

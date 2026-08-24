@@ -7,6 +7,7 @@ import '../models/category.dart';
 import '../models/recurring.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
+import '../widgets/month_day_picker.dart';
 import '../core/l10n.dart';
 
 class RecurringScreen extends ConsumerWidget {
@@ -272,15 +273,26 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                DropdownMenu<int>(
-                  initialSelection: _day,
-                  label: Text(context.l10n.dayLabel),
-                  width: 120,
-                  onSelected: (v) => setState(() => _day = v ?? 1),
-                  dropdownMenuEntries: [
-                    for (var d = 1; d <= 31; d++)
-                      DropdownMenuEntry(value: d, label: context.l10n.dayN(d)),
-                  ],
+                SizedBox(
+                  height: 56,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final day =
+                          await showMonthDayPicker(context, selected: _day);
+                      if (day != null) setState(() => _day = day);
+                    },
+                    icon: const Icon(Icons.calendar_month_rounded, size: 18),
+                    label: Text(context.l10n.dayN(_day)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: theme.colorScheme.onSurface,
+                      side: BorderSide(
+                          color: theme.colorScheme.outlineVariant),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.6.0',
+    itemsRu: [
+      'Импорт настоящих PDF-выписок СберБанка: категории банка и продавец переносятся в описание, приходы распознаются',
+      'Регулярные платежи: день месяца выбирается календарной сеткой',
+    ],
+    itemsEn: [
+      'Real Sberbank PDF statements import: bank categories and merchant go into the description, incomes are detected',
+      'Recurring payments: pick the day of month on a calendar grid',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.5.2',
     itemsRu: [
       'macOS: автообновление надёжно ставится в «Программы» и снимает карантин Gatekeeper',
