@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 /// Экран блокировки: PIN на входе в приложение.
 class LockScreen extends ConsumerStatefulWidget {
@@ -60,18 +61,18 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                     height: 72,
                     decoration: BoxDecoration(
                       gradient: NumoColors.heroGradient,
-                      borderRadius: BorderRadius.circular(22),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.lock_rounded,
                         color: Colors.white, size: 32),
                   ),
                   const SizedBox(height: 20),
-                  Text('Numo заблокирован',
+                  Text(context.l10n.lockedTitle,
                       style: theme.textTheme.titleLarge
                           ?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 6),
                   Text(
-                    _error ? 'Неверный PIN, попробуйте ещё раз' : 'Введите PIN',
+                    _error ? context.l10n.wrongPinRetry : context.l10n.enterPin,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: _error
                           ? theme.colorScheme.error
@@ -117,9 +118,9 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                             ? const SizedBox.shrink()
                             : Material(
                                 color: theme.colorScheme.surface,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(10),
                                 child: InkWell(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(10),
                                   onTap: () => _tap(key),
                                   child: Center(
                                     child: key == '⌫'

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'core/l10n.dart';
 import 'core/theme.dart';
 import 'data/accounts_repository.dart';
 import 'data/budgets_repository.dart';
@@ -25,17 +25,25 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ru');
   final database = NumoDatabase();
-  final repository = await TransactionsRepository.open(database);
-  final categoriesRepository = await CategoriesRepository.open(database);
+  // Язык сидирования данных первого запуска — по языку системы.
+  final seedLocale =
+      WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+          ? 'ru'
+          : 'en';
+  final repository =
+      await TransactionsRepository.open(database, seedLocale: seedLocale);
+  final categoriesRepository =
+      await CategoriesRepository.open(database, seedLocale: seedLocale);
   final budgetsRepository = await BudgetsRepository.open(database);
   final recurringRepository = await RecurringRepository.open(database);
-  final accountsRepository = await AccountsRepository.open(database);
+  final accountsRepository =
+      await AccountsRepository.open(database, seedLocale: seedLocale);
   final rulesRepository = await RulesRepository.open(database);
   final securityRepository = await SecurityRepository.open();
   final syncService = await SyncService.open();
-  final onboarded = (await SharedPreferences.getInstance())
-          .getBool(onboardedKey) ??
-      false;
+  final prefs = await SharedPreferences.getInstance();
+  final onboarded = prefs.getBool(onboardedKey) ?? false;
+  final localeOverride = prefs.getString('numo.locale');
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   runApp(
@@ -50,6 +58,7 @@ Future<void> main() async {
         securityRepositoryProvider.overrideWithValue(securityRepository),
         syncServiceProvider.overrideWithValue(syncService),
         onboardedProvider.overrideWith((ref) => onboarded),
+        localeOverrideProvider.overrideWith((ref) => localeOverride),
       ],
       child: const NumoApp(),
     ),
@@ -63,19 +72,16 @@ class NumoApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final locked = ref.watch(lockedProvider);
     final onboarded = ref.watch(onboardedProvider);
+    final localeOverride = ref.watch(localeOverrideProvider);
     return MaterialApp(
       title: 'Numo',
       debugShowCheckedModeBanner: false,
       theme: NumoTheme.light(),
       darkTheme: NumoTheme.dark(),
       themeMode: ThemeMode.system,
-      locale: const Locale('ru'),
-      supportedLocales: const [Locale('ru'), Locale('en')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
+      locale: localeOverride == null ? null : Locale(localeOverride),
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
       home: locked
           ? const LockScreen()
           : !onboarded

@@ -313,6 +313,9 @@ final lockedProvider = StateProvider<bool>(
 /// Пройден ли onboarding первого запуска (значение задаётся в main()).
 final onboardedProvider = StateProvider<bool>((ref) => true);
 
+/// Язык интерфейса: null — системный (начальное значение задаёт main()).
+final localeOverrideProvider = StateProvider<String?>((ref) => null);
+
 final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );

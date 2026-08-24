@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 /// Обвязка синхронизации вокруг приложения: при старте предлагает
 /// принять более новые данные из папки синхронизации, а изменения
@@ -31,20 +32,20 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     final accept = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Данные с другого устройства'),
-        content: Text(
-          'В папке синхронизации есть данные новее локальных '
-          '(от ${DateFormat('d MMM yyyy, HH:mm', 'ru').format(exportedAt)}): '
-          '${data.transactions.length} операций. Заменить локальные данные?',
-        ),
+        title: Text(context.l10n.syncNewerTitle),
+        content: Text(context.l10n.syncNewerBody(
+          DateFormat('d MMM yyyy, HH:mm', context.localeCode)
+              .format(exportedAt),
+          data.transactions.length,
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Оставить свои'),
+            child: Text(context.l10n.keepMine),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Принять'),
+            child: Text(context.l10n.accept),
           ),
         ],
       ),

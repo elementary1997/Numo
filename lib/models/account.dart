@@ -87,6 +87,16 @@ abstract final class Accounts {
     iconKey: 'savings',
     color: NumoColors.violet,
   );
+
+  static const mainEn = Account(
+    id: 'main',
+    title: 'Main',
+    iconKey: 'savings',
+    color: NumoColors.violet,
+  );
+
+  static Account mainFor(String languageCode) =>
+      languageCode == 'ru' ? main : mainEn;
 }
 
 /// Поиск счёта с фолбэком на основной.

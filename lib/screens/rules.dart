@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/category.dart';
 import '../models/category_rule.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 /// Правила автокатегоризации: «подстрока в описании → категория».
 class RulesScreen extends ConsumerWidget {
@@ -17,7 +18,7 @@ class RulesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Автокатегории'),
+        title: Text(context.l10n.menuRules),
         actions: [
           if (rules.isNotEmpty)
             TextButton.icon(
@@ -30,28 +31,26 @@ class RulesScreen extends ConsumerWidget {
                     ..clearSnackBars()
                     ..showSnackBar(SnackBar(
                         content: Text(changed == 0
-                            ? 'Совпадений не нашлось'
-                            : 'Переклассифицировано операций: $changed')));
+                            ? context.l10n.noMatchesToast
+                            : context.l10n.reclassifiedToast(changed))));
                 }
               },
               icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
-              label: const Text('Применить'),
+              label: Text(context.l10n.rulesApply),
             ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showRuleDialog(context, ref),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Правило'),
+        label: Text(context.l10n.ruleChip),
       ),
       body: rules.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Например: «ПЯТЕРОЧКА → Продукты». Правила срабатывают '
-                  'при импорте выписок, а кнопкой «Применить» — '
-                  'и на уже существующих операциях.',
+                  context.l10n.rulesEmptyHint,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant),
@@ -66,7 +65,7 @@ class RulesScreen extends ConsumerWidget {
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 4, vertical: 2),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(10)),
                     onTap: () =>
                         _showRuleDialog(context, ref, initial: rule),
                     leading: Icon(
@@ -104,22 +103,22 @@ class RulesScreen extends ConsumerWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(initial == null ? 'Новое правило' : 'Изменить правило'),
+          title: Text(initial == null ? context.l10n.newRule : context.l10n.editRule),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: controller,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Подстрока в описании',
-                  hintText: 'ПЯТЕРОЧКА',
+                decoration: InputDecoration(
+                  labelText: context.l10n.patternLabel,
+                  hintText: context.l10n.patternHint,
                 ),
               ),
               const SizedBox(height: 14),
               DropdownMenu<String>(
                 initialSelection: categoryId,
-                label: const Text('Категория'),
+                label: Text(context.l10n.categoryLabel),
                 expandedInsets: EdgeInsets.zero,
                 onSelected: (v) =>
                     setState(() => categoryId = v ?? categoryId),
@@ -133,7 +132,7 @@ class RulesScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Отмена'),
+              child: Text(context.l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -147,7 +146,7 @@ class RulesScreen extends ConsumerWidget {
                     ));
                 Navigator.of(context).pop();
               },
-              child: const Text('Сохранить'),
+              child: Text(context.l10n.save),
             ),
           ],
         ),

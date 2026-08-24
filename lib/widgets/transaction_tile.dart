@@ -34,14 +34,14 @@ class TransactionTile extends ConsumerWidget {
 
     return ListTile(
       onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       leading: Container(
         width: 46,
         height: 46,
         decoration: BoxDecoration(
           color: category.color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(9),
         ),
         child: Icon(category.icon, color: category.color, size: 23),
       ),

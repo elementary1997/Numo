@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/theme.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 const onboardedKey = 'numo.onboarded.v1';
 
@@ -19,29 +20,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _controller = PageController();
   int _page = 0;
 
-  static const _pages = [
-    (
-      icon: Icons.donut_small_rounded,
-      title: 'Знай, куда уходят деньги',
-      text: 'Быстрое добавление трат, наглядная структура расходов '
-          'и аналитика по месяцам. Для начала уже добавлены '
-          'демо-данные — их можно просто удалить.',
-    ),
-    (
-      icon: Icons.track_changes_rounded,
-      title: 'Планируй, а не вспоминай',
-      text: 'Бюджеты по категориям с подсказкой «сколько можно тратить '
-          'сегодня», регулярные платежи создаются сами, выписки из '
-          'банка импортируются из CSV.',
-    ),
-    (
-      icon: Icons.lock_rounded,
-      title: 'Данные — только твои',
-      text: 'Всё хранится на устройстве, без серверов и аккаунтов. '
-          'PIN-код, бэкапы одним файлом и синхронизация через '
-          'твоё собственное облако.',
-    ),
-  ];
+  List<({IconData icon, String title, String text})> _pages(
+          BuildContext context) =>
+      [
+        (
+          icon: Icons.donut_small_rounded,
+          title: context.l10n.onb1Title,
+          text: context.l10n.onb1Text,
+        ),
+        (
+          icon: Icons.track_changes_rounded,
+          title: context.l10n.onb2Title,
+          text: context.l10n.onb2Text,
+        ),
+        (
+          icon: Icons.lock_rounded,
+          title: context.l10n.onb3Title,
+          text: context.l10n.onb3Text,
+        ),
+      ];
 
   Future<void> _finish() async {
     final prefs = await SharedPreferences.getInstance();
@@ -58,7 +55,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isLast = _page == _pages.length - 1;
+    final pages = _pages(context);
+    final isLast = _page == pages.length - 1;
 
     return Scaffold(
       body: SafeArea(
@@ -73,17 +71,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     padding: const EdgeInsets.all(12),
                     child: TextButton(
                       onPressed: _finish,
-                      child: const Text('Пропустить'),
+                      child: Text(context.l10n.skip),
                     ),
                   ),
                 ),
                 Expanded(
                   child: PageView.builder(
                     controller: _controller,
-                    itemCount: _pages.length,
+                    itemCount: pages.length,
                     onPageChanged: (i) => setState(() => _page = i),
                     itemBuilder: (context, i) {
-                      final page = _pages[i];
+                      final page = pages[i];
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 36),
                         child: Column(
@@ -94,7 +92,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               height: 140,
                               decoration: BoxDecoration(
                                 gradient: NumoColors.heroGradient,
-                                borderRadius: BorderRadius.circular(40),
+                                borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
                                     color: NumoColors.violetDeep
@@ -132,7 +130,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    for (var i = 0; i < _pages.length; i++)
+                    for (var i = 0; i < pages.length; i++)
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
                         width: i == _page ? 26 : 9,
@@ -164,11 +162,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       style: FilledButton.styleFrom(
                         backgroundColor: NumoColors.violet,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
+                            borderRadius: BorderRadius.circular(10)),
                         textStyle: theme.textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
-                      child: Text(isLast ? 'Начать' : 'Далее'),
+                      child: Text(isLast ? context.l10n.start : context.l10n.next),
                     ),
                   ),
                 ),

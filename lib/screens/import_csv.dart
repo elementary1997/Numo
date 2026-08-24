@@ -9,6 +9,7 @@ import '../data/statement_import.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 /// Импорт банковской выписки из CSV: выбор файла → маппинг колонок →
 /// предпросмотр с дедупликацией → импорт.
@@ -39,7 +40,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     if (rows.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Файл пуст или не похож на CSV')));
+            SnackBar(content: Text(context.l10n.fileEmptyToast)));
       }
       return;
     }
@@ -92,7 +93,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
-          content: Text('Импортировано операций: ${toImport.length}')));
+          content: Text(context.l10n.importedToast(toImport.length))));
   }
 
   @override
@@ -106,7 +107,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
         parsed.where((r) => r.tx == null).length;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Импорт выписки')),
+      appBar: AppBar(title: Text(context.l10n.importStatementTitle)),
       body: _rows == null
           ? Center(
               child: Column(
@@ -116,7 +117,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                       size: 56, color: theme.colorScheme.onSurfaceVariant),
                   const SizedBox(height: 16),
                   Text(
-                    'Выберите CSV-файл выписки из банка',
+                    context.l10n.chooseCsvPrompt,
                     style: theme.textTheme.bodyLarge?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant),
                   ),
@@ -124,7 +125,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                   FilledButton.icon(
                     onPressed: _pickFile,
                     icon: const Icon(Icons.upload_file_rounded),
-                    label: const Text('Выбрать файл'),
+                    label: Text(context.l10n.chooseFile),
                   ),
                 ],
               ),
@@ -132,7 +133,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
               children: [
-                Text('Колонки',
+                Text(context.l10n.columnsLabel,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w800)),
                 const SizedBox(height: 10),
@@ -140,18 +141,18 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    _columnPicker('Дата', _dateColumn,
+                    _columnPicker(context.l10n.colDate, _dateColumn,
                         (v) => setState(() => _dateColumn = v)),
-                    _columnPicker('Сумма', _amountColumn,
+                    _columnPicker(context.l10n.colAmount, _amountColumn,
                         (v) => setState(() => _amountColumn = v)),
-                    _columnPicker('Описание', _noteColumn,
+                    _columnPicker(context.l10n.colDescription, _noteColumn,
                         (v) => setState(() => _noteColumn = v),
                         allowNone: true),
                     if (accounts.length > 1)
                       DropdownMenu<String>(
                         initialSelection:
                             _accountId ?? accounts.first.id,
-                        label: const Text('Счёт'),
+                        label: Text(context.l10n.accountLabel),
                         width: 180,
                         onSelected: (v) =>
                             setState(() => _accountId = v),
@@ -165,16 +166,15 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                 ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Суммы без знака — это расходы'),
-                  subtitle: const Text(
-                      'Включите, если в выписке нет минусов у трат'),
+                  title: Text(context.l10n.unsignedIsExpense),
+                  subtitle: Text(context.l10n.unsignedIsExpenseHint),
                   value: _unsignedIsExpense,
                   onChanged: (v) =>
                       setState(() => _unsignedIsExpense = v),
                 ),
                 const Divider(height: 24),
                 Text(
-                  'Будет импортировано: $importable · дубликаты: $duplicates · нераспознано: $skipped',
+                  context.l10n.importSummary(importable, duplicates, skipped),
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
@@ -183,7 +183,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                 if (parsed.length > 8)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('… и ещё ${parsed.length - 8} строк',
+                    child: Text(context.l10n.moreRows(parsed.length - 8),
                         style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant)),
                   ),
@@ -195,9 +195,9 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                         importable > 0 ? () => _import(parsed) : null,
                     style: FilledButton.styleFrom(
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18)),
+                          borderRadius: BorderRadius.circular(10)),
                     ),
-                    child: Text('Импортировать $importable операций'),
+                    child: Text(context.l10n.importButton(importable)),
                   ),
                 ),
               ],
@@ -213,7 +213,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
       final example = i < sample.length ? sample[i] : '';
       final trimmed =
           example.length > 14 ? '${example.substring(0, 14)}…' : example;
-      return trimmed.isEmpty ? 'Колонка ${i + 1}' : '${i + 1}: $trimmed';
+      return trimmed.isEmpty ? context.l10n.columnN(i + 1) : '${i + 1}: $trimmed';
     }
 
     return DropdownMenu<int>(
@@ -223,7 +223,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
       onSelected: (v) => onChanged(v == -1 ? null : v),
       dropdownMenuEntries: [
         if (allowNone)
-          const DropdownMenuEntry(value: -1, label: '— нет —'),
+          DropdownMenuEntry(value: -1, label: context.l10n.noneOption),
         for (var i = 0; i < _columnCount; i++)
           DropdownMenuEntry(value: i, label: columnLabel(i)),
       ],
@@ -253,7 +253,7 @@ class _PreviewTile extends ConsumerWidget {
           style: theme.textTheme.bodySmall
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
-        trailing: Text('пропуск',
+        trailing: Text(context.l10n.skippedRow,
             style: theme.textTheme.labelSmall
                 ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
       );
@@ -273,9 +273,9 @@ class _PreviewTile extends ConsumerWidget {
         ),
       ),
       subtitle: Text(
-          '${DateFormat('d MMM yyyy', 'ru').format(tx.date)} · ${category.title}'),
+          '${DateFormat('d MMM yyyy', context.localeCode).format(tx.date)} · ${category.title}'),
       trailing: row.duplicate
-          ? Text('дубль',
+          ? Text(context.l10n.duplicateRow,
               style: theme.textTheme.labelSmall
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant))
           : Text(

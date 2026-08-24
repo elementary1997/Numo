@@ -20,7 +20,8 @@ class CategoriesRepository {
   final NumoDatabase _db;
   List<TxCategory> _cache;
 
-  static Future<CategoriesRepository> open(NumoDatabase db) async {
+  static Future<CategoriesRepository> open(NumoDatabase db,
+      {String seedLocale = 'ru'}) async {
     final rows = await db.select(db.categoryRows).get();
     if (rows.isNotEmpty) {
       final repo = CategoriesRepository._(db, rows.map(_fromRow).toList());
@@ -45,7 +46,7 @@ class CategoriesRepository {
     } else {
       // Категории нельзя удалить все до единой, поэтому пустая
       // таблица означает чистую установку.
-      await repo.saveAll(Categories.defaults);
+      await repo.saveAll(Categories.defaultsFor(seedLocale));
     }
     await prefs.setBool(_migratedKey, true);
     return repo;

@@ -11,6 +11,7 @@ import '../data/csv.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 void _toast(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
@@ -38,10 +39,10 @@ Future<void> exportBackup(BuildContext context, WidgetRef ref) async {
       name: suggested,
     );
     await file.saveTo(location.path);
-    if (context.mounted) _toast(context, 'Бэкап сохранён');
+    if (context.mounted) _toast(context, context.l10n.backupSavedToast);
   } on UnimplementedError {
     if (context.mounted) {
-      _toast(context, 'Экспорт в файл недоступен на этой платформе');
+      _toast(context, context.l10n.exportUnavailableToast);
     }
   }
 }
@@ -54,11 +55,21 @@ Future<void> exportCsv(BuildContext context, WidgetRef ref) async {
   final txs = ref.read(transactionsProvider);
 
   final csv = Csv.write([
-    ['Дата', 'Тип', 'Сумма', 'Валюта', 'Категория', 'Счёт', 'Заметка'],
+    [
+      context.l10n.csvHeaderDate,
+      context.l10n.csvHeaderType,
+      context.l10n.csvHeaderAmount,
+      context.l10n.csvHeaderCurrency,
+      context.l10n.csvHeaderCategory,
+      context.l10n.csvHeaderAccount,
+      context.l10n.csvHeaderNote,
+    ],
     for (final t in txs)
       [
         DateFormat('dd.MM.yyyy HH:mm').format(t.date),
-        t.isTransfer ? 'Перевод' : (t.isExpense ? 'Расход' : 'Доход'),
+        t.isTransfer
+            ? context.l10n.transfer
+            : (t.isExpense ? context.l10n.expense : context.l10n.incomeSingular),
         t.signedAmount.toStringAsFixed(2).replaceAll('.', ','),
         accounts.byId(t.accountId).currency,
         categories.byId(t.categoryId).title,
@@ -84,10 +95,10 @@ Future<void> exportCsv(BuildContext context, WidgetRef ref) async {
       name: suggested,
     );
     await file.saveTo(location.path);
-    if (context.mounted) _toast(context, 'CSV сохранён');
+    if (context.mounted) _toast(context, context.l10n.csvSavedToast);
   } on UnimplementedError {
     if (context.mounted) {
-      _toast(context, 'Экспорт в файл недоступен на этой платформе');
+      _toast(context, context.l10n.exportUnavailableToast);
     }
   }
 }
@@ -112,20 +123,17 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Восстановить из бэкапа?'),
-      content: Text(
-        'Текущие данные будут полностью заменены: '
-        '${parsed.transactions.length} операций и '
-        '${parsed.categories.length} категорий из файла.',
-      ),
+      title: Text(context.l10n.restoreTitle),
+      content: Text(context.l10n.restoreBody(
+          parsed.transactions.length, parsed.categories.length)),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Отмена'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Заменить'),
+          child: Text(context.l10n.replace),
         ),
       ],
     ),
@@ -139,5 +147,5 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   await ref
       .read(transactionsProvider.notifier)
       .replaceAll(parsed.transactions);
-  if (context.mounted) _toast(context, 'Данные восстановлены');
+  if (context.mounted) _toast(context, context.l10n.dataRestoredToast);
 }

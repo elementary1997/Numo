@@ -41,6 +41,8 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   final syncService = await SyncService.open();
   return ProviderScope(
     overrides: [
+      // Тесты закреплены за русской локалью — проверяемые строки русские.
+      localeOverrideProvider.overrideWith((ref) => 'ru'),
       securityRepositoryProvider.overrideWithValue(securityRepo),
       syncServiceProvider.overrideWithValue(syncService),
       repositoryProvider.overrideWithValue(repo),

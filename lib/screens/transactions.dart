@@ -8,6 +8,7 @@ import '../models/transaction.dart';
 import '../state/providers.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction.dart';
+import '../core/l10n.dart';
 
 enum _Filter { all, expense, income }
 
@@ -62,7 +63,7 @@ class TransactionsScreen extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-            child: Text('Операции',
+            child: Text(context.l10n.navTransactions,
                 style: theme.textTheme.headlineSmall
                     ?.copyWith(fontWeight: FontWeight.w800)),
           ),
@@ -71,12 +72,12 @@ class TransactionsScreen extends ConsumerWidget {
             child: TextField(
               onChanged: (v) => ref.read(_searchProvider.notifier).state = v,
               decoration: InputDecoration(
-                hintText: 'Поиск по заметкам и категориям',
+                hintText: context.l10n.searchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
                 filled: true,
                 fillColor: theme.colorScheme.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
                 isDense: true,
@@ -90,12 +91,16 @@ class TransactionsScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: SegmentedButton<_Filter>(
-                    segments: const [
-                      ButtonSegment(value: _Filter.all, label: Text('Все')),
+                    segments: [
                       ButtonSegment(
-                          value: _Filter.expense, label: Text('Расходы')),
+                          value: _Filter.all,
+                          label: Text(context.l10n.filterAll)),
                       ButtonSegment(
-                          value: _Filter.income, label: Text('Доходы')),
+                          value: _Filter.expense,
+                          label: Text(context.l10n.expenses)),
+                      ButtonSegment(
+                          value: _Filter.income,
+                          label: Text(context.l10n.income)),
                     ],
                     selected: {filter},
                     onSelectionChanged: (s) =>
@@ -114,8 +119,8 @@ class TransactionsScreen extends ConsumerWidget {
                 ? Center(
                     child: Text(
                       query.isNotEmpty || range != null
-                          ? 'Ничего не найдено'
-                          : 'Операций нет',
+                          ? context.l10n.nothingFound
+                          : context.l10n.noTransactions,
                       style: theme.textTheme.bodyLarge?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant),
                     ),
@@ -146,9 +151,9 @@ class _RangeChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final active = range != null;
     final label = active
-        ? '${DateFormat('d MMM', 'ru').format(range!.start)} — '
-            '${DateFormat('d MMM', 'ru').format(range!.end)}'
-        : 'Период';
+        ? '${DateFormat('d MMM', context.localeCode).format(range!.start)} — '
+            '${DateFormat('d MMM', context.localeCode).format(range!.end)}'
+        : context.l10n.period;
 
     return InputChip(
       avatar: active
@@ -172,7 +177,7 @@ class _RangeChip extends ConsumerWidget {
       },
       onDeleted:
           active ? () => ref.read(_rangeProvider.notifier).state = null : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 }
@@ -183,12 +188,12 @@ class _DayGroup extends ConsumerWidget {
   final DateTime day;
   final List<Tx> txs;
 
-  String _dayLabel(DateTime day) {
+  String _dayLabel(BuildContext context, DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    if (day == today) return 'Сегодня';
-    if (day == today.subtract(const Duration(days: 1))) return 'Вчера';
-    return toBeginningOfSentenceCase(DateFormat('d MMMM, EEEE', 'ru').format(day));
+    if (day == today) return context.l10n.today;
+    if (day == today.subtract(const Duration(days: 1))) return context.l10n.yesterday;
+    return toBeginningOfSentenceCase(DateFormat('d MMMM, EEEE', context.localeCode).format(day));
   }
 
   @override
@@ -204,7 +209,7 @@ class _DayGroup extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                _dayLabel(day),
+                _dayLabel(context, day),
                 style: theme.textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.w800),
               ),
@@ -228,7 +233,7 @@ class _DayGroup extends ConsumerWidget {
               padding: const EdgeInsets.only(right: 20),
               decoration: BoxDecoration(
                 color: theme.colorScheme.error.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.delete_rounded,
                   color: theme.colorScheme.error),
@@ -240,9 +245,9 @@ class _DayGroup extends ConsumerWidget {
                 ..clearSnackBars()
                 ..showSnackBar(
                   SnackBar(
-                    content: const Text('Операция удалена'),
+                    content: Text(context.l10n.transactionDeleted),
                     action: SnackBarAction(
-                      label: 'Вернуть',
+                      label: context.l10n.undo,
                       onPressed: () => ref
                           .read(transactionsProvider.notifier)
                           .add(removed),

@@ -7,6 +7,7 @@ import '../core/theme.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
 import '../widgets/charts.dart';
+import '../core/l10n.dart';
 
 class AnalyticsScreen extends ConsumerWidget {
   const AnalyticsScreen({super.key});
@@ -25,7 +26,7 @@ class AnalyticsScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
         children: [
-          Text('Аналитика',
+          Text(context.l10n.navAnalytics,
               style: theme.textTheme.headlineSmall
                   ?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 12),
@@ -41,7 +42,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 child: Center(
                   child: Text(
                     toBeginningOfSentenceCase(
-                        DateFormat.yMMMM('ru').format(month)),
+                        DateFormat.yMMMM(context.localeCode).format(month)),
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
@@ -62,7 +63,7 @@ class AnalyticsScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: _StatCard(
-                  label: 'Доходы',
+                  label: context.l10n.income,
                   value: stats.income,
                   color: NumoColors.mint,
                 ),
@@ -70,7 +71,7 @@ class AnalyticsScreen extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _StatCard(
-                  label: 'Расходы',
+                  label: context.l10n.expenses,
                   value: stats.expense,
                   color: NumoColors.coral,
                 ),
@@ -79,7 +80,7 @@ class AnalyticsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _StatCard(
-            label: stats.net >= 0 ? 'Накоплено за месяц' : 'Перерасход',
+            label: stats.net >= 0 ? context.l10n.savedThisMonth : context.l10n.overspendTitle,
             value: stats.net.abs(),
             color: stats.net >= 0 ? NumoColors.sky : NumoColors.amber,
           ),
@@ -90,7 +91,7 @@ class AnalyticsScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Расходы по дням',
+                  Text(context.l10n.expensesByDay,
                       style: theme.textTheme.titleMedium
                           ?.copyWith(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 16),
@@ -119,7 +120,7 @@ class AnalyticsScreen extends ConsumerWidget {
           const _CapitalDynamicsCard(),
           const SizedBox(height: 20),
           if (stats.byCategory.isNotEmpty) ...[
-            Text('Топ категорий',
+            Text(context.l10n.topCategories,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
@@ -134,7 +135,7 @@ class AnalyticsScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Center(
                 child: Text(
-                  'За этот месяц расходов нет',
+                  context.l10n.noExpensesThisMonth,
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -168,7 +169,7 @@ class _CapitalDynamicsCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Text('Капитал, 90 дней',
+                Text(context.l10n.capital90Days,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w800)),
                 const Spacer(),
@@ -269,7 +270,7 @@ class _CategoryRow extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: category.color.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(category.icon, color: category.color, size: 21),
           ),

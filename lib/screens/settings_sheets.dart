@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../data/sync_service.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 void _toast(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
@@ -18,17 +20,17 @@ Future<void> showSecurityDialog(BuildContext context, WidgetRef ref) async {
   final security = ref.read(securityRepositoryProvider);
 
   if (!security.hasPin) {
-    final pin = await _askPin(context, title: 'Новый PIN (4–6 цифр)');
+    final pin = await _askPin(context, title: context.l10n.newPinTitle);
     if (pin == null) return;
     if (!context.mounted) return;
-    final confirm = await _askPin(context, title: 'Повторите PIN');
+    final confirm = await _askPin(context, title: context.l10n.repeatPinTitle);
     if (confirm == null) return;
     if (pin != confirm) {
-      if (context.mounted) _toast(context, 'PIN не совпал — не сохранён');
+      if (context.mounted) _toast(context, context.l10n.pinMismatchToast);
       return;
     }
     await security.setPin(pin);
-    if (context.mounted) _toast(context, 'PIN установлен');
+    if (context.mounted) _toast(context, context.l10n.pinSetToast);
     return;
   }
 
@@ -36,21 +38,21 @@ Future<void> showSecurityDialog(BuildContext context, WidgetRef ref) async {
   final action = await showDialog<String>(
     context: context,
     builder: (context) => SimpleDialog(
-      title: const Text('Защита приложения'),
+      title: Text(context.l10n.securityTitle),
       children: [
         SimpleDialogOption(
           onPressed: () => Navigator.of(context).pop('change'),
-          child: const ListTile(
-            leading: Icon(Icons.pin_rounded),
-            title: Text('Сменить PIN'),
+          child: ListTile(
+            leading: const Icon(Icons.pin_rounded),
+            title: Text(context.l10n.changePin),
             contentPadding: EdgeInsets.zero,
           ),
         ),
         SimpleDialogOption(
           onPressed: () => Navigator.of(context).pop('disable'),
-          child: const ListTile(
-            leading: Icon(Icons.lock_open_rounded),
-            title: Text('Отключить PIN'),
+          child: ListTile(
+            leading: const Icon(Icons.lock_open_rounded),
+            title: Text(context.l10n.disablePin),
             contentPadding: EdgeInsets.zero,
           ),
         ),
@@ -59,23 +61,23 @@ Future<void> showSecurityDialog(BuildContext context, WidgetRef ref) async {
   );
   if (action == null || !context.mounted) return;
 
-  final current = await _askPin(context, title: 'Текущий PIN');
+  final current = await _askPin(context, title: context.l10n.currentPinTitle);
   if (current == null || !security.verify(current)) {
-    if (context.mounted) _toast(context, 'Неверный PIN');
+    if (context.mounted) _toast(context, context.l10n.wrongPinToast);
     return;
   }
 
   if (action == 'disable') {
     await security.clear();
-    if (context.mounted) _toast(context, 'PIN отключён');
+    if (context.mounted) _toast(context, context.l10n.pinDisabledToast);
     return;
   }
 
   if (!context.mounted) return;
-  final pin = await _askPin(context, title: 'Новый PIN (4–6 цифр)');
+  final pin = await _askPin(context, title: context.l10n.newPinTitle);
   if (pin == null) return;
   await security.setPin(pin);
-  if (context.mounted) _toast(context, 'PIN изменён');
+  if (context.mounted) _toast(context, context.l10n.pinChangedToast);
 }
 
 Future<String?> _askPin(BuildContext context, {required String title}) async {
@@ -96,14 +98,14 @@ Future<String?> _askPin(BuildContext context, {required String title}) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
             final pin = controller.text;
             if (pin.length >= 4) Navigator.of(context).pop(pin);
           },
-          child: const Text('Далее'),
+          child: Text(context.l10n.next),
         ),
       ],
     ),
@@ -112,11 +114,49 @@ Future<String?> _askPin(BuildContext context, {required String title}) async {
   return result;
 }
 
+/// Диалог выбора языка интерфейса.
+Future<void> showLanguageDialog(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(localeOverrideProvider);
+  final chosen = await showDialog<String>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(context.l10n.menuLanguage),
+      children: [
+        for (final (value, label) in [
+          ('system', context.l10n.languageSystem),
+          ('ru', context.l10n.languageRussian),
+          ('en', context.l10n.languageEnglish),
+        ])
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop(value),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                (current ?? 'system') == value
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+              ),
+              title: Text(label),
+            ),
+          ),
+      ],
+    ),
+  );
+  if (chosen == null) return;
+  final newValue = chosen == 'system' ? null : chosen;
+  ref.read(localeOverrideProvider.notifier).state = newValue;
+  final prefs = await SharedPreferences.getInstance();
+  if (newValue == null) {
+    await prefs.remove('numo.locale');
+  } else {
+    await prefs.setString('numo.locale', newValue);
+  }
+}
+
 /// Диалог настройки синхронизации через папку облака.
 Future<void> showSyncDialog(BuildContext context, WidgetRef ref) async {
   if (!SyncService.supported) {
-    _toast(context,
-        'На web синхронизация недоступна — используйте бэкап (JSON)');
+    _toast(context, context.l10n.syncWebUnavailable);
     return;
   }
   final sync = ref.read(syncServiceProvider);
@@ -126,23 +166,21 @@ Future<void> showSyncDialog(BuildContext context, WidgetRef ref) async {
   final action = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('Синхронизация'),
+      title: Text(context.l10n.syncTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(directory == null
-              ? 'Укажите папку, которую синхронизирует ваше облако '
-                  '(Яндекс.Диск, Dropbox, Syncthing…). Numo будет держать '
-                  'там файл ${SyncService.fileName} и подхватывать '
-                  'изменения с других устройств.'
-              : 'Папка: $directory'),
+              ? context.l10n.syncExplainer(SyncService.fileName)
+              : context.l10n.syncFolder(directory)),
           if (lastWrite != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                'Последняя запись: '
-                '${DateFormat('d MMM yyyy, HH:mm', 'ru').format(lastWrite)}',
+                context.l10n.syncLastWrite(
+                    DateFormat('d MMM yyyy, HH:mm', context.localeCode)
+                        .format(lastWrite)),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
@@ -152,15 +190,15 @@ Future<void> showSyncDialog(BuildContext context, WidgetRef ref) async {
         if (directory != null)
           TextButton(
             onPressed: () => Navigator.of(context).pop('disable'),
-            child: const Text('Отключить'),
+            child: Text(context.l10n.disable),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Закрыть'),
+          child: Text(context.l10n.close),
         ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop('choose'),
-          child: Text(directory == null ? 'Выбрать папку' : 'Сменить папку'),
+          child: Text(directory == null ? context.l10n.chooseFolder : context.l10n.changeFolder),
         ),
       ],
     ),
@@ -168,7 +206,7 @@ Future<void> showSyncDialog(BuildContext context, WidgetRef ref) async {
 
   if (action == 'disable') {
     await sync.setDirectory(null);
-    if (context.mounted) _toast(context, 'Синхронизация отключена');
+    if (context.mounted) _toast(context, context.l10n.syncDisabledToast);
     return;
   }
   if (action != 'choose') return;
@@ -178,6 +216,6 @@ Future<void> showSyncDialog(BuildContext context, WidgetRef ref) async {
   await sync.setDirectory(dir);
   await sync.writeNow(collectBackupData(ref.read));
   if (context.mounted) {
-    _toast(context, 'Синхронизация включена, данные записаны');
+    _toast(context, context.l10n.syncEnabledToast);
   }
 }

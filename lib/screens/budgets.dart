@@ -6,6 +6,7 @@ import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 class BudgetsScreen extends ConsumerWidget {
   const BudgetsScreen({super.key});
@@ -24,7 +25,7 @@ class BudgetsScreen extends ConsumerWidget {
         categories.where((c) => !budgets.containsKey(c.id)).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Бюджеты')),
+      appBar: AppBar(title: Text(context.l10n.menuBudgets)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
         children: [
@@ -33,7 +34,7 @@ class BudgetsScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: NumoColors.heroGradient,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
@@ -42,7 +43,7 @@ class BudgetsScreen extends ConsumerWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.today_rounded,
                         color: Colors.white),
@@ -52,7 +53,7 @@ class BudgetsScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Безопасно тратить сегодня',
+                        Text(context.l10n.safeToSpendToday,
                             style: theme.textTheme.bodySmall?.copyWith(
                                 color:
                                     Colors.white.withValues(alpha: 0.75))),
@@ -75,14 +76,13 @@ class BudgetsScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
-                'Задайте месячный лимит хотя бы одной категории — '
-                'появятся прогресс и подсказка, сколько можно тратить в день.',
+                context.l10n.budgetsEmptyHint,
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
             )
           else ...[
-            Text('С лимитом',
+            Text(context.l10n.withLimit,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
@@ -90,7 +90,7 @@ class BudgetsScreen extends ConsumerWidget {
             const SizedBox(height: 20),
           ],
           if (withoutBudget.isNotEmpty) ...[
-            Text('Без лимита',
+            Text(context.l10n.withoutLimit,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
@@ -99,14 +99,14 @@ class BudgetsScreen extends ConsumerWidget {
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(10)),
                 onTap: () => showBudgetDialog(context, ref, c),
                 leading: Container(
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
                     color: c.color.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(c.icon, color: c.color, size: 22),
                 ),
@@ -139,7 +139,7 @@ class _BudgetRow extends ConsumerWidget {
             : b.category.color;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       onTap: () => showBudgetDialog(context, ref, b.category,
           currentLimit: b.limit),
       child: Padding(
@@ -151,7 +151,7 @@ class _BudgetRow extends ConsumerWidget {
               height: 44,
               decoration: BoxDecoration(
                 color: b.category.color.withValues(alpha: 0.16),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(b.category.icon, color: b.category.color, size: 22),
             ),
@@ -172,7 +172,8 @@ class _BudgetRow extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '${formatMoney(b.spent)} из ${formatMoney(b.limit)}',
+                        context.l10n
+                            .spentOf(formatMoney(b.spent), formatMoney(b.limit)),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: b.overspent
@@ -234,9 +235,9 @@ Future<void> showBudgetDialog(
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
         ],
-        decoration: const InputDecoration(
-          labelText: 'Лимит на месяц, ₽',
-          hintText: 'Например, 25000',
+        decoration: InputDecoration(
+          labelText: context.l10n.monthlyLimitLabel,
+          hintText: context.l10n.monthlyLimitHint,
         ),
       ),
       actions: [
@@ -246,11 +247,11 @@ Future<void> showBudgetDialog(
               ref.read(budgetsProvider.notifier).setLimit(category.id, null);
               Navigator.of(context).pop();
             },
-            child: const Text('Убрать лимит'),
+            child: Text(context.l10n.removeLimit),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Отмена'),
+          child: Text(context.l10n.cancel),
         ),
         FilledButton(
           onPressed: () {
@@ -261,7 +262,7 @@ Future<void> showBudgetDialog(
             }
             Navigator.of(context).pop();
           },
-          child: const Text('Сохранить'),
+          child: Text(context.l10n.save),
         ),
       ],
     ),

@@ -200,6 +200,37 @@ abstract final class Categories {
     color: Color(0xFF8E8AA6),
   );
 
+  /// Английский встроенный набор — те же id/иконки/цвета.
+  static List<TxCategory> get defaultsEn => [
+        for (final c in defaults)
+          TxCategory(
+            id: c.id,
+            title: _titlesEn[c.id] ?? c.title,
+            iconKey: c.iconKey,
+            color: c.color,
+            isIncome: c.isIncome,
+          ),
+      ];
+
+  static const _titlesEn = {
+    'groceries': 'Groceries',
+    'cafe': 'Cafes & dining',
+    'transport': 'Transport',
+    'home': 'Home & utilities',
+    'health': 'Health',
+    'entertainment': 'Entertainment',
+    'shopping': 'Shopping',
+    'other': 'Other',
+    'salary': 'Salary',
+    'freelance': 'Side income',
+    'gifts': 'Gifts',
+    'transfer': 'Transfer',
+  };
+
+  /// Набор для сидирования по языку системы.
+  static List<TxCategory> defaultsFor(String languageCode) =>
+      languageCode == 'ru' ? defaults : defaultsEn;
+
   static const defaults = [
     groceries,
     cafe,

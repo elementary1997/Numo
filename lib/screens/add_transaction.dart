@@ -10,6 +10,7 @@ import '../models/account.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 import 'categories.dart';
+import '../core/l10n.dart';
 
 /// Открывает sheet добавления новой операции, либо редактирования
 /// существующей, если передан [initial].
@@ -21,7 +22,7 @@ Future<void> showAddTransactionSheet(BuildContext context, {Tx? initial}) {
     constraints: const BoxConstraints(maxWidth: 520),
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
     ),
     builder: (_) => _AddTransactionSheet(initial: initial),
   );
@@ -131,9 +132,10 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
         ScaffoldMessenger.of(context)
           ..clearSnackBars()
           ..showSnackBar(SnackBar(
-            content: Text(
-                'Лимит «${budget.category.title}» превышен: '
-                '${formatMoney(budget.spent)} из ${formatMoney(budget.limit)}'),
+            content: Text(context.l10n.limitExceededToast(
+                budget.category.title,
+                formatMoney(budget.spent),
+                formatMoney(budget.limit))),
           ));
       }
     }
@@ -164,9 +166,12 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
             ),
             const SizedBox(height: 16),
             SegmentedButton<TxType>(
-              segments: const [
-                ButtonSegment(value: TxType.expense, label: Text('Расход')),
-                ButtonSegment(value: TxType.income, label: Text('Доход')),
+              segments: [
+                ButtonSegment(
+                    value: TxType.expense, label: Text(context.l10n.expense)),
+                ButtonSegment(
+                    value: TxType.income,
+                    label: Text(context.l10n.incomeSingular)),
               ],
               selected: {_type},
               onSelectionChanged: (s) => setState(() {
@@ -234,7 +239,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                         side: BorderSide.none,
                         showCheckmark: false,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(8)),
                       );
                     },
                   ),
@@ -255,7 +260,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                     return ActionChip(
                       avatar: Icon(Icons.add_rounded,
                           size: 18, color: theme.colorScheme.onSurfaceVariant),
-                      label: const Text('Новая'),
+                      label: Text(context.l10n.newChip),
                       labelStyle: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -263,7 +268,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                       onPressed: () => showCategoryEditor(context,
                           isIncome: _type == TxType.income),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(8)),
                     );
                   }
                   final c = categories[i];
@@ -287,7 +292,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                     side: BorderSide.none,
                     showCheckmark: false,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(8)),
                   );
                 },
               );
@@ -300,12 +305,12 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                   child: TextField(
                     controller: _noteController,
                     decoration: InputDecoration(
-                      hintText: 'Заметка',
+                      hintText: context.l10n.note,
                       prefixIcon: const Icon(Icons.edit_note_rounded),
                       filled: true,
                       fillColor: theme.colorScheme.surface,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
                       ),
                       isDense: true,
@@ -318,12 +323,13 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                   avatar: const Icon(Icons.calendar_today_rounded, size: 16),
                   label: Text(
                     isToday
-                        ? 'Сегодня'
-                        : DateFormat('d MMM', 'ru').format(_date),
+                        ? context.l10n.today
+                        : DateFormat('d MMM', context.localeCode)
+                            .format(_date),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                      borderRadius: BorderRadius.circular(8)),
                 ),
               ],
             ),
@@ -338,15 +344,15 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                 style: FilledButton.styleFrom(
                   backgroundColor: NumoColors.violet,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(10)),
                   textStyle: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 child: Text(_isEditing
-                    ? 'Сохранить изменения'
+                    ? context.l10n.saveChanges
                     : _type == TxType.expense
-                        ? 'Добавить расход'
-                        : 'Добавить доход'),
+                        ? context.l10n.addExpense
+                        : context.l10n.addIncome),
               ),
             ),
           ],
@@ -382,9 +388,9 @@ class _Keypad extends StatelessWidget {
         for (final key in _keys)
           Material(
             color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
             child: InkWell(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
               onTap: () => onTap(key),
               child: Center(
                 child: key == '⌫'

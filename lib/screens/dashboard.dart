@@ -18,6 +18,7 @@ import 'import_csv.dart';
 import 'recurring.dart';
 import 'rules.dart';
 import 'settings_sheets.dart';
+import '../core/l10n.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -38,24 +39,26 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Text('Numo',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  )),
+              if (MediaQuery.sizeOf(context).width < 840)
+                Text('Numo',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    )),
               const Spacer(),
               Text(
                 toBeginningOfSentenceCase(
-                    DateFormat.yMMMM('ru').format(now)),
+                    DateFormat.yMMMM(context.localeCode).format(now)),
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
+              if (MediaQuery.sizeOf(context).width < 840)
               PopupMenuButton<String>(
-                tooltip: 'Меню',
+                tooltip: context.l10n.menuTooltip,
                 icon: Icon(Icons.more_vert_rounded,
                     color: theme.colorScheme.onSurfaceVariant),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                    borderRadius: BorderRadius.circular(10)),
                 onSelected: (value) => switch (value) {
                   'categories' => Navigator.of(context).push(
                       MaterialPageRoute(
@@ -75,6 +78,7 @@ class DashboardScreen extends ConsumerWidget {
                   'import-csv' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const ImportCsvScreen())),
+                  'language' => showLanguageDialog(context, ref),
                   'security' => showSecurityDialog(context, ref),
                   'sync' => showSyncDialog(context, ref),
                   'export-csv' => exportCsv(context, ref),
@@ -82,12 +86,12 @@ class DashboardScreen extends ConsumerWidget {
                   'import' => importBackup(context, ref),
                   _ => null,
                 },
-                itemBuilder: (context) => const [
+                itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'categories',
                     child: ListTile(
                       leading: Icon(Icons.sell_outlined),
-                      title: Text('Категории'),
+                      title: Text(context.l10n.menuCategories),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -95,7 +99,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'budgets',
                     child: ListTile(
                       leading: Icon(Icons.track_changes_rounded),
-                      title: Text('Бюджеты'),
+                      title: Text(context.l10n.menuBudgets),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -103,7 +107,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'recurring',
                     child: ListTile(
                       leading: Icon(Icons.autorenew_rounded),
-                      title: Text('Регулярные'),
+                      title: Text(context.l10n.menuRecurring),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -111,7 +115,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'accounts',
                     child: ListTile(
                       leading: Icon(Icons.account_balance_wallet_outlined),
-                      title: Text('Счета'),
+                      title: Text(context.l10n.menuAccounts),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -119,7 +123,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'rules',
                     child: ListTile(
                       leading: Icon(Icons.auto_fix_high_rounded),
-                      title: Text('Автокатегории'),
+                      title: Text(context.l10n.menuRules),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -127,7 +131,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'import-csv',
                     child: ListTile(
                       leading: Icon(Icons.table_view_rounded),
-                      title: Text('Импорт выписки CSV'),
+                      title: Text(context.l10n.menuImportCsv),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -135,7 +139,15 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'export-csv',
                     child: ListTile(
                       leading: Icon(Icons.grid_on_rounded),
-                      title: Text('Экспорт отчёта CSV'),
+                      title: Text(context.l10n.menuExportCsv),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'language',
+                    child: ListTile(
+                      leading: const Icon(Icons.language_rounded),
+                      title: Text(context.l10n.menuLanguage),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -143,7 +155,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'security',
                     child: ListTile(
                       leading: Icon(Icons.lock_outline_rounded),
-                      title: Text('Защита (PIN)'),
+                      title: Text(context.l10n.menuSecurity),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -151,7 +163,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'sync',
                     child: ListTile(
                       leading: Icon(Icons.cloud_sync_outlined),
-                      title: Text('Синхронизация'),
+                      title: Text(context.l10n.menuSync),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -159,7 +171,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'export',
                     child: ListTile(
                       leading: Icon(Icons.upload_file_rounded),
-                      title: Text('Бэкап (JSON)'),
+                      title: Text(context.l10n.menuBackup),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -167,7 +179,7 @@ class DashboardScreen extends ConsumerWidget {
                     value: 'import',
                     child: ListTile(
                       leading: Icon(Icons.download_rounded),
-                      title: Text('Восстановить из бэкапа'),
+                      title: Text(context.l10n.menuRestore),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -182,19 +194,19 @@ class DashboardScreen extends ConsumerWidget {
           const _SafeToSpendCard(),
           const SizedBox(height: 8),
           if (stats.byCategory.isNotEmpty) ...[
-            _SectionHeader(title: 'Структура трат'),
+            _SectionHeader(title: context.l10n.spendingStructure),
             const SizedBox(height: 12),
             _SpendingBreakdown(stats: stats, categories: categories),
             const SizedBox(height: 20),
           ],
-          _SectionHeader(title: 'Последние операции'),
+          _SectionHeader(title: context.l10n.recentTransactions),
           const SizedBox(height: 4),
           if (recent.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 32),
               child: Center(
                 child: Text(
-                  'Пока пусто — добавьте первую операцию',
+                  context.l10n.emptyAddFirst,
                   style: theme.textTheme.bodyMedium
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                 ),
@@ -236,7 +248,7 @@ class _AccountsStrip extends ConsumerWidget {
             final balance = ref.watch(accountBalanceProvider(a.id));
             return Card(
               child: InkWell(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(12),
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const AccountsScreen())),
                 child: Padding(
@@ -249,7 +261,7 @@ class _AccountsStrip extends ConsumerWidget {
                         height: 38,
                         decoration: BoxDecoration(
                           color: a.color.withValues(alpha: 0.16),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(a.icon, color: a.color, size: 19),
                       ),
@@ -300,7 +312,7 @@ class _SafeToSpendCard extends ConsumerWidget {
 
     return Card(
       child: InkWell(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(12),
         onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => const BudgetsScreen())),
         child: Padding(
@@ -313,7 +325,7 @@ class _SafeToSpendCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Безопасно тратить сегодня',
+                    Text(context.l10n.safeToSpendToday,
                         style: theme.textTheme.labelMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant)),
                     Text(
@@ -333,12 +345,12 @@ class _SafeToSpendCard extends ConsumerWidget {
                             ? NumoColors.coral
                             : NumoColors.amber)
                         .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(7),
                   ),
                   child: Text(
                     warnings.any((b) => b.overspent)
-                        ? 'Лимит превышен'
-                        : 'Близко к лимиту',
+                        ? context.l10n.limitExceededChip
+                        : context.l10n.nearLimitChip,
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: warnings.any((b) => b.overspent)
@@ -389,7 +401,7 @@ class _BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: NumoColors.heroGradient,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
             color: NumoColors.violetDeep.withValues(alpha: 0.35),
@@ -403,8 +415,9 @@ class _BalanceCard extends StatelessWidget {
         children: [
           Text(
             netWorth.unconverted.isEmpty
-                ? 'Общий баланс'
-                : 'Общий баланс (без ${netWorth.unconverted.join(", ")})',
+                ? context.l10n.totalBalance
+                : context.l10n
+                    .totalBalanceExcluding(netWorth.unconverted.join(', ')),
             style: textTheme.bodyMedium
                 ?.copyWith(color: Colors.white.withValues(alpha: 0.75)),
           ),
@@ -427,14 +440,14 @@ class _BalanceCard extends StatelessWidget {
             children: [
               _FlowChip(
                 icon: Icons.arrow_downward_rounded,
-                label: 'Доходы',
+                label: context.l10n.income,
                 value: stats.income,
                 color: NumoColors.mint,
               ),
               const SizedBox(width: 12),
               _FlowChip(
                 icon: Icons.arrow_upward_rounded,
-                label: 'Расходы',
+                label: context.l10n.expenses,
                 value: stats.expense,
                 color: NumoColors.coral,
               ),
@@ -467,7 +480,7 @@ class _FlowChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           children: [
@@ -537,7 +550,7 @@ class _SpendingBreakdown extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('За месяц',
+                    Text(context.l10n.forMonth,
                         style: theme.textTheme.labelSmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant)),
                     FittedBox(

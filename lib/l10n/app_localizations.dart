@@ -1,0 +1,1178 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_ru.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('ru'),
+  ];
+
+  /// No description provided for @navOverview.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обзор'**
+  String get navOverview;
+
+  /// No description provided for @navTransactions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Операции'**
+  String get navTransactions;
+
+  /// No description provided for @navAnalytics.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аналитика'**
+  String get navAnalytics;
+
+  /// No description provided for @menuTooltip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Меню'**
+  String get menuTooltip;
+
+  /// No description provided for @menuCategories.
+  ///
+  /// In ru, this message translates to:
+  /// **'Категории'**
+  String get menuCategories;
+
+  /// No description provided for @menuBudgets.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бюджеты'**
+  String get menuBudgets;
+
+  /// No description provided for @menuRecurring.
+  ///
+  /// In ru, this message translates to:
+  /// **'Регулярные'**
+  String get menuRecurring;
+
+  /// No description provided for @menuAccounts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Счета'**
+  String get menuAccounts;
+
+  /// No description provided for @menuRules.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автокатегории'**
+  String get menuRules;
+
+  /// No description provided for @menuImportCsv.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импорт CSV'**
+  String get menuImportCsv;
+
+  /// No description provided for @menuExportCsv.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт отчёта CSV'**
+  String get menuExportCsv;
+
+  /// No description provided for @menuSecurity.
+  ///
+  /// In ru, this message translates to:
+  /// **'Защита (PIN)'**
+  String get menuSecurity;
+
+  /// No description provided for @menuSync.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизация'**
+  String get menuSync;
+
+  /// No description provided for @menuBackup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бэкап (JSON)'**
+  String get menuBackup;
+
+  /// No description provided for @menuRestore.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить из бэкапа'**
+  String get menuRestore;
+
+  /// No description provided for @totalBalance.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общий баланс'**
+  String get totalBalance;
+
+  /// No description provided for @totalBalanceExcluding.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общий баланс (без {currencies})'**
+  String totalBalanceExcluding(String currencies);
+
+  /// No description provided for @income.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доходы'**
+  String get income;
+
+  /// No description provided for @expenses.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расходы'**
+  String get expenses;
+
+  /// No description provided for @spendingStructure.
+  ///
+  /// In ru, this message translates to:
+  /// **'Структура трат'**
+  String get spendingStructure;
+
+  /// No description provided for @recentTransactions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последние операции'**
+  String get recentTransactions;
+
+  /// No description provided for @emptyAddFirst.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока пусто — добавьте первую операцию'**
+  String get emptyAddFirst;
+
+  /// No description provided for @forMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'За месяц'**
+  String get forMonth;
+
+  /// No description provided for @safeToSpendToday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Безопасно тратить сегодня'**
+  String get safeToSpendToday;
+
+  /// No description provided for @limitExceededChip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лимит превышен'**
+  String get limitExceededChip;
+
+  /// No description provided for @nearLimitChip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Близко к лимиту'**
+  String get nearLimitChip;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск по заметкам и категориям'**
+  String get searchHint;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все'**
+  String get filterAll;
+
+  /// No description provided for @period.
+  ///
+  /// In ru, this message translates to:
+  /// **'Период'**
+  String get period;
+
+  /// No description provided for @today.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вчера'**
+  String get yesterday;
+
+  /// No description provided for @nothingFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ничего не найдено'**
+  String get nothingFound;
+
+  /// No description provided for @noTransactions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Операций нет'**
+  String get noTransactions;
+
+  /// No description provided for @transactionDeleted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Операция удалена'**
+  String get transactionDeleted;
+
+  /// No description provided for @undo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуть'**
+  String get undo;
+
+  /// No description provided for @savedThisMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'Накоплено за месяц'**
+  String get savedThisMonth;
+
+  /// No description provided for @overspendTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перерасход'**
+  String get overspendTitle;
+
+  /// No description provided for @expensesByDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расходы по дням'**
+  String get expensesByDay;
+
+  /// No description provided for @topCategories.
+  ///
+  /// In ru, this message translates to:
+  /// **'Топ категорий'**
+  String get topCategories;
+
+  /// No description provided for @noExpensesThisMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'За этот месяц расходов нет'**
+  String get noExpensesThisMonth;
+
+  /// No description provided for @capital90Days.
+  ///
+  /// In ru, this message translates to:
+  /// **'Капитал, 90 дней'**
+  String get capital90Days;
+
+  /// No description provided for @expense.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расход'**
+  String get expense;
+
+  /// No description provided for @incomeSingular.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход'**
+  String get incomeSingular;
+
+  /// No description provided for @transfer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевод'**
+  String get transfer;
+
+  /// No description provided for @note.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заметка'**
+  String get note;
+
+  /// No description provided for @newChip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая'**
+  String get newChip;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить изменения'**
+  String get saveChanges;
+
+  /// No description provided for @addExpense.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить расход'**
+  String get addExpense;
+
+  /// No description provided for @addIncome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить доход'**
+  String get addIncome;
+
+  /// No description provided for @limitExceededToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лимит «{category}» превышен: {spent} из {limit}'**
+  String limitExceededToast(String category, String spent, String limit);
+
+  /// No description provided for @editCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить категорию'**
+  String get editCategory;
+
+  /// No description provided for @newCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая категория'**
+  String get newCategory;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название'**
+  String get nameLabel;
+
+  /// No description provided for @iconLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Иконка'**
+  String get iconLabel;
+
+  /// No description provided for @colorLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Цвет'**
+  String get colorLabel;
+
+  /// No description provided for @create.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать'**
+  String get create;
+
+  /// No description provided for @save.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get cancel;
+
+  /// No description provided for @inArchive.
+  ///
+  /// In ru, this message translates to:
+  /// **'В архиве'**
+  String get inArchive;
+
+  /// No description provided for @toArchive.
+  ///
+  /// In ru, this message translates to:
+  /// **'В архив'**
+  String get toArchive;
+
+  /// No description provided for @fromArchive.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуть из архива'**
+  String get fromArchive;
+
+  /// No description provided for @archiveSection.
+  ///
+  /// In ru, this message translates to:
+  /// **'Архив'**
+  String get archiveSection;
+
+  /// No description provided for @budgetsEmptyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Задайте месячный лимит хотя бы одной категории — появятся прогресс и подсказка, сколько можно тратить в день.'**
+  String get budgetsEmptyHint;
+
+  /// No description provided for @withLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'С лимитом'**
+  String get withLimit;
+
+  /// No description provided for @withoutLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без лимита'**
+  String get withoutLimit;
+
+  /// No description provided for @spentOf.
+  ///
+  /// In ru, this message translates to:
+  /// **'{spent} из {limit}'**
+  String spentOf(String spent, String limit);
+
+  /// No description provided for @monthlyLimitLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Лимит на месяц, ₽'**
+  String get monthlyLimitLabel;
+
+  /// No description provided for @monthlyLimitHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например, 25000'**
+  String get monthlyLimitHint;
+
+  /// No description provided for @removeLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Убрать лимит'**
+  String get removeLimit;
+
+  /// No description provided for @newRule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новое правило'**
+  String get newRule;
+
+  /// No description provided for @editRule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить правило'**
+  String get editRule;
+
+  /// No description provided for @recurringEmptyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подписки, аренда, зарплата — операции, которые повторяются каждый месяц, могут создаваться сами.'**
+  String get recurringEmptyHint;
+
+  /// No description provided for @ruleDeletedToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правило удалено. Созданные операции остались.'**
+  String get ruleDeletedToast;
+
+  /// No description provided for @everyMonthOnDay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Каждый месяц, {day}-го числа'**
+  String everyMonthOnDay(int day);
+
+  /// No description provided for @amountRub.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма, ₽'**
+  String get amountRub;
+
+  /// No description provided for @dayLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'День'**
+  String get dayLabel;
+
+  /// No description provided for @dayN.
+  ///
+  /// In ru, this message translates to:
+  /// **'{day}-е'**
+  String dayN(int day);
+
+  /// No description provided for @ruleNameHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название (например, «Аренда»)'**
+  String get ruleNameHint;
+
+  /// No description provided for @newAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый счёт'**
+  String get newAccount;
+
+  /// No description provided for @editAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить счёт'**
+  String get editAccount;
+
+  /// No description provided for @transferBetweenAccounts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевод между счетами'**
+  String get transferBetweenAccounts;
+
+  /// No description provided for @currencyLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Валюта'**
+  String get currencyLabel;
+
+  /// No description provided for @fromAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Со счёта'**
+  String get fromAccount;
+
+  /// No description provided for @toAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'На счёт'**
+  String get toAccount;
+
+  /// No description provided for @amountLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма'**
+  String get amountLabel;
+
+  /// No description provided for @amountInCurrency.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма, {symbol}'**
+  String amountInCurrency(String symbol);
+
+  /// No description provided for @creditedInCurrency.
+  ///
+  /// In ru, this message translates to:
+  /// **'Зачислится, {symbol}'**
+  String creditedInCurrency(String symbol);
+
+  /// No description provided for @currenciesDifferHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Валюты счетов различаются — укажите обе суммы'**
+  String get currenciesDifferHint;
+
+  /// No description provided for @transferButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Перевести'**
+  String get transferButton;
+
+  /// No description provided for @importStatementTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импорт выписки'**
+  String get importStatementTitle;
+
+  /// No description provided for @chooseCsvPrompt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите CSV-файл выписки из банка'**
+  String get chooseCsvPrompt;
+
+  /// No description provided for @chooseFile.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать файл'**
+  String get chooseFile;
+
+  /// No description provided for @fileEmptyToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Файл пуст или не похож на CSV'**
+  String get fileEmptyToast;
+
+  /// No description provided for @columnsLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колонки'**
+  String get columnsLabel;
+
+  /// No description provided for @colDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дата'**
+  String get colDate;
+
+  /// No description provided for @colAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма'**
+  String get colAmount;
+
+  /// No description provided for @colDescription.
+  ///
+  /// In ru, this message translates to:
+  /// **'Описание'**
+  String get colDescription;
+
+  /// No description provided for @accountLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Счёт'**
+  String get accountLabel;
+
+  /// No description provided for @unsignedIsExpense.
+  ///
+  /// In ru, this message translates to:
+  /// **'Суммы без знака — это расходы'**
+  String get unsignedIsExpense;
+
+  /// No description provided for @unsignedIsExpenseHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Включите, если в выписке нет минусов у трат'**
+  String get unsignedIsExpenseHint;
+
+  /// No description provided for @importSummary.
+  ///
+  /// In ru, this message translates to:
+  /// **'Будет импортировано: {importable} · дубликаты: {duplicates} · нераспознано: {skipped}'**
+  String importSummary(int importable, int duplicates, int skipped);
+
+  /// No description provided for @moreRows.
+  ///
+  /// In ru, this message translates to:
+  /// **'… и ещё {count} строк'**
+  String moreRows(int count);
+
+  /// No description provided for @importButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импортировать {count} операций'**
+  String importButton(int count);
+
+  /// No description provided for @importedToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импортировано операций: {count}'**
+  String importedToast(int count);
+
+  /// No description provided for @columnN.
+  ///
+  /// In ru, this message translates to:
+  /// **'Колонка {n}'**
+  String columnN(int n);
+
+  /// No description provided for @noneOption.
+  ///
+  /// In ru, this message translates to:
+  /// **'— нет —'**
+  String get noneOption;
+
+  /// No description provided for @skippedRow.
+  ///
+  /// In ru, this message translates to:
+  /// **'пропуск'**
+  String get skippedRow;
+
+  /// No description provided for @duplicateRow.
+  ///
+  /// In ru, this message translates to:
+  /// **'дубль'**
+  String get duplicateRow;
+
+  /// No description provided for @rulesApply.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применить'**
+  String get rulesApply;
+
+  /// No description provided for @noMatchesToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Совпадений не нашлось'**
+  String get noMatchesToast;
+
+  /// No description provided for @reclassifiedToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переклассифицировано операций: {count}'**
+  String reclassifiedToast(int count);
+
+  /// No description provided for @ruleChip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правило'**
+  String get ruleChip;
+
+  /// No description provided for @rulesEmptyHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например: «ПЯТЕРОЧКА → Продукты». Правила срабатывают при импорте выписок, а кнопкой «Применить» — и на уже существующих операциях.'**
+  String get rulesEmptyHint;
+
+  /// No description provided for @patternLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подстрока в описании'**
+  String get patternLabel;
+
+  /// No description provided for @patternHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'ПЯТЕРОЧКА'**
+  String get patternHint;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Категория'**
+  String get categoryLabel;
+
+  /// No description provided for @lockedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Numo заблокирован'**
+  String get lockedTitle;
+
+  /// No description provided for @enterPin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите PIN'**
+  String get enterPin;
+
+  /// No description provided for @wrongPinRetry.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный PIN, попробуйте ещё раз'**
+  String get wrongPinRetry;
+
+  /// No description provided for @newPinTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый PIN (4–6 цифр)'**
+  String get newPinTitle;
+
+  /// No description provided for @repeatPinTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторите PIN'**
+  String get repeatPinTitle;
+
+  /// No description provided for @pinMismatchToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'PIN не совпал — не сохранён'**
+  String get pinMismatchToast;
+
+  /// No description provided for @pinSetToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'PIN установлен'**
+  String get pinSetToast;
+
+  /// No description provided for @securityTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Защита приложения'**
+  String get securityTitle;
+
+  /// No description provided for @changePin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сменить PIN'**
+  String get changePin;
+
+  /// No description provided for @disablePin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отключить PIN'**
+  String get disablePin;
+
+  /// No description provided for @currentPinTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текущий PIN'**
+  String get currentPinTitle;
+
+  /// No description provided for @wrongPinToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверный PIN'**
+  String get wrongPinToast;
+
+  /// No description provided for @pinDisabledToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'PIN отключён'**
+  String get pinDisabledToast;
+
+  /// No description provided for @pinChangedToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'PIN изменён'**
+  String get pinChangedToast;
+
+  /// No description provided for @next.
+  ///
+  /// In ru, this message translates to:
+  /// **'Далее'**
+  String get next;
+
+  /// No description provided for @syncWebUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'На web синхронизация недоступна — используйте бэкап (JSON)'**
+  String get syncWebUnavailable;
+
+  /// No description provided for @syncTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизация'**
+  String get syncTitle;
+
+  /// No description provided for @syncExplainer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Укажите папку, которую синхронизирует ваше облако (Яндекс.Диск, Dropbox, Syncthing…). Numo будет держать там файл {file} и подхватывать изменения с других устройств.'**
+  String syncExplainer(String file);
+
+  /// No description provided for @syncFolder.
+  ///
+  /// In ru, this message translates to:
+  /// **'Папка: {path}'**
+  String syncFolder(String path);
+
+  /// No description provided for @syncLastWrite.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последняя запись: {time}'**
+  String syncLastWrite(String time);
+
+  /// No description provided for @disable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отключить'**
+  String get disable;
+
+  /// No description provided for @close.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть'**
+  String get close;
+
+  /// No description provided for @chooseFolder.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать папку'**
+  String get chooseFolder;
+
+  /// No description provided for @changeFolder.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сменить папку'**
+  String get changeFolder;
+
+  /// No description provided for @syncDisabledToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизация отключена'**
+  String get syncDisabledToast;
+
+  /// No description provided for @syncEnabledToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизация включена, данные записаны'**
+  String get syncEnabledToast;
+
+  /// No description provided for @syncNewerTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные с другого устройства'**
+  String get syncNewerTitle;
+
+  /// No description provided for @syncNewerBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'В папке синхронизации есть данные новее локальных (от {time}): {count} операций. Заменить локальные данные?'**
+  String syncNewerBody(String time, int count);
+
+  /// No description provided for @keepMine.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оставить свои'**
+  String get keepMine;
+
+  /// No description provided for @accept.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принять'**
+  String get accept;
+
+  /// No description provided for @onb1Title.
+  ///
+  /// In ru, this message translates to:
+  /// **'Знай, куда уходят деньги'**
+  String get onb1Title;
+
+  /// No description provided for @onb1Text.
+  ///
+  /// In ru, this message translates to:
+  /// **'Быстрое добавление трат, наглядная структура расходов и аналитика по месяцам. Для начала уже добавлены демо-данные — их можно просто удалить.'**
+  String get onb1Text;
+
+  /// No description provided for @onb2Title.
+  ///
+  /// In ru, this message translates to:
+  /// **'Планируй, а не вспоминай'**
+  String get onb2Title;
+
+  /// No description provided for @onb2Text.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бюджеты по категориям с подсказкой «сколько можно тратить сегодня», регулярные платежи создаются сами, выписки из банка импортируются из CSV.'**
+  String get onb2Text;
+
+  /// No description provided for @onb3Title.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные — только твои'**
+  String get onb3Title;
+
+  /// No description provided for @onb3Text.
+  ///
+  /// In ru, this message translates to:
+  /// **'Всё хранится на устройстве, без серверов и аккаунтов. PIN-код, бэкапы одним файлом и синхронизация через твоё собственное облако.'**
+  String get onb3Text;
+
+  /// No description provided for @skip.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пропустить'**
+  String get skip;
+
+  /// No description provided for @start.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get start;
+
+  /// No description provided for @backupSavedToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бэкап сохранён'**
+  String get backupSavedToast;
+
+  /// No description provided for @exportUnavailableToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт в файл недоступен на этой платформе'**
+  String get exportUnavailableToast;
+
+  /// No description provided for @csvSavedToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'CSV сохранён'**
+  String get csvSavedToast;
+
+  /// No description provided for @restoreTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить из бэкапа?'**
+  String get restoreTitle;
+
+  /// No description provided for @restoreBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текущие данные будут полностью заменены: {txCount} операций и {catCount} категорий из файла.'**
+  String restoreBody(int txCount, int catCount);
+
+  /// No description provided for @replace.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заменить'**
+  String get replace;
+
+  /// No description provided for @dataRestoredToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные восстановлены'**
+  String get dataRestoredToast;
+
+  /// No description provided for @menuLanguage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык'**
+  String get menuLanguage;
+
+  /// No description provided for @languageSystem.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как в системе'**
+  String get languageSystem;
+
+  /// No description provided for @languageRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русский'**
+  String get languageRussian;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @menuSettings.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настройки'**
+  String get menuSettings;
+
+  /// No description provided for @addTransaction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новая операция'**
+  String get addTransaction;
+
+  /// No description provided for @csvHeaderDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дата'**
+  String get csvHeaderDate;
+
+  /// No description provided for @csvHeaderType.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тип'**
+  String get csvHeaderType;
+
+  /// No description provided for @csvHeaderAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сумма'**
+  String get csvHeaderAmount;
+
+  /// No description provided for @csvHeaderCurrency.
+  ///
+  /// In ru, this message translates to:
+  /// **'Валюта'**
+  String get csvHeaderCurrency;
+
+  /// No description provided for @csvHeaderCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Категория'**
+  String get csvHeaderCategory;
+
+  /// No description provided for @csvHeaderAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Счёт'**
+  String get csvHeaderAccount;
+
+  /// No description provided for @csvHeaderNote.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заметка'**
+  String get csvHeaderNote;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'ru'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'ru':
+      return AppLocalizationsRu();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

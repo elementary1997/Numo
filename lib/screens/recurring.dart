@@ -7,6 +7,7 @@ import '../models/category.dart';
 import '../models/recurring.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 class RecurringScreen extends ConsumerWidget {
   const RecurringScreen({super.key});
@@ -18,19 +19,18 @@ class RecurringScreen extends ConsumerWidget {
     final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Регулярные')),
+      appBar: AppBar(title: Text(context.l10n.menuRecurring)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showRecurringEditor(context),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Новое правило'),
+        label: Text(context.l10n.newRule),
       ),
       body: rules.isEmpty
           ? Center(
               child: Padding(
                 padding: const EdgeInsets.all(32),
                 child: Text(
-                  'Подписки, аренда, зарплата — операции, которые повторяются '
-                  'каждый месяц, могут создаваться сами.',
+                  context.l10n.recurringEmptyHint,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyLarge
                       ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
@@ -50,7 +50,7 @@ class RecurringScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: theme.colorScheme.error
                             .withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(Icons.delete_rounded,
                           color: theme.colorScheme.error),
@@ -59,9 +59,8 @@ class RecurringScreen extends ConsumerWidget {
                       ref.read(recurringProvider.notifier).remove(rule.id);
                       ScaffoldMessenger.of(context)
                         ..clearSnackBars()
-                        ..showSnackBar(const SnackBar(
-                            content: Text(
-                                'Правило удалено. Созданные операции остались.')));
+                        ..showSnackBar(SnackBar(
+                            content: Text(context.l10n.ruleDeletedToast)));
                     },
                     child: _RuleTile(
                       rule: rule,
@@ -85,14 +84,14 @@ class _RuleTile extends StatelessWidget {
     final theme = Theme.of(context);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onTap: () => showRecurringEditor(context, initial: rule),
       leading: Container(
         width: 46,
         height: 46,
         decoration: BoxDecoration(
           color: category.color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(9),
         ),
         child: Icon(category.icon, color: category.color, size: 23),
       ),
@@ -104,7 +103,7 @@ class _RuleTile extends StatelessWidget {
             theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
       ),
       subtitle: Text(
-        'Каждый месяц, ${rule.dayOfMonth}-го числа',
+        context.l10n.everyMonthOnDay(rule.dayOfMonth),
         style: theme.textTheme.bodySmall
             ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
       ),
@@ -131,7 +130,7 @@ Future<void> showRecurringEditor(BuildContext context,
     constraints: const BoxConstraints(maxWidth: 520),
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
     ),
     builder: (_) => _RecurringEditor(initial: initial),
   );
@@ -229,15 +228,18 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
             ),
             const SizedBox(height: 16),
             Text(
-              _isEditing ? 'Изменить правило' : 'Новое правило',
+              _isEditing ? context.l10n.editRule : context.l10n.newRule,
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 16),
             SegmentedButton<TxType>(
-              segments: const [
-                ButtonSegment(value: TxType.expense, label: Text('Расход')),
-                ButtonSegment(value: TxType.income, label: Text('Доход')),
+              segments: [
+                ButtonSegment(
+                    value: TxType.expense, label: Text(context.l10n.expense)),
+                ButtonSegment(
+                    value: TxType.income,
+                    label: Text(context.l10n.incomeSingular)),
               ],
               selected: {_type},
               onSelectionChanged: (s) => setState(() {
@@ -259,11 +261,11 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
                     ],
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      labelText: 'Сумма, ₽',
+                      labelText: context.l10n.amountRub,
                       filled: true,
                       fillColor: theme.colorScheme.surface,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -272,12 +274,12 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
                 const SizedBox(width: 10),
                 DropdownMenu<int>(
                   initialSelection: _day,
-                  label: const Text('День'),
+                  label: Text(context.l10n.dayLabel),
                   width: 120,
                   onSelected: (v) => setState(() => _day = v ?? 1),
                   dropdownMenuEntries: [
                     for (var d = 1; d <= 31; d++)
-                      DropdownMenuEntry(value: d, label: '$d-е'),
+                      DropdownMenuEntry(value: d, label: context.l10n.dayN(d)),
                   ],
                 ),
               ],
@@ -310,7 +312,7 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
                     side: BorderSide.none,
                     showCheckmark: false,
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
+                        borderRadius: BorderRadius.circular(8)),
                   );
                 },
               ),
@@ -319,12 +321,12 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
             TextField(
               controller: _note,
               decoration: InputDecoration(
-                hintText: 'Название (например, «Аренда»)',
+                hintText: context.l10n.ruleNameHint,
                 prefixIcon: const Icon(Icons.edit_note_rounded),
                 filled: true,
                 fillColor: theme.colorScheme.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
                 isDense: true,
@@ -338,11 +340,11 @@ class _RecurringEditorState extends ConsumerState<_RecurringEditor> {
                 onPressed: canSave ? _save : null,
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(10)),
                   textStyle: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                child: Text(_isEditing ? 'Сохранить' : 'Создать'),
+                child: Text(_isEditing ? context.l10n.save : context.l10n.create),
               ),
             ),
           ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
@@ -14,18 +15,18 @@ class CategoriesScreen extends ConsumerWidget {
     final income = categories.where((c) => c.isIncome).toList();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Категории')),
+      appBar: AppBar(title: Text(context.l10n.menuCategories)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showCategoryEditor(context),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Новая'),
+        label: Text(context.l10n.newChip),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
         children: [
-          _Section(title: 'Расходы', categories: expense),
+          _Section(title: context.l10n.expenses, categories: expense),
           const SizedBox(height: 20),
-          _Section(title: 'Доходы', categories: income),
+          _Section(title: context.l10n.income, categories: income),
         ],
       ),
     );
@@ -61,14 +62,14 @@ class _Section extends ConsumerWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(10)),
               onTap: () => showCategoryEditor(context, initial: c),
               leading: Container(
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
                   color: c.color.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(c.icon, color: c.color, size: 22),
               ),
@@ -76,12 +77,12 @@ class _Section extends ConsumerWidget {
                   style: theme.textTheme.bodyLarge
                       ?.copyWith(fontWeight: FontWeight.w700)),
               subtitle: c.archived
-                  ? Text('В архиве',
+                  ? Text(context.l10n.inArchive,
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant))
                   : null,
               trailing: IconButton(
-                tooltip: c.archived ? 'Вернуть из архива' : 'В архив',
+                tooltip: c.archived ? context.l10n.fromArchive : context.l10n.toArchive,
                 icon: Icon(
                   c.archived
                       ? Icons.unarchive_rounded
@@ -112,7 +113,7 @@ Future<void> showCategoryEditor(
     constraints: const BoxConstraints(maxWidth: 520),
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
     ),
     builder: (_) => _CategoryEditor(initial: initial, isIncome: isIncome),
   );
@@ -196,7 +197,7 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
             ),
             const SizedBox(height: 16),
             Text(
-              isEditing ? 'Изменить категорию' : 'Новая категория',
+              isEditing ? context.l10n.editCategory : context.l10n.newCategory,
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
@@ -208,7 +209,7 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
                   height: 52,
                   decoration: BoxDecoration(
                     color: _color.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(CategoryIcons.resolve(_iconKey),
                       color: _color, size: 26),
@@ -221,11 +222,11 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
                     textCapitalization: TextCapitalization.sentences,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Название',
+                      hintText: context.l10n.nameLabel,
                       filled: true,
                       fillColor: theme.colorScheme.surface,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -236,9 +237,11 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
             if (!isEditing) ...[
               const SizedBox(height: 14),
               SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: false, label: Text('Расход')),
-                  ButtonSegment(value: true, label: Text('Доход')),
+                segments: [
+                  ButtonSegment(
+                      value: false, label: Text(context.l10n.expense)),
+                  ButtonSegment(
+                      value: true, label: Text(context.l10n.incomeSingular)),
                 ],
                 selected: {_isIncome},
                 onSelectionChanged: (s) =>
@@ -247,7 +250,7 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
               ),
             ],
             const SizedBox(height: 18),
-            Text('Иконка',
+            Text(context.l10n.iconLabel,
                 style: theme.textTheme.labelLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
@@ -271,7 +274,7 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
               ],
             ),
             const SizedBox(height: 18),
-            Text('Цвет',
+            Text(context.l10n.colorLabel,
                 style: theme.textTheme.labelLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
@@ -301,11 +304,11 @@ class _CategoryEditorState extends ConsumerState<_CategoryEditor> {
                 onPressed: _title.text.trim().isEmpty ? null : _save,
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(10)),
                   textStyle: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                child: Text(isEditing ? 'Сохранить' : 'Создать'),
+                child: Text(isEditing ? context.l10n.save : context.l10n.create),
               ),
             ),
           ],
@@ -335,16 +338,16 @@ class _PickTile extends StatelessWidget {
       color: selected
           ? color.withValues(alpha: 0.16)
           : theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(13),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Container(
           width: 44,
           height: 44,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(8),
             border: selected
                 ? Border.all(color: color, width: 2)
                 : Border.all(color: Colors.transparent, width: 2),

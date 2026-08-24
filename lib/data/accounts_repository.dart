@@ -14,13 +14,14 @@ class AccountsRepository {
   final NumoDatabase _db;
   List<Account> _cache;
 
-  static Future<AccountsRepository> open(NumoDatabase db) async {
+  static Future<AccountsRepository> open(NumoDatabase db,
+      {String seedLocale = 'ru'}) async {
     final rows = await db.select(db.accountRows).get();
     if (rows.isNotEmpty) {
       return AccountsRepository._(db, rows.map(_fromRow).toList());
     }
     final repo = AccountsRepository._(db, []);
-    await repo.saveAll([Accounts.main]);
+    await repo.saveAll([Accounts.mainFor(seedLocale)]);
     return repo;
   }
 

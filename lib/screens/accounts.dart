@@ -6,6 +6,7 @@ import '../core/money.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../core/l10n.dart';
 
 class AccountsScreen extends ConsumerWidget {
   const AccountsScreen({super.key});
@@ -19,11 +20,11 @@ class AccountsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Счета'),
+        title: Text(context.l10n.menuAccounts),
         actions: [
           if (active.length >= 2)
             IconButton(
-              tooltip: 'Перевод между счетами',
+              tooltip: context.l10n.transferBetweenAccounts,
               onPressed: () => showTransferSheet(context),
               icon: const Icon(Icons.swap_horiz_rounded),
             ),
@@ -32,7 +33,7 @@ class AccountsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showAccountEditor(context),
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Новый счёт'),
+        label: Text(context.l10n.newAccount),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
@@ -40,7 +41,7 @@ class AccountsScreen extends ConsumerWidget {
           for (final a in active) _AccountTile(account: a),
           if (archived.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Архив',
+            Text(context.l10n.archiveSection,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w800)),
             for (final a in archived)
@@ -64,14 +65,14 @@ class _AccountTile extends ConsumerWidget {
 
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       onTap: () => showAccountEditor(context, initial: account),
       leading: Container(
         width: 46,
         height: 46,
         decoration: BoxDecoration(
           color: account.color.withValues(alpha: 0.16),
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(9),
         ),
         child: Icon(account.icon, color: account.color, size: 23),
       ),
@@ -93,7 +94,7 @@ class _AccountTile extends ConsumerWidget {
           IconButton(
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
-            tooltip: account.archived ? 'Вернуть из архива' : 'В архив',
+            tooltip: account.archived ? context.l10n.fromArchive : context.l10n.toArchive,
             icon: Icon(
               account.archived
                   ? Icons.unarchive_rounded
@@ -120,7 +121,7 @@ Future<void> showAccountEditor(BuildContext context, {Account? initial}) {
     constraints: const BoxConstraints(maxWidth: 520),
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
     ),
     builder: (_) => _AccountEditor(initial: initial),
   );
@@ -207,7 +208,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
             ),
             const SizedBox(height: 16),
             Text(
-              _isEditing ? 'Изменить счёт' : 'Новый счёт',
+              _isEditing ? context.l10n.editAccount : context.l10n.newAccount,
               style: theme.textTheme.titleLarge
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
@@ -221,11 +222,11 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                     textCapitalization: TextCapitalization.sentences,
                     onChanged: (_) => setState(() {}),
                     decoration: InputDecoration(
-                      hintText: 'Название',
+                      hintText: context.l10n.nameLabel,
                       filled: true,
                       fillColor: theme.colorScheme.surface,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -234,7 +235,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                 const SizedBox(width: 10),
                 DropdownMenu<String>(
                   initialSelection: _currency,
-                  label: const Text('Валюта'),
+                  label: Text(context.l10n.currencyLabel),
                   width: 130,
                   onSelected: (v) =>
                       setState(() => _currency = v ?? Currencies.rub),
@@ -248,7 +249,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
               ],
             ),
             const SizedBox(height: 18),
-            Text('Иконка',
+            Text(context.l10n.iconLabel,
                 style: theme.textTheme.labelLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
@@ -273,7 +274,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
               ],
             ),
             const SizedBox(height: 18),
-            Text('Цвет',
+            Text(context.l10n.colorLabel,
                 style: theme.textTheme.labelLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 10),
@@ -304,11 +305,11 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                 onPressed: _title.text.trim().isEmpty ? null : _save,
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(10)),
                   textStyle: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                child: Text(_isEditing ? 'Сохранить' : 'Создать'),
+                child: Text(_isEditing ? context.l10n.save : context.l10n.create),
               ),
             ),
           ],
@@ -327,16 +328,16 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     return Material(
       color:
           selected ? color.withValues(alpha: 0.16) : theme.colorScheme.surface,
-      borderRadius: BorderRadius.circular(13),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(13),
+        borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Container(
           width: 44,
           height: 44,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
                 color: selected ? color : Colors.transparent, width: 2),
           ),
@@ -356,7 +357,7 @@ Future<void> showTransferSheet(BuildContext context) {
     constraints: const BoxConstraints(maxWidth: 520),
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
     ),
     builder: (_) => const _TransferSheet(),
   );
@@ -437,7 +438,7 @@ class _TransferSheetState extends ConsumerState<_TransferSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Перевод между счетами',
+            Text(context.l10n.transferBetweenAccounts,
                 style: theme.textTheme.titleLarge
                     ?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 16),
@@ -445,7 +446,7 @@ class _TransferSheetState extends ConsumerState<_TransferSheet> {
               children: [
                 Expanded(
                   child: DropdownMenu<Account>(
-                    label: const Text('Со счёта'),
+                    label: Text(context.l10n.fromAccount),
                     expandedInsets: EdgeInsets.zero,
                     onSelected: (v) => setState(() => _from = v),
                     dropdownMenuEntries: [
@@ -460,7 +461,7 @@ class _TransferSheetState extends ConsumerState<_TransferSheet> {
                 ),
                 Expanded(
                   child: DropdownMenu<Account>(
-                    label: const Text('На счёт'),
+                    label: Text(context.l10n.toAccount),
                     expandedInsets: EdgeInsets.zero,
                     onSelected: (v) => setState(() => _to = v),
                     dropdownMenuEntries: [
@@ -482,12 +483,13 @@ class _TransferSheetState extends ConsumerState<_TransferSheet> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
                 labelText: _from == null
-                    ? 'Сумма'
-                    : 'Сумма, ${Currencies.symbol(_from!.currency)}',
+                    ? context.l10n.amountLabel
+                    : context.l10n
+                        .amountInCurrency(Currencies.symbol(_from!.currency)),
                 filled: true,
                 fillColor: theme.colorScheme.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
               ),
@@ -503,13 +505,13 @@ class _TransferSheetState extends ConsumerState<_TransferSheet> {
                 ],
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  labelText:
-                      'Зачислится, ${Currencies.symbol(_to!.currency)}',
-                  helperText: 'Валюты счетов различаются — укажите обе суммы',
+                  labelText: context.l10n
+                      .creditedInCurrency(Currencies.symbol(_to!.currency)),
+                  helperText: context.l10n.currenciesDifferHint,
                   filled: true,
                   fillColor: theme.colorScheme.surface,
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide.none,
                   ),
                 ),
@@ -523,11 +525,11 @@ class _TransferSheetState extends ConsumerState<_TransferSheet> {
                 onPressed: canSave ? _save : null,
                 style: FilledButton.styleFrom(
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18)),
+                      borderRadius: BorderRadius.circular(10)),
                   textStyle: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                child: const Text('Перевести'),
+                child: Text(context.l10n.transferButton),
               ),
             ),
           ],

@@ -23,7 +23,8 @@ class TransactionsRepository {
   final NumoDatabase _db;
   List<Tx> _cache;
 
-  static Future<TransactionsRepository> open(NumoDatabase db) async {
+  static Future<TransactionsRepository> open(NumoDatabase db,
+      {String seedLocale = 'ru'}) async {
     final rows = await db.select(db.transactionRows).get();
     if (rows.isNotEmpty) {
       final cache = rows.map(_fromRow).toList()
@@ -41,7 +42,7 @@ class TransactionsRepository {
             .toList();
         await repo.saveAll(migrated);
       } else {
-        await repo.saveAll(demoData());
+        await repo.saveAll(demoData(seedLocale: seedLocale));
       }
       await prefs.setBool(_migratedKey, true);
     }
@@ -82,7 +83,8 @@ class TransactionsRepository {
 
   /// Демо-данные первого запуска: пример живого месяца, чтобы дашборд
   /// и аналитика сразу были наглядными. Удаляются как обычные операции.
-  static List<Tx> demoData() {
+  static List<Tx> demoData({String seedLocale = 'ru'}) {
+    String t(String ru, String en) => seedLocale == 'ru' ? ru : en;
     final rng = Random(7);
     final now = DateTime.now();
     final txs = <Tx>[];
@@ -112,9 +114,9 @@ class TransactionsRepository {
       ));
     }
 
-    earn(21, Categories.salary, 145000, 'Аванс');
-    earn(6, Categories.salary, 145000, 'Зарплата');
-    earn(12, Categories.freelance, 30000, 'Проект на стороне');
+    earn(21, Categories.salary, 145000, t('Аванс', 'Advance'));
+    earn(6, Categories.salary, 145000, t('Зарплата', 'Salary'));
+    earn(12, Categories.freelance, 30000, t('Проект на стороне', 'Side project'));
 
     for (var d = 0; d < 28; d++) {
       if (d % 2 == 0) {
@@ -127,12 +129,12 @@ class TransactionsRepository {
         spend(d, Categories.cafe, 900 + rng.nextInt(2200).toDouble());
       }
     }
-    spend(2, Categories.entertainment, 1800, 'Кино');
-    spend(4, Categories.shopping, 6400, 'Кроссовки');
-    spend(9, Categories.health, 3200, 'Аптека');
-    spend(15, Categories.home, 8900, 'Коммуналка');
-    spend(18, Categories.entertainment, 2500, 'Концерт');
-    spend(24, Categories.shopping, 4300, 'Подарок');
+    spend(2, Categories.entertainment, 1800, t('Кино', 'Movies'));
+    spend(4, Categories.shopping, 6400, t('Кроссовки', 'Sneakers'));
+    spend(9, Categories.health, 3200, t('Аптека', 'Pharmacy'));
+    spend(15, Categories.home, 8900, t('Коммуналка', 'Utilities'));
+    spend(18, Categories.entertainment, 2500, t('Концерт', 'Concert'));
+    spend(24, Categories.shopping, 4300, t('Подарок', 'Gift'));
 
     txs.sort((a, b) => b.date.compareTo(a.date));
     return txs;
