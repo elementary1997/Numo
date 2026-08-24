@@ -848,6 +848,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get importAction => 'Import';
 
   @override
+  String get uiScaleTitle => 'Interface scale';
+
+  @override
+  String get scaleCompact => 'Compact';
+
+  @override
+  String get scaleDefault => 'Default';
+
+  @override
+  String get scaleLarge => 'Large';
+
+  @override
+  String get scaleXLarge => 'Extra large';
+
+  @override
   String get csvHeaderDate => 'Date';
 
   @override

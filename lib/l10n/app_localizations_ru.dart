@@ -848,6 +848,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get importAction => 'Импортировать';
 
   @override
+  String get uiScaleTitle => 'Масштаб интерфейса';
+
+  @override
+  String get scaleCompact => 'Компактный';
+
+  @override
+  String get scaleDefault => 'Стандартный';
+
+  @override
+  String get scaleLarge => 'Крупный';
+
+  @override
+  String get scaleXLarge => 'Очень крупный';
+
+  @override
   String get csvHeaderDate => 'Дата';
 
   @override

@@ -338,6 +338,9 @@ final themeOverrideProvider = StateProvider<String?>((ref) => null);
 /// Акцентный цвет (ARGB); null — фирменный фиолетовый.
 final accentColorProvider = StateProvider<int?>((ref) => null);
 
+/// Масштаб интерфейса (1.0 — стандартный), начальное значение из main().
+final uiScaleProvider = StateProvider<double>((ref) => 1.0);
+
 final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );

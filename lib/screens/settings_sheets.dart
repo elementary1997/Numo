@@ -258,6 +258,45 @@ Future<void> showAccentDialog(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// Диалог масштаба интерфейса.
+Future<void> showUiScaleDialog(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(uiScaleProvider);
+  final chosen = await showDialog<double>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(context.l10n.uiScaleTitle),
+      children: [
+        for (final (value, label) in [
+          (0.85, context.l10n.scaleCompact),
+          (1.0, context.l10n.scaleDefault),
+          (1.15, context.l10n.scaleLarge),
+          (1.3, context.l10n.scaleXLarge),
+        ])
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop(value),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                (current - value).abs() < 0.01
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+              ),
+              title: Text(label),
+            ),
+          ),
+      ],
+    ),
+  );
+  if (chosen == null) return;
+  ref.read(uiScaleProvider.notifier).state = chosen;
+  final prefs = await SharedPreferences.getInstance();
+  if (chosen == 1.0) {
+    await prefs.remove('numo.uiScale');
+  } else {
+    await prefs.setDouble('numo.uiScale', chosen);
+  }
+}
+
 /// Диалог папки выписок: Numo при запуске находит в ней новые файлы
 /// и предлагает импорт (этап 2 банковской интеграции).
 Future<void> showStatementsFolderDialog(

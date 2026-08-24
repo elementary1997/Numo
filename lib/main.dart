@@ -53,6 +53,7 @@ Future<void> main() async {
   final localeOverride = prefs.getString('numo.locale');
   final themeOverride = prefs.getString('numo.theme');
   final accentColor = prefs.getInt('numo.accent');
+  final uiScale = prefs.getDouble('numo.uiScale') ?? 1.0;
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   // Названия встроенных категорий/счёта следуют текущему языку.
@@ -77,6 +78,7 @@ Future<void> main() async {
         localeOverrideProvider.overrideWith((ref) => localeOverride),
         themeOverrideProvider.overrideWith((ref) => themeOverride),
         accentColorProvider.overrideWith((ref) => accentColor),
+        uiScaleProvider.overrideWith((ref) => uiScale),
       ],
       child: const NumoApp(),
     ),
@@ -108,9 +110,30 @@ class NumoApp extends ConsumerWidget {
     final accentValue = ref.watch(accentColorProvider);
     final accent =
         accentValue == null ? NumoColors.violet : Color(accentValue);
+    final uiScale = ref.watch(uiScaleProvider);
     return MaterialApp(
       title: 'Numo',
       scrollBehavior: const _NumoScrollBehavior(),
+      // Масштаб интерфейса: рендерим в уменьшенном логическом размере
+      // и масштабируем трансформом — растёт всё, включая иконки.
+      builder: (context, child) {
+        if (child == null || uiScale == 1.0) return child ?? const SizedBox();
+        final mq = MediaQuery.of(context);
+        final scaledSize = Size(
+            mq.size.width / uiScale, mq.size.height / uiScale);
+        return MediaQuery(
+          data: mq.copyWith(size: scaledSize),
+          child: Transform.scale(
+            scale: uiScale,
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: scaledSize.width,
+              height: scaledSize.height,
+              child: child,
+            ),
+          ),
+        );
+      },
       debugShowCheckedModeBanner: false,
       theme: NumoTheme.light(accent),
       darkTheme: NumoTheme.dark(accent),

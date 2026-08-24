@@ -61,6 +61,11 @@ class SettingsScreen extends ConsumerWidget {
               title: context.l10n.accentColorTitle,
               onTap: () => showAccentDialog(context, ref),
             ),
+            item(
+              icon: Icons.text_fields_rounded,
+              title: context.l10n.uiScaleTitle,
+              onTap: () => showUiScaleDialog(context, ref),
+            ),
           ]),
           const SizedBox(height: 14),
           _GroupTitle(context.l10n.dataGroup),

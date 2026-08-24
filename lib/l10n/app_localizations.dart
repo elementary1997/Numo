@@ -1592,6 +1592,36 @@ abstract class AppLocalizations {
   /// **'Импортировать'**
   String get importAction;
 
+  /// No description provided for @uiScaleTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Масштаб интерфейса'**
+  String get uiScaleTitle;
+
+  /// No description provided for @scaleCompact.
+  ///
+  /// In ru, this message translates to:
+  /// **'Компактный'**
+  String get scaleCompact;
+
+  /// No description provided for @scaleDefault.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стандартный'**
+  String get scaleDefault;
+
+  /// No description provided for @scaleLarge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Крупный'**
+  String get scaleLarge;
+
+  /// No description provided for @scaleXLarge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очень крупный'**
+  String get scaleXLarge;
+
   /// No description provided for @csvHeaderDate.
   ///
   /// In ru, this message translates to:
