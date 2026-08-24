@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/l10n.dart';
 import 'core/theme.dart';
+import 'core/ui_scale.dart';
 import 'data/accounts_repository.dart';
 import 'data/budgets_repository.dart';
 import 'data/categories_repository.dart';
@@ -114,26 +115,9 @@ class NumoApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Numo',
       scrollBehavior: const _NumoScrollBehavior(),
-      // Масштаб интерфейса: рендерим в уменьшенном логическом размере
-      // и масштабируем трансформом — растёт всё, включая иконки.
-      builder: (context, child) {
-        if (child == null || uiScale == 1.0) return child ?? const SizedBox();
-        final mq = MediaQuery.of(context);
-        final scaledSize = Size(
-            mq.size.width / uiScale, mq.size.height / uiScale);
-        return MediaQuery(
-          data: mq.copyWith(size: scaledSize),
-          child: Transform.scale(
-            scale: uiScale,
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: scaledSize.width,
-              height: scaledSize.height,
-              child: child,
-            ),
-          ),
-        );
-      },
+      // Масштаб интерфейса: см. UiScaler (lib/core/ui_scale.dart).
+      builder: (context, child) =>
+          UiScaler(scale: uiScale, child: child ?? const SizedBox()),
       debugShowCheckedModeBanner: false,
       theme: NumoTheme.light(accent),
       darkTheme: NumoTheme.dark(accent),

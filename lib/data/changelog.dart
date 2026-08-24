@@ -18,6 +18,15 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.6.1',
+    itemsRu: [
+      'Масштаб интерфейса исправлен: контент больше не обрезается, боковая панель на месте при любом масштабе',
+    ],
+    itemsEn: [
+      'Interface scale fixed: content is no longer cropped, the sidebar stays at any scale',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.6.0',
     itemsRu: [
       'Импорт настоящих PDF-выписок СберБанка: категории банка и продавец переносятся в описание, приходы распознаются',
