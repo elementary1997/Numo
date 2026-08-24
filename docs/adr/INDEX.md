@@ -11,3 +11,4 @@
 | [0007](0007-cbr-rates-first-network-call.md) | Курсы ЦБ РФ — первый сетевой вызов | accepted |
 | [0008](0008-privacy-and-sync.md) | PIN локально, sync через облако пользователя | accepted |
 | [0009](0009-branding-generators.md) | Иконки и splash через генераторы | accepted |
+| [0010](0010-updates-and-desktop-builds.md) | Обновления через GitHub Releases, автосборки | accepted |

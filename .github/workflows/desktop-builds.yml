@@ -1,0 +1,79 @@
+name: Desktop builds
+
+# Автосборки Windows/macOS/Linux на каждый push в main (ADR-0010):
+# свежую сборку можно взять из артефактов, не дожидаясь релиза.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-builds-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath numo-windows-x64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: numo-windows-x64-${{ github.sha }}
+          path: numo-windows-x64.zip
+          retention-days: 14
+
+  macos:
+    name: macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build macos --release
+      - name: Package
+        run: |
+          cd build/macos/Build/Products/Release
+          ditto -c -k --keepParent Numo.app "$GITHUB_WORKSPACE/numo-macos.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: numo-macos-${{ github.sha }}
+          path: numo-macos.zip
+          retention-days: 14
+
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+      - run: flutter pub get
+      - run: flutter build linux --release
+      - name: Package
+        run: |
+          cd build/linux/x64/release/bundle
+          tar czf "$GITHUB_WORKSPACE/numo-linux-x64.tar.gz" .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: numo-linux-x64-${{ github.sha }}
+          path: numo-linux-x64.tar.gz
+          retention-days: 14
