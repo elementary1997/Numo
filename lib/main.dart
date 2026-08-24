@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kReleaseMode;
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -32,8 +34,10 @@ Future<void> main() async {
       WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
           ? 'ru'
           : 'en';
-  final repository =
-      await TransactionsRepository.open(database, seedLocale: seedLocale);
+  // Демо-данные — только в dev-сборках; релизы начинаются с чистого
+  // состояния.
+  final repository = await TransactionsRepository.open(database,
+      seedLocale: seedLocale, seedDemo: !kReleaseMode);
   final categoriesRepository =
       await CategoriesRepository.open(database, seedLocale: seedLocale);
   final budgetsRepository = await BudgetsRepository.open(database);
@@ -77,6 +81,19 @@ Future<void> main() async {
   );
 }
 
+/// На desktop горизонтальные списки должны таскаться и мышью.
+class _NumoScrollBehavior extends MaterialScrollBehavior {
+  const _NumoScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.trackpad,
+      };
+}
+
 class NumoApp extends ConsumerWidget {
   const NumoApp({super.key});
 
@@ -88,6 +105,7 @@ class NumoApp extends ConsumerWidget {
     final themeOverride = ref.watch(themeOverrideProvider);
     return MaterialApp(
       title: 'Numo',
+      scrollBehavior: const _NumoScrollBehavior(),
       debugShowCheckedModeBanner: false,
       theme: NumoTheme.light(),
       darkTheme: NumoTheme.dark(),

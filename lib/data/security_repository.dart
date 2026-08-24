@@ -11,6 +11,7 @@ class SecurityRepository {
 
   static const _saltKey = 'numo.pin.salt';
   static const _hashKey = 'numo.pin.hash';
+  static const _lengthKey = 'numo.pin.length';
 
   final SharedPreferences _prefs;
 
@@ -20,12 +21,16 @@ class SecurityRepository {
 
   bool get hasPin => _prefs.containsKey(_hashKey);
 
+  /// Длина установленного PIN — столько точек рисует экран блокировки.
+  int get pinLength => _prefs.getInt(_lengthKey) ?? 4;
+
   Future<void> setPin(String pin) async {
     final saltBytes =
         List<int>.generate(16, (_) => Random.secure().nextInt(256));
     final salt = base64Encode(saltBytes);
     await _prefs.setString(_saltKey, salt);
     await _prefs.setString(_hashKey, _hash(salt, pin));
+    await _prefs.setInt(_lengthKey, pin.length);
   }
 
   bool verify(String pin) {
@@ -38,6 +43,7 @@ class SecurityRepository {
   Future<void> clear() async {
     await _prefs.remove(_saltKey);
     await _prefs.remove(_hashKey);
+    await _prefs.remove(_lengthKey);
   }
 
   static String _hash(String salt, String pin) =>

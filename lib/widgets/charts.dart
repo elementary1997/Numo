@@ -29,6 +29,54 @@ void _paintLabel(
   painter.paint(canvas, Offset(dx, position.dy));
 }
 
+/// Подпись-чип с подложкой; центр по [anchorX], верх по [top].
+/// Не выходит за границы [bounds].
+void _paintChip(
+  Canvas canvas,
+  String text, {
+  required double anchorX,
+  required double top,
+  required Size bounds,
+  required Color background,
+  required Color foreground,
+  Color? border,
+}) {
+  final painter = TextPainter(
+    text: TextSpan(
+      text: text,
+      style: TextStyle(
+          fontSize: 10.5, fontWeight: FontWeight.w700, color: foreground),
+    ),
+    textDirection: TextDirection.ltr,
+  )..layout();
+  const padX = 7.0;
+  const padY = 3.5;
+  final w = painter.width + padX * 2;
+  final h = painter.height + padY * 2;
+  final left = (anchorX - w / 2).clamp(2.0, bounds.width - w - 2);
+  final clampedTop = top.clamp(2.0, bounds.height - h - 2);
+  final rect = RRect.fromRectAndRadius(
+    Rect.fromLTWH(left, clampedTop, w, h),
+    const Radius.circular(7),
+  );
+  canvas.drawRRect(
+    rect,
+    Paint()
+      ..color = background
+      ..style = PaintingStyle.fill,
+  );
+  if (border != null) {
+    canvas.drawRRect(
+      rect,
+      Paint()
+        ..color = border
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+  painter.paint(canvas, Offset(left + padX, clampedTop + padY));
+}
+
 /// Кольцевая диаграмма расходов по категориям, рисуется вручную —
 /// с зазорами между секторами и скруглёнными концами.
 class DonutChart extends StatelessWidget {
@@ -118,16 +166,16 @@ class _DonutPainter extends CustomPainter {
       old.progress != progress || old.values != values;
 }
 
-/// Плавная линия с градиентной заливкой, сеткой и подписями
-/// минимума/максимума. [labels] — реальные значения ряда для подписей
-/// (сам [values] может быть нормализован).
+/// Плавная линия с градиентной заливкой, сеткой и аккуратными
+/// подписями (не наезжают на линию и края). [labels] — реальные
+/// значения ряда для подписей.
 class Sparkline extends StatelessWidget {
   const Sparkline({
     super.key,
     required this.values,
     required this.color,
     this.labels,
-    this.strokeWidth = 3,
+    this.strokeWidth = 2.5,
   });
 
   final List<double> values;
@@ -149,8 +197,10 @@ class Sparkline extends StatelessWidget {
           color: color,
           strokeWidth: strokeWidth,
           progress: progress,
-          gridColor: theme.colorScheme.onSurface.withValues(alpha: 0.06),
+          gridColor: theme.colorScheme.onSurface.withValues(alpha: 0.05),
           labelColor: theme.colorScheme.onSurfaceVariant,
+          chipBackground: theme.colorScheme.surface,
+          chipBorder: theme.colorScheme.onSurface.withValues(alpha: 0.10),
         ),
         size: Size.infinite,
       ),
@@ -167,6 +217,8 @@ class _SparklinePainter extends CustomPainter {
     required this.progress,
     required this.gridColor,
     required this.labelColor,
+    required this.chipBackground,
+    required this.chipBorder,
   });
 
   final List<double> values;
@@ -176,26 +228,34 @@ class _SparklinePainter extends CustomPainter {
   final double progress;
   final Color gridColor;
   final Color labelColor;
+  final Color chipBackground;
+  final Color chipBorder;
+
+  static const _topPad = 24.0;
+  static const _bottomPad = 16.0;
+  static const _sidePad = 6.0;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (values.length < 2) return;
     final maxV = values.reduce(max);
     if (maxV <= 0) return;
+    final chartHeight = size.height - _topPad - _bottomPad;
+    final chartWidth = size.width - _sidePad * 2;
 
     // Горизонтальная сетка.
     final gridPaint = Paint()
       ..color = gridColor
       ..strokeWidth = 1;
-    for (final fraction in [0.15, 0.5, 0.85]) {
-      final y = size.height * fraction;
+    for (final fraction in [0.0, 0.5, 1.0]) {
+      final y = _topPad + chartHeight * fraction;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
 
     final points = <Offset>[];
     for (var i = 0; i < values.length; i++) {
-      final x = size.width * i / (values.length - 1);
-      final y = size.height * (1 - 0.85 * values[i] / maxV) - 2;
+      final x = _sidePad + chartWidth * i / (values.length - 1);
+      final y = _topPad + chartHeight * (1 - values[i] / maxV);
       points.add(Offset(x, y));
     }
 
@@ -217,8 +277,8 @@ class _SparklinePainter extends CustomPainter {
     );
 
     final fill = Path.from(path)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
+      ..lineTo(points.last.dx, size.height - _bottomPad + 8)
+      ..lineTo(points.first.dx, size.height - _bottomPad + 8)
       ..close();
     canvas.drawPath(
       fill,
@@ -226,7 +286,7 @@ class _SparklinePainter extends CustomPainter {
         ..shader = LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [color.withValues(alpha: 0.30), color.withValues(alpha: 0)],
+          colors: [color.withValues(alpha: 0.22), color.withValues(alpha: 0)],
         ).createShader(Offset.zero & size),
     );
 
@@ -241,27 +301,37 @@ class _SparklinePainter extends CustomPainter {
     canvas.restore();
 
     if (progress >= 1 && labels != null && labels!.length == values.length) {
-      // Конечная точка с текущим значением.
+      // Конечная точка с белым кольцом.
       final endPoint = points.last;
-      canvas.drawCircle(endPoint, 4, Paint()..color = color);
-      _paintLabel(
+      canvas.drawCircle(
+          endPoint, 5.5, Paint()..color = chipBackground);
+      canvas.drawCircle(endPoint, 3.5, Paint()..color = color);
+
+      // Значение на конце: над точкой, а если точка у верхнего края —
+      // под ней; чип не выходит за границы.
+      final labelTop =
+          endPoint.dy > 34 ? endPoint.dy - 30 : endPoint.dy + 10;
+      _paintChip(
         canvas,
         formatMoney(labels!.last),
-        Offset(size.width - 2, max(0, endPoint.dy - 18)),
-        color: color,
-        fontSize: 11,
-        weight: FontWeight.w700,
-        align: TextAlign.right,
+        anchorX: endPoint.dx - 20,
+        top: labelTop,
+        bounds: size,
+        background: chipBackground,
+        foreground: color,
+        border: chipBorder,
       );
-      // Минимум и максимум ряда.
+
+      // Минимум и максимум ряда — мелко по левому краю.
       final minLabel = labels!.reduce(min);
       final maxLabel = labels!.reduce(max);
       if (maxLabel > minLabel) {
-        _paintLabel(canvas, formatMoney(maxLabel), const Offset(2, 2),
-            color: labelColor);
+        _paintLabel(canvas, formatMoney(maxLabel),
+            Offset(_sidePad, _topPad - 16),
+            color: labelColor, fontSize: 9.5);
         _paintLabel(canvas, formatMoney(minLabel),
-            Offset(2, size.height - 14),
-            color: labelColor);
+            Offset(_sidePad, size.height - _bottomPad + 3),
+            color: labelColor, fontSize: 9.5);
       }
     }
   }
@@ -271,8 +341,8 @@ class _SparklinePainter extends CustomPainter {
       old.progress != progress || old.values != values;
 }
 
-/// Столбчатый график расходов по дням: сетка со значениями, подпись
-/// максимума, выбор дня тапом.
+/// Столбчатый график расходов по дням: градиентные бары, сетка со
+/// значениями, чип с суммой над выбранным днём, выбор тапом.
 class DailyBars extends StatelessWidget {
   const DailyBars({
     super.key,
@@ -297,9 +367,9 @@ class DailyBars extends StatelessWidget {
             ? null
             : (details) {
                 final slot = constraints.maxWidth / values.length;
-                final index =
-                    (details.localPosition.dx / slot).floor().clamp(
-                        0, values.length - 1);
+                final index = (details.localPosition.dx / slot)
+                    .floor()
+                    .clamp(0, values.length - 1);
                 onBarTap!(index);
               },
         child: TweenAnimationBuilder<double>(
@@ -313,11 +383,14 @@ class DailyBars extends StatelessWidget {
               progress: progress,
               selectedIndex: selectedIndex,
               baseColor:
-                  theme.colorScheme.onSurface.withValues(alpha: 0.07),
-              gridColor:
                   theme.colorScheme.onSurface.withValues(alpha: 0.06),
+              gridColor:
+                  theme.colorScheme.onSurface.withValues(alpha: 0.05),
               labelColor: theme.colorScheme.onSurfaceVariant,
-              onSurface: theme.colorScheme.onSurface,
+              chipBackground: theme.colorScheme.surface,
+              chipForeground: theme.colorScheme.onSurface,
+              chipBorder:
+                  theme.colorScheme.onSurface.withValues(alpha: 0.10),
             ),
             size: Size(constraints.maxWidth, constraints.maxHeight),
           ),
@@ -335,7 +408,9 @@ class _BarsPainter extends CustomPainter {
     required this.baseColor,
     required this.gridColor,
     required this.labelColor,
-    required this.onSurface,
+    required this.chipBackground,
+    required this.chipForeground,
+    required this.chipBorder,
     this.selectedIndex,
   });
 
@@ -345,32 +420,35 @@ class _BarsPainter extends CustomPainter {
   final Color baseColor;
   final Color gridColor;
   final Color labelColor;
-  final Color onSurface;
+  final Color chipBackground;
+  final Color chipForeground;
+  final Color chipBorder;
   final int? selectedIndex;
 
-  static const _topPadding = 18.0;
+  static const _topPad = 28.0;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (values.isEmpty) return;
     final maxV = values.reduce(max);
     final slot = size.width / values.length;
-    final barWidth = min(slot * 0.62, 14.0);
-    final chartHeight = size.height - _topPadding;
+    final barWidth = min(slot * 0.58, 12.0);
+    final chartHeight = size.height - _topPad;
 
-    // Сетка: половина и максимум, с подписями сумм справа.
+    // Сетка: максимум и половина, суммы мелко над линиями справа.
     if (maxV > 0) {
       final gridPaint = Paint()
         ..color = gridColor
         ..strokeWidth = 1;
       for (final fraction in [1.0, 0.5]) {
-        final y = _topPadding + chartHeight * (1 - 0.9 * fraction);
+        final y = _topPad + chartHeight * (1 - fraction);
         canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
         _paintLabel(
           canvas,
           formatMoney(maxV * fraction),
-          Offset(size.width - 2, y - 13),
+          Offset(size.width - 2, y - 12),
           color: labelColor,
+          fontSize: 9.5,
           align: TextAlign.right,
         );
       }
@@ -386,35 +464,48 @@ class _BarsPainter extends CustomPainter {
       final isHighlight = i == highlight && values[i] > 0;
       final h = maxV <= 0
           ? 0.0
-          : max(barWidth, chartHeight * 0.9 * (values[i] / maxV) * progress);
+          : max(barWidth, chartHeight * (values[i] / maxV) * progress);
+      final barRect = Rect.fromLTWH(x, size.height - h, barWidth, h);
 
-      final rrect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(x, size.height - h, barWidth, h),
-        Radius.circular(barWidth / 2),
+      final rrect = RRect.fromRectAndCorners(
+        barRect,
+        topLeft: Radius.circular(barWidth / 2),
+        topRight: Radius.circular(barWidth / 2),
+        bottomLeft: const Radius.circular(2),
+        bottomRight: const Radius.circular(2),
       );
-      canvas.drawRRect(
-        rrect,
-        Paint()
-          ..color = values[i] <= 0
-              ? baseColor
-              : isHighlight
-                  ? color
-                  : color.withValues(alpha: 0.45),
-      );
+      final paint = Paint();
+      if (values[i] <= 0) {
+        paint.color = baseColor;
+      } else if (isHighlight) {
+        paint.shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [color, color.withValues(alpha: 0.75)],
+        ).createShader(barRect);
+      } else {
+        paint.shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            color.withValues(alpha: 0.45),
+            color.withValues(alpha: 0.28),
+          ],
+        ).createShader(barRect);
+      }
+      canvas.drawRRect(rrect, paint);
 
-      // Значение над выделенным баром.
+      // Чип с суммой над выбранным баром.
       if (isHighlight && progress >= 1) {
-        _paintLabel(
+        _paintChip(
           canvas,
           formatMoney(values[i]),
-          Offset(
-            (x + barWidth / 2).clamp(18.0, size.width - 18.0),
-            size.height - h - 16,
-          ),
-          color: onSurface,
-          fontSize: 11,
-          weight: FontWeight.w700,
-          align: TextAlign.center,
+          anchorX: x + barWidth / 2,
+          top: size.height - h - 26,
+          bounds: size,
+          background: chipBackground,
+          foreground: chipForeground,
+          border: chipBorder,
         );
       }
     }

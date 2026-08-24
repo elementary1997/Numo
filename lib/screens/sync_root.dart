@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../core/l10n.dart';
+import '../data/changelog.dart';
 import '../state/providers.dart';
 
 /// Обвязка синхронизации вокруг приложения: при старте предлагает
@@ -23,7 +27,59 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForNewer());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _showWhatsNew();
+      await _checkForNewer();
+    });
+  }
+
+  /// После обновления показывает «Что нового» для текущей версии.
+  Future<void> _showWhatsNew() async {
+    final prefs = await SharedPreferences.getInstance();
+    final current = (await PackageInfo.fromPlatform()).version;
+    final lastSeen = prefs.getString('numo.lastSeenVersion');
+    await prefs.setString('numo.lastSeenVersion', current);
+    if (lastSeen == null || lastSeen == current || !mounted) return;
+
+    final entry =
+        changelog.where((e) => e.version == current).firstOrNull;
+    if (entry == null) return;
+    final lang = Localizations.localeOf(context).languageCode;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.whatsNewTitle(current)),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final item in entry.items(lang))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('•  '),
+                        Expanded(child: Text(item)),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.l10n.ok),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkForNewer() async {

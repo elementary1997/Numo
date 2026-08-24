@@ -778,6 +778,33 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not parse the PDF — export CSV or Excel from your bank instead';
 
   @override
+  String get wipeDataTitle => 'Erase all data';
+
+  @override
+  String get wipeDataBody =>
+      'All transactions, budgets, goals, rules and recurring payments will be deleted; categories and accounts reset to defaults. This cannot be undone. Continue?';
+
+  @override
+  String get wipeDataDone => 'Data erased';
+
+  @override
+  String get wipe => 'Erase';
+
+  @override
+  String get biometricsButton => 'Unlock with biometrics';
+
+  @override
+  String get biometricsReason => 'Unlock Numo';
+
+  @override
+  String whatsNewTitle(String version) {
+    return 'What\'s new in $version';
+  }
+
+  @override
+  String get ok => 'Got it';
+
+  @override
   String get csvHeaderDate => 'Date';
 
   @override

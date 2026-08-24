@@ -1472,6 +1472,54 @@ abstract class AppLocalizations {
   /// **'Не удалось распознать PDF — выгрузите из банка CSV или Excel'**
   String get pdfParseFailed;
 
+  /// No description provided for @wipeDataTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стереть все данные'**
+  String get wipeDataTitle;
+
+  /// No description provided for @wipeDataBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Будут удалены все операции, бюджеты, цели, правила и регулярные платежи; категории и счета вернутся к начальным. Это действие необратимо. Продолжить?'**
+  String get wipeDataBody;
+
+  /// No description provided for @wipeDataDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные стёрты'**
+  String get wipeDataDone;
+
+  /// No description provided for @wipe.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стереть'**
+  String get wipe;
+
+  /// No description provided for @biometricsButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти по биометрии'**
+  String get biometricsButton;
+
+  /// No description provided for @biometricsReason.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разблокировать Numo'**
+  String get biometricsReason;
+
+  /// No description provided for @whatsNewTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что нового в {version}'**
+  String whatsNewTitle(String version);
+
+  /// No description provided for @ok.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понятно'**
+  String get ok;
+
   /// No description provided for @csvHeaderDate.
   ///
   /// In ru, this message translates to:

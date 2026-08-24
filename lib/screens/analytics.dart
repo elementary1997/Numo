@@ -142,7 +142,8 @@ class _DailyExpensesCardState extends State<_DailyExpensesCard> {
     final stats = widget.stats;
     final daily = stats.dailyExpense;
     final maxV = daily.isEmpty ? 0.0 : daily.reduce((a, b) => a > b ? a : b);
-    final shown = _selected ?? (maxV > 0 ? daily.indexOf(maxV) : null);
+    if (maxV <= 0) return const SizedBox.shrink();
+    final shown = _selected ?? daily.indexOf(maxV);
 
     return Card(
       child: Padding(
@@ -156,14 +157,13 @@ class _DailyExpensesCardState extends State<_DailyExpensesCard> {
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w800)),
                 const Spacer(),
-                if (shown != null)
-                  Text(
-                    '${DateFormat('d MMMM', context.localeCode).format(DateTime(stats.month.year, stats.month.month, shown + 1))} · ${formatMoney(daily[shown])}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                Text(
+                  '${DateFormat('d MMMM', context.localeCode).format(DateTime(stats.month.year, stats.month.month, shown + 1))} · ${formatMoney(daily[shown])}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -201,7 +201,9 @@ class _CapitalDynamicsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final series = ref.watch(capitalSeriesProvider(90));
-    if (series.length < 2) return const SizedBox.shrink();
+    if (series.length < 2 || series.every((v) => v == 0)) {
+      return const SizedBox.shrink();
+    }
 
     final minV = series.reduce((a, b) => a < b ? a : b);
     final normalized = [for (final v in series) v - minV];

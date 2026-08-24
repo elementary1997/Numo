@@ -1,5 +1,6 @@
 package ru.numo.numo
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FlutterFragmentActivity — требование local_auth (BiometricPrompt).
+class MainActivity : FlutterFragmentActivity()

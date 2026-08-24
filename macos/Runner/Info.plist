@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Numo использует биометрию для разблокировки приложения.</string>
 </dict>
 </plist>

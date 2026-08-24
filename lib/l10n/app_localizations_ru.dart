@@ -778,6 +778,33 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось распознать PDF — выгрузите из банка CSV или Excel';
 
   @override
+  String get wipeDataTitle => 'Стереть все данные';
+
+  @override
+  String get wipeDataBody =>
+      'Будут удалены все операции, бюджеты, цели, правила и регулярные платежи; категории и счета вернутся к начальным. Это действие необратимо. Продолжить?';
+
+  @override
+  String get wipeDataDone => 'Данные стёрты';
+
+  @override
+  String get wipe => 'Стереть';
+
+  @override
+  String get biometricsButton => 'Войти по биометрии';
+
+  @override
+  String get biometricsReason => 'Разблокировать Numo';
+
+  @override
+  String whatsNewTitle(String version) {
+    return 'Что нового в $version';
+  }
+
+  @override
+  String get ok => 'Понятно';
+
+  @override
   String get csvHeaderDate => 'Дата';
 
   @override

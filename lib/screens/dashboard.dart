@@ -463,14 +463,14 @@ class _BalanceCard extends StatelessWidget {
           Row(
             children: [
               _FlowChip(
-                icon: Icons.arrow_downward_rounded,
+                icon: Icons.arrow_upward_rounded,
                 label: context.l10n.income,
                 value: stats.income,
                 color: NumoColors.mint,
               ),
               const SizedBox(width: 12),
               _FlowChip(
-                icon: Icons.arrow_upward_rounded,
+                icon: Icons.arrow_downward_rounded,
                 label: context.l10n.expenses,
                 value: stats.expense,
                 color: NumoColors.coral,

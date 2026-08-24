@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../core/theme.dart';
 import '../state/providers.dart';
@@ -17,8 +21,45 @@ class LockScreen extends ConsumerStatefulWidget {
 class _LockScreenState extends ConsumerState<LockScreen> {
   String _entered = '';
   bool _error = false;
+  bool _biometricsAvailable = false;
+  final _localAuth = LocalAuthentication();
+
+  bool get _biometricsSupported =>
+      !kIsWeb && (Platform.isMacOS || Platform.isWindows ||
+          Platform.isAndroid || Platform.isIOS);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_biometricsSupported) {
+      _localAuth.isDeviceSupported().then((supported) async {
+        final canCheck =
+            supported && await _localAuth.canCheckBiometrics;
+        if (!mounted) return;
+        setState(() => _biometricsAvailable = canCheck);
+        if (canCheck) _tryBiometrics(); // авто-попытка при открытии
+      }).catchError((_) {});
+    }
+  }
+
+  Future<void> _tryBiometrics() async {
+    try {
+      final ok = await _localAuth.authenticate(
+        localizedReason:
+            context.mounted ? context.l10n.biometricsReason : 'Numo',
+        biometricOnly: true,
+      );
+      if (ok && mounted) {
+        ref.read(lockedProvider.notifier).state = false;
+      }
+    } catch (_) {
+      // Биометрия недоступна/отменена — остаётся PIN.
+    }
+  }
 
   void _tap(String key) {
+    final security = ref.read(securityRepositoryProvider);
+    final length = security.pinLength;
     HapticFeedback.selectionClick();
     setState(() {
       _error = false;
@@ -28,18 +69,19 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         }
         return;
       }
-      if (_entered.length >= 6) return;
+      if (_entered.length >= length) return;
       _entered += key;
     });
-    if (_entered.length >= 4 &&
-        ref.read(securityRepositoryProvider).verify(_entered)) {
-      ref.read(lockedProvider.notifier).state = false;
-    } else if (_entered.length == 6) {
-      HapticFeedback.heavyImpact();
-      setState(() {
-        _error = true;
-        _entered = '';
-      });
+    if (_entered.length == length) {
+      if (security.verify(_entered)) {
+        ref.read(lockedProvider.notifier).state = false;
+      } else {
+        HapticFeedback.heavyImpact();
+        setState(() {
+          _error = true;
+          _entered = '';
+        });
+      }
     }
   }
 
@@ -83,7 +125,12 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      for (var i = 0; i < 6; i++)
+                      for (var i = 0;
+                          i <
+                              ref
+                                  .read(securityRepositoryProvider)
+                                  .pinLength;
+                          i++)
                         Container(
                           width: 14,
                           height: 14,
@@ -141,6 +188,14 @@ class _LockScreenState extends ConsumerState<LockScreen> {
                               ),
                     ],
                   ),
+                  if (_biometricsAvailable) ...[
+                    const SizedBox(height: 14),
+                    TextButton.icon(
+                      onPressed: _tryBiometrics,
+                      icon: const Icon(Icons.fingerprint_rounded, size: 20),
+                      label: Text(context.l10n.biometricsButton),
+                    ),
+                  ],
                 ],
               ),
             ),

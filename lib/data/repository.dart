@@ -24,7 +24,7 @@ class TransactionsRepository {
   List<Tx> _cache;
 
   static Future<TransactionsRepository> open(NumoDatabase db,
-      {String seedLocale = 'ru'}) async {
+      {String seedLocale = 'ru', bool seedDemo = true}) async {
     final rows = await db.select(db.transactionRows).get();
     if (rows.isNotEmpty) {
       final cache = rows.map(_fromRow).toList()
@@ -41,7 +41,7 @@ class TransactionsRepository {
             .map((e) => Tx.fromJson(e as Map<String, dynamic>))
             .toList();
         await repo.saveAll(migrated);
-      } else {
+      } else if (seedDemo) {
         await repo.saveAll(demoData(seedLocale: seedLocale));
       }
       await prefs.setBool(_migratedKey, true);

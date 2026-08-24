@@ -283,6 +283,12 @@ class RulesNotifier extends Notifier<List<CategoryRule>> {
     await ref.read(rulesRepositoryProvider).saveAll(state);
   }
 
+  /// Полная замена данных — используется сбросом и бэкапом.
+  Future<void> replaceAll(List<CategoryRule> rules) async {
+    state = [...rules];
+    await ref.read(rulesRepositoryProvider).saveAll(state);
+  }
+
   /// Применяет правила к существующим операциям (кроме переводов).
   /// Возвращает число переклассифицированных операций.
   Future<int> applyToExisting() async {

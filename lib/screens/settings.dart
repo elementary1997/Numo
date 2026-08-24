@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/l10n.dart';
+import '../models/account.dart';
+import '../models/category.dart';
 import '../state/providers.dart';
 import 'backup_actions.dart';
 import 'settings_sheets.dart';
@@ -85,9 +87,67 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             const _UpdatesCard(),
           ],
+          const SizedBox(height: 14),
+          Card(
+            child: ListTile(
+              dense: true,
+              leading: Icon(Icons.delete_forever_rounded,
+                  size: 20, color: theme.colorScheme.error),
+              title: Text(context.l10n.wipeDataTitle,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.error,
+                  )),
+              onTap: () => _wipeData(context, ref),
+            ),
+          ),
         ],
       ),
     );
+  }
+}
+
+/// Полный сброс данных с подтверждением.
+Future<void> _wipeData(BuildContext context, WidgetRef ref) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(context.l10n.wipeDataTitle),
+      content: Text(context.l10n.wipeDataBody),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error),
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(context.l10n.wipe),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  final languageCode = context.mounted
+      ? Localizations.localeOf(context).languageCode
+      : 'ru';
+  await ref.read(transactionsProvider.notifier).replaceAll(const []);
+  await ref.read(budgetsProvider.notifier).replaceAll(const {});
+  await ref.read(goalsProvider.notifier).replaceAll(const []);
+  await ref.read(rulesProvider.notifier).replaceAll(const []);
+  await ref.read(recurringProvider.notifier).replaceAll(const []);
+  await ref
+      .read(categoriesProvider.notifier)
+      .replaceAll(Categories.defaultsFor(languageCode));
+  await ref
+      .read(accountsProvider.notifier)
+      .replaceAll([Accounts.mainFor(languageCode)]);
+  if (context.mounted) {
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(context.l10n.wipeDataDone)));
   }
 }
 

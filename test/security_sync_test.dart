@@ -33,7 +33,7 @@ void main() {
       await security.setPin('4821');
       final prefs = await SharedPreferences.getInstance();
       for (final key in prefs.getKeys()) {
-        expect(prefs.getString(key), isNot(contains('4821')));
+        expect('${prefs.get(key)}', isNot(contains('4821')));
       }
     });
   });
