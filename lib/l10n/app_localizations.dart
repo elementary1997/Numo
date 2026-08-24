@@ -1622,6 +1622,36 @@ abstract class AppLocalizations {
   /// **'Очень крупный'**
   String get scaleXLarge;
 
+  /// No description provided for @updateNow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить сейчас'**
+  String get updateNow;
+
+  /// No description provided for @updating.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скачивание обновления…'**
+  String get updating;
+
+  /// No description provided for @updateRestartNote.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приложение закроется и перезапустится само'**
+  String get updateRestartNote;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось обновиться автоматически — откройте страницу релиза'**
+  String get updateFailed;
+
+  /// No description provided for @openPage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть страницу'**
+  String get openPage;
+
   /// No description provided for @csvHeaderDate.
   ///
   /// In ru, this message translates to:

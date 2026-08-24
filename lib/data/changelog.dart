@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.5.0',
+    itemsRu: [
+      'Автообновление: новая версия скачивается и устанавливается сама, приложение перезапускается',
+      'Персонализация: масштаб интерфейса — от компактного до очень крупного',
+    ],
+    itemsEn: [
+      'Auto-update: new versions download and install themselves, the app restarts on its own',
+      'Personalization: interface scale from compact to extra large',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.4.0',
     itemsRu: [
       'Официальные иконки банков: Сбер, Т-Банк, Альфа, ВТБ, Озон, Яндекс, МТС и другие',

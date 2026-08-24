@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../core/l10n.dart';
 import '../models/account.dart';
@@ -9,6 +8,7 @@ import '../models/category.dart';
 import '../data/update_service.dart';
 import '../state/providers.dart';
 import 'backup_actions.dart';
+import 'update_flow.dart';
 import 'settings_sheets.dart';
 
 /// Настройки: язык, защита, синхронизация, бэкапы и экспорт.
@@ -236,10 +236,11 @@ class _UpdatesCardState extends ConsumerState<_UpdatesCard> {
         ..showSnackBar(SnackBar(content: Text(context.l10n.upToDate)));
       return;
     }
-    final open = await showDialog<bool>(
+    final update = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.updateAvailable(info.version)),
+        content: Text(context.l10n.updateRestartNote),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -247,14 +248,13 @@ class _UpdatesCardState extends ConsumerState<_UpdatesCard> {
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(context.l10n.download),
+            child: Text(context.l10n.updateNow),
           ),
         ],
       ),
     );
-    if (open == true) {
-      await launchUrl(Uri.parse(info.url),
-          mode: LaunchMode.externalApplication);
+    if (update == true && mounted) {
+      await runUpdateFlow(context, info);
     }
   }
 

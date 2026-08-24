@@ -863,6 +863,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get scaleXLarge => 'Очень крупный';
 
   @override
+  String get updateNow => 'Обновить сейчас';
+
+  @override
+  String get updating => 'Скачивание обновления…';
+
+  @override
+  String get updateRestartNote => 'Приложение закроется и перезапустится само';
+
+  @override
+  String get updateFailed =>
+      'Не удалось обновиться автоматически — откройте страницу релиза';
+
+  @override
+  String get openPage => 'Открыть страницу';
+
+  @override
   String get csvHeaderDate => 'Дата';
 
   @override

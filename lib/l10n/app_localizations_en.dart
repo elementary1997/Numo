@@ -863,6 +863,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scaleXLarge => 'Extra large';
 
   @override
+  String get updateNow => 'Update now';
+
+  @override
+  String get updating => 'Downloading update…';
+
+  @override
+  String get updateRestartNote => 'The app will close and restart itself';
+
+  @override
+  String get updateFailed =>
+      'Automatic update failed — open the release page instead';
+
+  @override
+  String get openPage => 'Open page';
+
+  @override
   String get csvHeaderDate => 'Date';
 
   @override

@@ -4,12 +4,32 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'platform_name_stub.dart'
+    if (dart.library.io) 'platform_name_io.dart';
+
 /// Информация о доступном обновлении.
 class UpdateInfo {
-  const UpdateInfo({required this.version, required this.url});
+  const UpdateInfo({required this.version, required this.url, this.assetUrl});
 
   final String version;
+
+  /// Страница релиза (fallback, если автообновление недоступно).
   final String url;
+
+  /// Прямая ссылка на архив сборки для текущей платформы.
+  final String? assetUrl;
+}
+
+/// Имя архива релиза для текущей платформы; null — автообновление
+/// на этой платформе не поддерживается (web).
+String? platformAssetName({String? platformOverride}) {
+  final platform = platformOverride ?? currentPlatformName();
+  return switch (platform) {
+    'windows' => 'numo-windows-x64.zip',
+    'macos' => 'numo-macos.zip',
+    'linux' => 'numo-linux-x64.tar.gz',
+    _ => null,
+  };
 }
 
 /// Результат ручной проверки: доступна версия / всё актуально /
@@ -74,7 +94,12 @@ class UpdateService {
       final current = await currentVersion();
       if (isNewerVersion(version, current)) {
         return UpdateCheckResult(
-            UpdateCheckStatus.available, UpdateInfo(version: version, url: url));
+            UpdateCheckStatus.available,
+            UpdateInfo(
+              version: version,
+              url: url,
+              assetUrl: _assetUrlFrom(json),
+            ));
       }
       return const UpdateCheckResult(UpdateCheckStatus.upToDate);
     } catch (_) {
@@ -124,6 +149,20 @@ class UpdateService {
     final current = await currentVersion();
     if (!isNewerVersion(latestVersion, current)) return null;
     return UpdateInfo(version: latestVersion, url: latestUrl);
+  }
+
+  /// Ссылка на архив текущей платформы из JSON релиза.
+  static String? _assetUrlFrom(Map<String, dynamic> release) {
+    final wanted = platformAssetName();
+    if (wanted == null) return null;
+    final assets = release['assets'] as List?;
+    if (assets == null) return null;
+    for (final asset in assets.whereType<Map<String, dynamic>>()) {
+      if (asset['name'] == wanted) {
+        return asset['browser_download_url'] as String?;
+      }
+    }
+    return null;
   }
 
   /// Сравнение semver: `candidate` новее `current`?

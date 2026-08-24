@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +11,7 @@ import '../data/changelog.dart';
 import '../data/statements_watcher.dart';
 import '../state/providers.dart';
 import 'import_csv.dart';
+import 'update_flow.dart';
 
 /// Обвязка синхронизации вокруг приложения: при старте предлагает
 /// принять более новые данные из папки синхронизации, а изменения
@@ -161,12 +161,11 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
         final info = next.valueOrNull;
         if (info == null) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          duration: const Duration(seconds: 8),
+          duration: const Duration(seconds: 10),
           content: Text(context.l10n.updateAvailable(info.version)),
           action: SnackBarAction(
-            label: context.l10n.download,
-            onPressed: () => launchUrl(Uri.parse(info.url),
-                mode: LaunchMode.externalApplication),
+            label: context.l10n.updateNow,
+            onPressed: () => runUpdateFlow(context, info),
           ),
         ));
       });

@@ -5,6 +5,17 @@ import 'package:numo/data/update_service.dart';
 import 'package:numo/models/account.dart';
 
 void main() {
+  group('platformAssetName', () {
+    test('выбирает архив своей платформы', () {
+      expect(platformAssetName(platformOverride: 'windows'),
+          'numo-windows-x64.zip');
+      expect(platformAssetName(platformOverride: 'macos'), 'numo-macos.zip');
+      expect(platformAssetName(platformOverride: 'linux'),
+          'numo-linux-x64.tar.gz');
+      expect(platformAssetName(platformOverride: 'web'), isNull);
+    });
+  });
+
   group('UpdateService.isNewerVersion', () {
     test('сравнивает semver по компонентам', () {
       expect(UpdateService.isNewerVersion('1.0.1', '1.0.0'), isTrue);
