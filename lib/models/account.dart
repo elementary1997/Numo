@@ -22,8 +22,17 @@ abstract final class Currencies {
       };
 }
 
-/// Тип счёта: обычный или вклад с процентной ставкой.
-enum AccountKind { regular, deposit }
+/// Тип счёта. У вклада и накопительного есть процентная ставка,
+/// у вклада — ещё и срок.
+enum AccountKind { card, cash, deposit, savings }
+
+/// Разбор типа с поддержкой legacy-значения 'regular' (до v1.1).
+AccountKind accountKindFrom(String? raw) => switch (raw) {
+      'cash' => AccountKind.cash,
+      'deposit' => AccountKind.deposit,
+      'savings' => AccountKind.savings,
+      _ => AccountKind.card,
+    };
 
 /// Счёт пользователя: наличные, карта, вклад — со своей валютой.
 class Account {
@@ -34,7 +43,7 @@ class Account {
     required this.color,
     this.currency = Currencies.rub,
     this.archived = false,
-    this.kind = AccountKind.regular,
+    this.kind = AccountKind.card,
     this.rate,
     this.openedAt,
     this.closesAt,
@@ -56,6 +65,10 @@ class Account {
   IconData get icon => CategoryIcons.resolve(iconKey);
   bool get isRub => currency == Currencies.rub;
   bool get isDeposit => kind == AccountKind.deposit;
+
+  /// Счёт с процентной ставкой (вклад или накопительный).
+  bool get hasRate =>
+      kind == AccountKind.deposit || kind == AccountKind.savings;
 
   /// Прогноз суммы к дате закрытия вклада: простые проценты от
   /// текущего баланса за срок «открытие → закрытие». Оценка «≈»:
@@ -113,8 +126,7 @@ class Account {
         color: Color(json['color'] as int),
         currency: (json['currency'] as String?) ?? Currencies.rub,
         archived: (json['archived'] as bool?) ?? false,
-        kind: AccountKind.values
-            .byName((json['kind'] as String?) ?? 'regular'),
+        kind: accountKindFrom(json['kind'] as String?),
         rate: (json['rate'] as num?)?.toDouble(),
         openedAt: json['openedAt'] == null
             ? null

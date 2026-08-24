@@ -4,12 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/money.dart';
+import '../core/theme.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../widgets/breakdown_card.dart';
 import '../state/providers.dart';
 import '../core/l10n.dart';
+
+/// Название типа счёта на языке интерфейса.
+String accountKindLabel(BuildContext context, AccountKind kind) =>
+    switch (kind) {
+      AccountKind.card => context.l10n.accountTypeCard,
+      AccountKind.cash => context.l10n.accountTypeCash,
+      AccountKind.deposit => context.l10n.accountTypeDeposit,
+      AccountKind.savings => context.l10n.accountTypeSavings,
+    };
 
 class AccountsScreen extends ConsumerWidget {
   const AccountsScreen({super.key});
@@ -42,7 +52,19 @@ class AccountsScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
         children: [
           const _CapitalBreakdown(),
-          for (final a in active) _AccountTile(account: a),
+          for (final kind in AccountKind.values)
+            if (active.any((a) => a.kind == kind)) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(4, 12, 4, 2),
+                child: Text(
+                  accountKindLabel(context, kind),
+                  style: theme.textTheme.titleSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              for (final a in active.where((a) => a.kind == kind))
+                _AccountTile(account: a),
+            ],
           if (archived.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(context.l10n.archiveSection,
@@ -118,7 +140,11 @@ class _AccountTile extends ConsumerWidget {
           style: theme.textTheme.bodyLarge
               ?.copyWith(fontWeight: FontWeight.w700)),
       subtitle: Text(
-        account.isDeposit && account.rate != null && account.closesAt != null
+        account.kind == AccountKind.savings && account.rate != null
+            ? '${accountKindLabel(context, account.kind)} · ${account.rate! == account.rate!.roundToDouble() ? account.rate!.toStringAsFixed(0) : account.rate!} %'
+            : account.isDeposit &&
+                    account.rate != null &&
+                    account.closesAt != null
             ? context.l10n.depositBadge(
                 account.rate! == account.rate!.roundToDouble()
                     ? account.rate!.toStringAsFixed(0)
@@ -228,7 +254,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     _iconKey = a?.iconKey ?? 'card';
     _color = a?.color ?? CategoryColors.palette.first;
     _currency = a?.currency ?? Currencies.rub;
-    _kind = a?.kind ?? AccountKind.regular;
+    _kind = a?.kind ?? AccountKind.card;
     _openedAt = a?.openedAt;
     _closesAt = a?.closesAt;
   }
@@ -258,6 +284,8 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     final title = _title.text.trim();
     if (title.isEmpty) return;
     final isDeposit = _kind == AccountKind.deposit;
+    final withRate =
+        isDeposit || _kind == AccountKind.savings;
     final account = Account(
       id: widget.initial?.id ??
           'acc-${DateTime.now().microsecondsSinceEpoch}',
@@ -267,7 +295,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
       currency: _currency,
       archived: widget.initial?.archived ?? false,
       kind: _kind,
-      rate: isDeposit
+      rate: withRate
           ? double.tryParse(_rate.text.replaceAll(',', '.'))
           : null,
       openedAt: isDeposit ? (_openedAt ?? DateTime.now()) : null,
@@ -385,20 +413,30 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
               ),
             ),
             const SizedBox(height: 14),
-            SegmentedButton<AccountKind>(
-              segments: [
-                ButtonSegment(
-                    value: AccountKind.regular,
-                    label: Text(context.l10n.accountTypeRegular)),
-                ButtonSegment(
-                    value: AccountKind.deposit,
-                    label: Text(context.l10n.accountTypeDeposit)),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final kind in AccountKind.values)
+                  ChoiceChip(
+                    selected: _kind == kind,
+                    onSelected: (_) => setState(() => _kind = kind),
+                    label: Text(accountKindLabel(context, kind)),
+                    labelStyle: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: _kind == kind
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
+                    ),
+                    selectedColor: NumoColors.violet,
+                    showCheckmark: false,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
               ],
-              selected: {_kind},
-              onSelectionChanged: (s) => setState(() => _kind = s.first),
-              showSelectedIcon: false,
             ),
-            if (_kind == AccountKind.deposit) ...[
+            if (_kind == AccountKind.deposit ||
+                _kind == AccountKind.savings) ...[
               const SizedBox(height: 14),
               Row(
                 children: [
@@ -425,6 +463,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                   ),
                 ],
               ),
+              if (_kind == AccountKind.deposit) ...[
               const SizedBox(height: 10),
               Row(
                 children: [
@@ -452,6 +491,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                   ),
                 ],
               ),
+              ],
             ],
             const SizedBox(height: 18),
             Text(context.l10n.iconLabel,

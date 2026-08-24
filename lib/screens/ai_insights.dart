@@ -19,7 +19,7 @@ class AiInsightsScreen extends ConsumerStatefulWidget {
 }
 
 class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
-  bool _hasKey = false;
+  bool _configured = false;
   bool _running = false;
   String? _review;
   String? _error;
@@ -27,60 +27,102 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
   @override
   void initState() {
     super.initState();
-    ref.read(aiServiceProvider).apiKey.then((key) {
-      if (mounted) setState(() => _hasKey = key != null && key.isNotEmpty);
+    ref.read(aiServiceProvider).configured.then((value) {
+      if (mounted) setState(() => _configured = value);
     });
   }
 
+  static String _providerName(AiProvider provider) => switch (provider) {
+        AiProvider.anthropic => 'Claude (Anthropic)',
+        AiProvider.cloudru => 'Cloud.ru',
+        AiProvider.lmstudio => 'LM Studio (локально)',
+        AiProvider.custom => 'OpenAI-compatible',
+      };
+
   Future<void> _configureKey() async {
     final service = ref.read(aiServiceProvider);
+    var provider = await service.provider;
+    final endpointController =
+        TextEditingController(text: await service.endpoint);
     final keyController = TextEditingController(text: await service.apiKey);
     final modelController = TextEditingController(text: await service.model);
     if (!mounted) return;
+
     final saved = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.aiSetKey),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: keyController,
-              autofocus: true,
-              obscureText: true,
-              decoration:
-                  InputDecoration(labelText: context.l10n.aiKeyLabel),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(context.l10n.aiSetKey),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownMenu<AiProvider>(
+                  initialSelection: provider,
+                  label: Text(context.l10n.aiProviderLabel),
+                  expandedInsets: EdgeInsets.zero,
+                  onSelected: (p) {
+                    if (p == null) return;
+                    setDialogState(() {
+                      provider = p;
+                      final defaults = aiProviderDefaults(p);
+                      endpointController.text = defaults.endpoint;
+                      modelController.text = defaults.model;
+                    });
+                  },
+                  dropdownMenuEntries: [
+                    for (final p in AiProvider.values)
+                      DropdownMenuEntry(
+                          value: p, label: _providerName(p)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: endpointController,
+                  decoration: InputDecoration(
+                      labelText: context.l10n.aiEndpointLabel),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: keyController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                      labelText: context.l10n.aiKeyGenericLabel),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: modelController,
+                  decoration: InputDecoration(
+                      labelText: context.l10n.aiModelLabel),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: modelController,
-              decoration:
-                  InputDecoration(labelText: context.l10n.aiModelLabel),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(context.l10n.save),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(context.l10n.save),
-          ),
-        ],
       ),
     );
     if (saved == true) {
       await service.configure(
+        provider: provider,
+        endpoint: endpointController.text.trim(),
         key: keyController.text.trim(),
         model: modelController.text.trim(),
       );
-      final key = await service.apiKey;
-      if (mounted) {
-        setState(() => _hasKey = key != null && key.isNotEmpty);
-      }
+      final ok = await service.configured;
+      if (mounted) setState(() => _configured = ok);
     }
+    endpointController.dispose();
     keyController.dispose();
     modelController.dispose();
   }
@@ -225,7 +267,7 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
                   Row(
                     children: [
                       FilledButton.icon(
-                        onPressed: _hasKey && !_running ? _run : null,
+                        onPressed: _configured && !_running ? _run : null,
                         icon: _running
                             ? const SizedBox(
                                 width: 16,

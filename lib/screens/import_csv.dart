@@ -38,21 +38,25 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     final file = await openFile(acceptedTypeGroups: const [
       XTypeGroup(
           label: 'Statements',
-          extensions: ['csv', 'txt', 'ofx', 'xlsx'])
+          extensions: ['csv', 'txt', 'ofx', 'xlsx', 'pdf'])
     ]);
     if (file == null) return;
     final bytes = await file.readAsBytes();
-    final rows = switch (detectFormat(file.name, bytes)) {
+    final format = detectFormat(file.name, bytes);
+    final rows = switch (format) {
       StatementFormat.ofx =>
         parseOfx(utf8.decode(bytes, allowMalformed: true)),
       StatementFormat.xlsx => parseXlsx(bytes),
+      StatementFormat.pdf => parsePdfStatement(bytes),
       StatementFormat.csv =>
         Csv.parse(utf8.decode(bytes, allowMalformed: true)),
     };
     if (rows.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.fileEmptyToast)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(format == StatementFormat.pdf
+                ? context.l10n.pdfParseFailed
+                : context.l10n.fileEmptyToast)));
       }
       return;
     }

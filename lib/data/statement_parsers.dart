@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 
+import 'pdf_text.dart';
+
 /// Форматы банковских выписок (ADR-0012). Все парсеры приводят файл
 /// к таблице строк, которая дальше идёт в общий пайплайн импорта
 /// (маппинг колонок → предпросмотр → дедупликация).
-enum StatementFormat { csv, ofx, xlsx }
+enum StatementFormat { csv, ofx, xlsx, pdf }
 
 /// Определяет формат по содержимому и имени файла.
 StatementFormat detectFormat(String fileName, Uint8List bytes) {
@@ -22,6 +24,7 @@ StatementFormat detectFormat(String fileName, Uint8List bytes) {
   final head = latin1
       .decode(bytes.take(2048).toList(), allowInvalid: true)
       .toUpperCase();
+  if (head.startsWith('%PDF')) return StatementFormat.pdf;
   if (lower.endsWith('.ofx') ||
       head.contains('<OFX') ||
       head.contains('OFXHEADER')) {
@@ -154,3 +157,58 @@ String _unescapeXml(String s) => s
     .replaceAll('&quot;', '"')
     .replaceAll('&apos;', "'")
     .replaceAll('&amp;', '&');
+
+
+/// PDF-выписка (Сбербанк и похожие текстовые выписки): извлекаем
+/// текст и собираем операции эвристикой «строка с датой и суммой».
+/// В сбер-выписках расходы идут без знака, приходы — с плюсом.
+List<List<String>> parsePdfStatement(Uint8List bytes) {
+  final text = extractPdfText(bytes);
+  if (text.trim().isEmpty) return const [];
+
+  final rows = <List<String>>[
+    ['Date', 'Amount', 'Description'],
+  ];
+  final lines = text.split('\n');
+  final dateRe = RegExp(r'\d{2}\.\d{2}\.\d{4}');
+  final moneyRe = RegExp(r'[+-]?\d[\d  ]*,\d{2}');
+
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
+    final date = dateRe.firstMatch(line);
+    if (date == null) continue;
+    final amounts = moneyRe.allMatches(line).toList();
+    if (amounts.isEmpty) continue;
+
+    // Первая денежная группа — сумма операции (дальше может идти
+    // остаток по счёту).
+    final rawAmount = amounts.first.group(0)!;
+    final normalized = rawAmount
+        .replaceAll(' ', '')
+        .replaceAll(' ', '')
+        .replaceAll(',', '.');
+    final signed = normalized.startsWith('+')
+        ? normalized.substring(1)
+        : normalized.startsWith('-')
+            ? normalized
+            : '-$normalized';
+
+    // Описание: строка без дат, кода авторизации и денежных групп;
+    // если почти пусто — добавляем следующую строку без даты.
+    var description = line
+        .replaceAll(dateRe, ' ')
+        .replaceAll(moneyRe, ' ')
+        .replaceAll(RegExp(r'\b\d{5,}\b'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (description.length < 4 &&
+        i + 1 < lines.length &&
+        !dateRe.hasMatch(lines[i + 1])) {
+      description =
+          ('$description ${lines[i + 1]}').replaceAll(RegExp(r'\s+'), ' ').trim();
+    }
+
+    rows.add([date.group(0)!, signed, description]);
+  }
+  return rows.length > 1 ? rows : const [];
+}

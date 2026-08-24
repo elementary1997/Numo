@@ -44,7 +44,7 @@ class AccountsRepository {
         color: Color(row.color),
         currency: row.currency,
         archived: row.archived,
-        kind: AccountKind.values.byName(row.kind),
+        kind: accountKindFrom(row.kind),
         rate: row.rate,
         openedAt: row.openedAt,
         closesAt: row.closesAt,

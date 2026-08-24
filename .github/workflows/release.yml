@@ -65,6 +65,14 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter build macos --release
+      - name: Ad-hoc sign
+        # Без Apple Developer сертификата подписываем ad-hoc: убирает
+        # «приложение повреждено» на Apple Silicon. Gatekeeper при
+        # первом запуске всё равно требует «правый клик → Открыть» —
+        # инструкция в описании релиза; полная нотарификация появится
+        # вместе с Apple Developer аккаунтом.
+        run: |
+          codesign --force --deep --sign - build/macos/Build/Products/Release/Numo.app
       - name: Package
         run: |
           cd build/macos/Build/Products/Release
@@ -90,3 +98,11 @@ jobs:
             numo-windows-x64.zip
             numo-macos.zip
           generate_release_notes: true
+          body: |
+            ### Установка
+
+            **Windows**: распаковать `numo-windows-x64.zip`, запустить `numo.exe`. SmartScreen может предупредить — «Подробнее → Выполнить в любом случае» (сборка не подписана сертификатом).
+
+            **macOS**: распаковать `numo-macos.zip`, перетащить `Numo.app` в «Программы». При первом запуске macOS сообщит, что не может проверить приложение — это отсутствие нотарификации Apple, не вирус. Открыть так: **правый клик по Numo.app → «Открыть» → «Открыть»**, либо в терминале: `xattr -cr /Applications/Numo.app`.
+
+            **Linux**: `tar xzf numo-linux-x64.tar.gz && ./numo`.

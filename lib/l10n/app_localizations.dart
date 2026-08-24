@@ -641,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @chooseCsvPrompt.
   ///
   /// In ru, this message translates to:
-  /// **'Выберите файл выписки из банка — CSV, OFX или Excel (XLSX)'**
+  /// **'Выберите файл выписки — CSV, OFX, Excel (XLSX) или PDF Сбербанка'**
   String get chooseCsvPrompt;
 
   /// No description provided for @chooseFile.
@@ -1325,7 +1325,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiExplainer.
   ///
   /// In ru, this message translates to:
-  /// **'Подключите свой API-ключ Anthropic — Claude разберёт ваши финансы за последние месяцы: паттерны, риски и конкретные советы. Сводные данные отправляются только по вашей команде.'**
+  /// **'Подключите провайдера — Claude (Anthropic), Cloud.ru или локальную модель через LM Studio — и получите разбор финансов: паттерны, риски и конкретные советы. Сводные данные отправляются только по вашей команде; с LM Studio всё остаётся на вашем компьютере.'**
   String get aiExplainer;
 
   /// No description provided for @aiSetKey.
@@ -1429,6 +1429,48 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Бюджетов превышено: {count}'**
   String insBudgetsOver(int count);
+
+  /// No description provided for @accountTypeCard.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карта'**
+  String get accountTypeCard;
+
+  /// No description provided for @accountTypeCash.
+  ///
+  /// In ru, this message translates to:
+  /// **'Наличные'**
+  String get accountTypeCash;
+
+  /// No description provided for @accountTypeSavings.
+  ///
+  /// In ru, this message translates to:
+  /// **'Накопительный'**
+  String get accountTypeSavings;
+
+  /// No description provided for @aiProviderLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Провайдер'**
+  String get aiProviderLabel;
+
+  /// No description provided for @aiEndpointLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Endpoint'**
+  String get aiEndpointLabel;
+
+  /// No description provided for @aiKeyGenericLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'API-ключ'**
+  String get aiKeyGenericLabel;
+
+  /// No description provided for @pdfParseFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось распознать PDF — выгрузите из банка CSV или Excel'**
+  String get pdfParseFailed;
 
   /// No description provided for @csvHeaderDate.
   ///

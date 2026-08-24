@@ -7,41 +7,97 @@ import '../models/account.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 
-/// Разбор финансов через Anthropic API с ключом пользователя
-/// (ADR-0011). Отправляется только агрегированная сводка — суммы по
-/// категориям и месяцам, балансы и бюджеты; заметки операций не
-/// покидают устройство. Запрос выполняется исключительно по явному
-/// действию пользователя.
+/// Провайдер LLM-разбора. Anthropic говорит на Messages API,
+/// остальные — OpenAI-совместимый chat/completions (Cloud.ru,
+/// локальный LM Studio, любой свой сервер).
+enum AiProvider { anthropic, cloudru, lmstudio, custom }
+
+/// Конфигурация провайдера по умолчанию.
+({String endpoint, String model, bool keyRequired}) aiProviderDefaults(
+        AiProvider provider) =>
+    switch (provider) {
+      AiProvider.anthropic => (
+          endpoint: 'https://api.anthropic.com/v1/messages',
+          model: 'claude-sonnet-5',
+          keyRequired: true,
+        ),
+      AiProvider.cloudru => (
+          endpoint:
+              'https://foundation-models.api.cloud.ru/v1/chat/completions',
+          model: 'openai/gpt-oss-120b',
+          keyRequired: true,
+        ),
+      AiProvider.lmstudio => (
+          endpoint: 'http://127.0.0.1:1234/v1/chat/completions',
+          model: 'local-model',
+          keyRequired: false,
+        ),
+      AiProvider.custom => (
+          endpoint: '',
+          model: '',
+          keyRequired: false,
+        ),
+    };
+
+/// Разбор финансов через LLM с ключом пользователя (ADR-0011).
+/// Отправляется только агрегированная сводка — суммы по категориям и
+/// месяцам, балансы и бюджеты; заметки операций не покидают
+/// устройство. Запрос выполняется исключительно по явному действию.
 class AiService {
   AiService({http.Client? client}) : _client = client ?? http.Client();
 
+  static const _providerPref = 'numo.ai.provider';
+  static const _endpointPref = 'numo.ai.endpoint';
   static const _keyPref = 'numo.ai.key';
   static const _modelPref = 'numo.ai.model';
-  static const defaultModel = 'claude-sonnet-5';
-
-  static final _endpoint = Uri.parse('https://api.anthropic.com/v1/messages');
 
   final http.Client _client;
+
+  Future<AiProvider> get provider async {
+    final raw =
+        (await SharedPreferences.getInstance()).getString(_providerPref);
+    return AiProvider.values
+        .firstWhere((p) => p.name == raw, orElse: () => AiProvider.anthropic);
+  }
 
   Future<String?> get apiKey async =>
       (await SharedPreferences.getInstance()).getString(_keyPref);
 
-  Future<String> get model async =>
-      (await SharedPreferences.getInstance()).getString(_modelPref) ??
-      defaultModel;
-
-  Future<void> configure({required String key, String? model}) async {
+  Future<String> get endpoint async {
     final prefs = await SharedPreferences.getInstance();
-    if (key.isEmpty) {
-      await prefs.remove(_keyPref);
-    } else {
-      await prefs.setString(_keyPref, key);
+    return prefs.getString(_endpointPref) ??
+        aiProviderDefaults(await provider).endpoint;
+  }
+
+  Future<String> get model async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_modelPref) ??
+        aiProviderDefaults(await provider).model;
+  }
+
+  /// Готов ли сервис к запросу: ключ есть либо провайдеру он не нужен.
+  Future<bool> get configured async {
+    final p = await provider;
+    if (!aiProviderDefaults(p).keyRequired) {
+      return (await endpoint).isNotEmpty;
     }
-    if (model == null || model.isEmpty) {
-      await prefs.remove(_modelPref);
-    } else {
-      await prefs.setString(_modelPref, model);
-    }
+    final key = await apiKey;
+    return key != null && key.isNotEmpty;
+  }
+
+  Future<void> configure({
+    required AiProvider provider,
+    required String endpoint,
+    required String key,
+    required String model,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_providerPref, provider.name);
+    Future<void> setOrRemove(String pref, String value) async =>
+        value.isEmpty ? await prefs.remove(pref) : await prefs.setString(pref, value);
+    await setOrRemove(_endpointPref, endpoint);
+    await setOrRemove(_keyPref, key);
+    await setOrRemove(_modelPref, model);
   }
 
   /// Агрегированная сводка для модели: последние [months] месяцев.
@@ -109,8 +165,10 @@ class AiService {
     required Map<String, dynamic> summary,
     required String languageCode,
   }) async {
+    final activeProvider = await provider;
+    final defaults = aiProviderDefaults(activeProvider);
     final key = await apiKey;
-    if (key == null || key.isEmpty) {
+    if (defaults.keyRequired && (key == null || key.isEmpty)) {
       throw const AiException('API key is not set');
     }
     final lang = languageCode == 'ru' ? 'русском' : 'English';
@@ -126,26 +184,36 @@ class AiService {
             'dynamics, 2) patterns and risks, 3) three concrete tips. '
             'Plain text, short paragraphs, no markdown.\n\n';
 
-    final response = await _client
-        .post(
-          _endpoint,
-          headers: {
-            'content-type': 'application/json',
-            'x-api-key': key,
-            'anthropic-version': '2023-06-01',
-          },
-          body: jsonEncode({
+    final isAnthropic = activeProvider == AiProvider.anthropic;
+    final headers = <String, String>{
+      'content-type': 'application/json',
+      if (isAnthropic) 'x-api-key': key!,
+      if (isAnthropic) 'anthropic-version': '2023-06-01',
+      if (!isAnthropic && key != null && key.isNotEmpty)
+        'authorization': 'Bearer $key',
+    };
+    final body = isAnthropic
+        ? {
             'model': await model,
             'max_tokens': 1200,
             'messages': [
-              {
-                'role': 'user',
-                'content': prompt + jsonEncode(summary),
-              }
+              {'role': 'user', 'content': prompt + jsonEncode(summary)}
             ],
-          }),
+          }
+        : {
+            'model': await model,
+            'max_tokens': 1200,
+            'messages': [
+              {'role': 'user', 'content': prompt + jsonEncode(summary)}
+            ],
+          };
+    final response = await _client
+        .post(
+          Uri.parse(await endpoint),
+          headers: headers,
+          body: jsonEncode(body),
         )
-        .timeout(const Duration(seconds: 60));
+        .timeout(const Duration(seconds: 120));
 
     if (response.statusCode != 200) {
       final body = utf8.decode(response.bodyBytes);
@@ -161,12 +229,23 @@ class AiService {
     }
     final json =
         jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
-    final content = json['content'] as List?;
-    final text = content
-        ?.whereType<Map<String, dynamic>>()
-        .where((block) => block['type'] == 'text')
-        .map((block) => block['text'] as String)
-        .join('\n');
+    String? text;
+    if (isAnthropic) {
+      final content = json['content'] as List?;
+      text = content
+          ?.whereType<Map<String, dynamic>>()
+          .where((block) => block['type'] == 'text')
+          .map((block) => block['text'] as String)
+          .join('\n');
+    } else {
+      final choices = json['choices'] as List?;
+      final message = choices != null && choices.isNotEmpty
+          ? (choices.first as Map<String, dynamic>)['message']
+          : null;
+      if (message is Map<String, dynamic>) {
+        text = message['content'] as String?;
+      }
+    }
     if (text == null || text.isEmpty) {
       throw const AiException('Empty response');
     }

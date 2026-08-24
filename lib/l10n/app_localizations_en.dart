@@ -298,7 +298,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseCsvPrompt =>
-      'Choose a bank statement file — CSV, OFX or Excel (XLSX)';
+      'Choose a statement file — CSV, OFX, Excel (XLSX) or Sberbank PDF';
 
   @override
   String get chooseFile => 'Choose file';
@@ -683,7 +683,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiExplainer =>
-      'Connect your Anthropic API key and Claude will review your recent finances: patterns, risks and concrete advice. Summary data is sent only when you ask.';
+      'Connect a provider — Claude (Anthropic), Cloud.ru or a local model via LM Studio — to get a finance review: patterns, risks and concrete advice. Summary data is sent only when you ask; with LM Studio everything stays on your machine.';
 
   @override
   String get aiSetKey => 'Set API key';
@@ -754,6 +754,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String insBudgetsOver(int count) {
     return 'Budgets exceeded: $count';
   }
+
+  @override
+  String get accountTypeCard => 'Card';
+
+  @override
+  String get accountTypeCash => 'Cash';
+
+  @override
+  String get accountTypeSavings => 'Savings';
+
+  @override
+  String get aiProviderLabel => 'Provider';
+
+  @override
+  String get aiEndpointLabel => 'Endpoint';
+
+  @override
+  String get aiKeyGenericLabel => 'API key';
+
+  @override
+  String get pdfParseFailed =>
+      'Could not parse the PDF — export CSV or Excel from your bank instead';
 
   @override
   String get csvHeaderDate => 'Date';

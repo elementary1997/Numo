@@ -298,7 +298,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get chooseCsvPrompt =>
-      'Выберите файл выписки из банка — CSV, OFX или Excel (XLSX)';
+      'Выберите файл выписки — CSV, OFX, Excel (XLSX) или PDF Сбербанка';
 
   @override
   String get chooseFile => 'Выбрать файл';
@@ -683,7 +683,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get aiExplainer =>
-      'Подключите свой API-ключ Anthropic — Claude разберёт ваши финансы за последние месяцы: паттерны, риски и конкретные советы. Сводные данные отправляются только по вашей команде.';
+      'Подключите провайдера — Claude (Anthropic), Cloud.ru или локальную модель через LM Studio — и получите разбор финансов: паттерны, риски и конкретные советы. Сводные данные отправляются только по вашей команде; с LM Studio всё остаётся на вашем компьютере.';
 
   @override
   String get aiSetKey => 'Указать API-ключ';
@@ -754,6 +754,28 @@ class AppLocalizationsRu extends AppLocalizations {
   String insBudgetsOver(int count) {
     return 'Бюджетов превышено: $count';
   }
+
+  @override
+  String get accountTypeCard => 'Карта';
+
+  @override
+  String get accountTypeCash => 'Наличные';
+
+  @override
+  String get accountTypeSavings => 'Накопительный';
+
+  @override
+  String get aiProviderLabel => 'Провайдер';
+
+  @override
+  String get aiEndpointLabel => 'Endpoint';
+
+  @override
+  String get aiKeyGenericLabel => 'API-ключ';
+
+  @override
+  String get pdfParseFailed =>
+      'Не удалось распознать PDF — выгрузите из банка CSV или Excel';
 
   @override
   String get csvHeaderDate => 'Дата';

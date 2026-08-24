@@ -46,7 +46,7 @@ void main() {
       );
       expect(regular.projectedAtClose(1000), isNull);
       expect(
-          deposit.copyWith(kind: AccountKind.regular).projectedAtClose(1000),
+          deposit.copyWith(kind: AccountKind.card).projectedAtClose(1000),
           isNull);
     });
 
