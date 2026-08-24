@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/category.dart';
+import '../models/account.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 import 'categories.dart';
@@ -41,6 +42,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
   String _raw = '0';
   TxCategory? _category;
   DateTime _date = DateTime.now();
+  late String _accountId;
   final _noteController = TextEditingController();
 
   bool get _isEditing => widget.initial != null;
@@ -49,6 +51,9 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
   void initState() {
     super.initState();
     final tx = widget.initial;
+    final accounts = ref.read(activeAccountsProvider);
+    _accountId = tx?.accountId ??
+        (accounts.isNotEmpty ? accounts.first.id : Accounts.main.id);
     if (tx != null) {
       _type = tx.type;
       _raw = tx.amount == tx.amount.roundToDouble()
@@ -109,6 +114,7 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
       amount: _amount,
       categoryId: category.id,
       date: _date,
+      accountId: _accountId,
       note: _noteController.text.trim(),
     );
     final notifier = ref.read(transactionsProvider.notifier);
@@ -192,6 +198,49 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
               ),
             ),
             const SizedBox(height: 16),
+            Builder(builder: (context) {
+              final accounts = ref.watch(activeAccountsProvider);
+              if (accounts.length < 2) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: SizedBox(
+                  height: 38,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: accounts.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final a = accounts[i];
+                      final selected = _accountId == a.id;
+                      return ChoiceChip(
+                        selected: selected,
+                        onSelected: (_) =>
+                            setState(() => _accountId = a.id),
+                        avatar: Icon(a.icon,
+                            size: 16,
+                            color: selected ? Colors.white : a.color),
+                        label: Text(
+                            '${a.title} · ${Currencies.symbol(a.currency)}'),
+                        labelStyle: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: selected
+                              ? Colors.white
+                              : theme.colorScheme.onSurface,
+                        ),
+                        selectedColor: a.color,
+                        backgroundColor:
+                            a.color.withValues(alpha: selected ? 1 : 0.10),
+                        side: BorderSide.none,
+                        showCheckmark: false,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      );
+                    },
+                  ),
+                ),
+              );
+            }),
             SizedBox(
               height: 44,
               child: Builder(builder: (context) {

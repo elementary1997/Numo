@@ -23,7 +23,13 @@ class CategoriesRepository {
   static Future<CategoriesRepository> open(NumoDatabase db) async {
     final rows = await db.select(db.categoryRows).get();
     if (rows.isNotEmpty) {
-      return CategoriesRepository._(db, rows.map(_fromRow).toList());
+      final repo = CategoriesRepository._(db, rows.map(_fromRow).toList());
+      // Системная категория переводов появилась позже — дозаводим её
+      // пользователям, сидированным до её появления.
+      if (!repo._cache.any((c) => c.id == Categories.transfer.id)) {
+        await repo.saveAll([...repo._cache, Categories.transfer]);
+      }
+      return repo;
     }
 
     final prefs = await SharedPreferences.getInstance();

@@ -66,6 +66,7 @@ class TransactionsRepository {
         amount: row.amount,
         categoryId: row.categoryId,
         date: row.date,
+        accountId: row.accountId,
         note: row.note,
       );
 
@@ -75,6 +76,7 @@ class TransactionsRepository {
         amount: Value(tx.amount),
         categoryId: Value(tx.categoryId),
         date: Value(tx.date),
+        accountId: Value(tx.accountId),
         note: Value(tx.note),
       );
 

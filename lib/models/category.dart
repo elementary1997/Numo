@@ -31,6 +31,9 @@ abstract final class CategoryIcons {
     'build': Icons.build_rounded,
     'savings': Icons.savings_rounded,
     'percent': Icons.percent_rounded,
+    'swap': Icons.swap_horiz_rounded,
+    'cash': Icons.payments_rounded,
+    'card': Icons.credit_card_rounded,
   };
 
   static IconData resolve(String key) =>
@@ -188,6 +191,15 @@ abstract final class Categories {
     isIncome: true,
   );
 
+  /// Системная категория переводов между счетами: не показывается
+  /// в выборе категорий и исключена из статистики доходов/расходов.
+  static const transfer = TxCategory(
+    id: 'transfer',
+    title: 'Перевод',
+    iconKey: 'swap',
+    color: Color(0xFF8E8AA6),
+  );
+
   static const defaults = [
     groceries,
     cafe,
@@ -200,6 +212,7 @@ abstract final class Categories {
     salary,
     freelance,
     gifts,
+    transfer,
   ];
 }
 

@@ -12,6 +12,20 @@ class TransactionRows extends Table {
   TextColumn get categoryId => text()();
   DateTimeColumn get date => dateTime()();
   TextColumn get note => text().withDefault(const Constant(''))();
+  TextColumn get accountId => text().withDefault(const Constant('main'))();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Счета: наличные, карты, вклады. У каждого своя валюта.
+class AccountRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get iconKey => text()();
+  IntColumn get color => integer()();
+  TextColumn get currency => text().withDefault(const Constant('RUB'))();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -60,15 +74,20 @@ class RecurringRows extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-@DriftDatabase(
-    tables: [TransactionRows, CategoryRows, BudgetRows, RecurringRows])
+@DriftDatabase(tables: [
+  TransactionRows,
+  CategoryRows,
+  BudgetRows,
+  RecurringRows,
+  AccountRows,
+])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
   /// в тестах передаётся in-memory executor.
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +97,10 @@ class NumoDatabase extends _$NumoDatabase {
           }
           if (from < 3) {
             await m.createTable(recurringRows);
+          }
+          if (from < 4) {
+            await m.createTable(accountRows);
+            await m.addColumn(transactionRows, transactionRows.accountId);
           }
         },
       );

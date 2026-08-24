@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme.dart';
+import 'data/accounts_repository.dart';
 import 'data/budgets_repository.dart';
 import 'data/categories_repository.dart';
 import 'data/database.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
   final categoriesRepository = await CategoriesRepository.open(database);
   final budgetsRepository = await BudgetsRepository.open(database);
   final recurringRepository = await RecurringRepository.open(database);
+  final accountsRepository = await AccountsRepository.open(database);
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   runApp(
@@ -29,6 +31,7 @@ Future<void> main() async {
         categoriesRepositoryProvider.overrideWithValue(categoriesRepository),
         budgetsRepositoryProvider.overrideWithValue(budgetsRepository),
         recurringRepositoryProvider.overrideWithValue(recurringRepository),
+        accountsRepositoryProvider.overrideWithValue(accountsRepository),
       ],
       child: const NumoApp(),
     ),

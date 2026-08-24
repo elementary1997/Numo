@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 
 import '../core/money.dart';
 import '../core/theme.dart';
+import '../models/account.dart';
 import '../models/category.dart';
 import '../state/providers.dart';
 import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
+import 'accounts.dart';
 import 'add_transaction.dart';
 import 'backup_actions.dart';
 import 'budgets.dart';
@@ -61,6 +63,9 @@ class DashboardScreen extends ConsumerWidget {
                   'recurring' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const RecurringScreen())),
+                  'accounts' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const AccountsScreen())),
                   'export' => exportBackup(context, ref),
                   'import' => importBackup(context, ref),
                   _ => null,
@@ -91,6 +96,14 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ),
                   PopupMenuItem(
+                    value: 'accounts',
+                    child: ListTile(
+                      leading: Icon(Icons.account_balance_wallet_outlined),
+                      title: Text('Счета'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
                     value: 'export',
                     child: ListTile(
                       leading: Icon(Icons.upload_file_rounded),
@@ -113,6 +126,7 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           _BalanceCard(balance: balance, stats: stats),
           const SizedBox(height: 12),
+          const _AccountsStrip(),
           const _SafeToSpendCard(),
           const SizedBox(height: 8),
           if (stats.byCategory.isNotEmpty) ...[
@@ -141,6 +155,76 @@ class DashboardScreen extends ConsumerWidget {
                   onTap: () => showAddTransactionSheet(context, initial: t),
                 )),
         ],
+      ),
+    );
+  }
+}
+
+/// Горизонтальная лента счетов с балансами; показывается, когда
+/// счетов больше одного.
+class _AccountsStrip extends ConsumerWidget {
+  const _AccountsStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accounts = ref.watch(activeAccountsProvider);
+    if (accounts.length < 2) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: SizedBox(
+        height: 76,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: accounts.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, i) {
+            final a = accounts[i];
+            final balance = ref.watch(accountBalanceProvider(a.id));
+            return Card(
+              child: InkWell(
+                borderRadius: BorderRadius.circular(24),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const AccountsScreen())),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: a.color.withValues(alpha: 0.16),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(a.icon, color: a.color, size: 19),
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(a.title,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                  color:
+                                      theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            formatMoneyIn(
+                                balance, Currencies.symbol(a.currency)),
+                            style: theme.textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }

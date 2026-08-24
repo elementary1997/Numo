@@ -66,6 +66,18 @@ class $TransactionRowsTable extends TransactionRows
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<String> accountId = GeneratedColumn<String>(
+    'account_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('main'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -74,6 +86,7 @@ class $TransactionRowsTable extends TransactionRows
     categoryId,
     date,
     note,
+    accountId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -130,6 +143,12 @@ class $TransactionRowsTable extends TransactionRows
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    }
     return context;
   }
 
@@ -163,6 +182,10 @@ class $TransactionRowsTable extends TransactionRows
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       )!,
+      accountId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}account_id'],
+      )!,
     );
   }
 
@@ -179,6 +202,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
   final String categoryId;
   final DateTime date;
   final String note;
+  final String accountId;
   const TransactionRow({
     required this.id,
     required this.type,
@@ -186,6 +210,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     required this.categoryId,
     required this.date,
     required this.note,
+    required this.accountId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -196,6 +221,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     map['category_id'] = Variable<String>(categoryId);
     map['date'] = Variable<DateTime>(date);
     map['note'] = Variable<String>(note);
+    map['account_id'] = Variable<String>(accountId);
     return map;
   }
 
@@ -207,6 +233,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       categoryId: Value(categoryId),
       date: Value(date),
       note: Value(note),
+      accountId: Value(accountId),
     );
   }
 
@@ -222,6 +249,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       categoryId: serializer.fromJson<String>(json['categoryId']),
       date: serializer.fromJson<DateTime>(json['date']),
       note: serializer.fromJson<String>(json['note']),
+      accountId: serializer.fromJson<String>(json['accountId']),
     );
   }
   @override
@@ -234,6 +262,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       'categoryId': serializer.toJson<String>(categoryId),
       'date': serializer.toJson<DateTime>(date),
       'note': serializer.toJson<String>(note),
+      'accountId': serializer.toJson<String>(accountId),
     };
   }
 
@@ -244,6 +273,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     String? categoryId,
     DateTime? date,
     String? note,
+    String? accountId,
   }) => TransactionRow(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -251,6 +281,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     categoryId: categoryId ?? this.categoryId,
     date: date ?? this.date,
     note: note ?? this.note,
+    accountId: accountId ?? this.accountId,
   );
   TransactionRow copyWithCompanion(TransactionRowsCompanion data) {
     return TransactionRow(
@@ -262,6 +293,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           : this.categoryId,
       date: data.date.present ? data.date.value : this.date,
       note: data.note.present ? data.note.value : this.note,
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
     );
   }
 
@@ -273,13 +305,15 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           ..write('amount: $amount, ')
           ..write('categoryId: $categoryId, ')
           ..write('date: $date, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('accountId: $accountId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, type, amount, categoryId, date, note);
+  int get hashCode =>
+      Object.hash(id, type, amount, categoryId, date, note, accountId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -289,7 +323,8 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           other.amount == this.amount &&
           other.categoryId == this.categoryId &&
           other.date == this.date &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.accountId == this.accountId);
 }
 
 class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
@@ -299,6 +334,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
   final Value<String> categoryId;
   final Value<DateTime> date;
   final Value<String> note;
+  final Value<String> accountId;
   final Value<int> rowid;
   const TransactionRowsCompanion({
     this.id = const Value.absent(),
@@ -307,6 +343,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     this.categoryId = const Value.absent(),
     this.date = const Value.absent(),
     this.note = const Value.absent(),
+    this.accountId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionRowsCompanion.insert({
@@ -316,6 +353,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     required String categoryId,
     required DateTime date,
     this.note = const Value.absent(),
+    this.accountId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type),
@@ -329,6 +367,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Expression<String>? categoryId,
     Expression<DateTime>? date,
     Expression<String>? note,
+    Expression<String>? accountId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -338,6 +377,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       if (categoryId != null) 'category_id': categoryId,
       if (date != null) 'date': date,
       if (note != null) 'note': note,
+      if (accountId != null) 'account_id': accountId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -349,6 +389,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Value<String>? categoryId,
     Value<DateTime>? date,
     Value<String>? note,
+    Value<String>? accountId,
     Value<int>? rowid,
   }) {
     return TransactionRowsCompanion(
@@ -358,6 +399,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       categoryId: categoryId ?? this.categoryId,
       date: date ?? this.date,
       note: note ?? this.note,
+      accountId: accountId ?? this.accountId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -383,6 +425,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (accountId.present) {
+      map['account_id'] = Variable<String>(accountId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -398,6 +443,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
           ..write('categoryId: $categoryId, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
+          ..write('accountId: $accountId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1560,6 +1606,411 @@ class RecurringRowsCompanion extends UpdateCompanion<RecurringRow> {
   }
 }
 
+class $AccountRowsTable extends AccountRows
+    with TableInfo<$AccountRowsTable, AccountRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AccountRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _iconKeyMeta = const VerificationMeta(
+    'iconKey',
+  );
+  @override
+  late final GeneratedColumn<String> iconKey = GeneratedColumn<String>(
+    'icon_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('RUB'),
+  );
+  static const VerificationMeta _archivedMeta = const VerificationMeta(
+    'archived',
+  );
+  @override
+  late final GeneratedColumn<bool> archived = GeneratedColumn<bool>(
+    'archived',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("archived" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    iconKey,
+    color,
+    currency,
+    archived,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'account_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AccountRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('icon_key')) {
+      context.handle(
+        _iconKeyMeta,
+        iconKey.isAcceptableOrUnknown(data['icon_key']!, _iconKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_iconKeyMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorMeta);
+    }
+    if (data.containsKey('currency')) {
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
+    }
+    if (data.containsKey('archived')) {
+      context.handle(
+        _archivedMeta,
+        archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AccountRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AccountRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      iconKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon_key'],
+      )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      archived: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}archived'],
+      )!,
+    );
+  }
+
+  @override
+  $AccountRowsTable createAlias(String alias) {
+    return $AccountRowsTable(attachedDatabase, alias);
+  }
+}
+
+class AccountRow extends DataClass implements Insertable<AccountRow> {
+  final String id;
+  final String title;
+  final String iconKey;
+  final int color;
+  final String currency;
+  final bool archived;
+  const AccountRow({
+    required this.id,
+    required this.title,
+    required this.iconKey,
+    required this.color,
+    required this.currency,
+    required this.archived,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['icon_key'] = Variable<String>(iconKey);
+    map['color'] = Variable<int>(color);
+    map['currency'] = Variable<String>(currency);
+    map['archived'] = Variable<bool>(archived);
+    return map;
+  }
+
+  AccountRowsCompanion toCompanion(bool nullToAbsent) {
+    return AccountRowsCompanion(
+      id: Value(id),
+      title: Value(title),
+      iconKey: Value(iconKey),
+      color: Value(color),
+      currency: Value(currency),
+      archived: Value(archived),
+    );
+  }
+
+  factory AccountRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AccountRow(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      iconKey: serializer.fromJson<String>(json['iconKey']),
+      color: serializer.fromJson<int>(json['color']),
+      currency: serializer.fromJson<String>(json['currency']),
+      archived: serializer.fromJson<bool>(json['archived']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'iconKey': serializer.toJson<String>(iconKey),
+      'color': serializer.toJson<int>(color),
+      'currency': serializer.toJson<String>(currency),
+      'archived': serializer.toJson<bool>(archived),
+    };
+  }
+
+  AccountRow copyWith({
+    String? id,
+    String? title,
+    String? iconKey,
+    int? color,
+    String? currency,
+    bool? archived,
+  }) => AccountRow(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    iconKey: iconKey ?? this.iconKey,
+    color: color ?? this.color,
+    currency: currency ?? this.currency,
+    archived: archived ?? this.archived,
+  );
+  AccountRow copyWithCompanion(AccountRowsCompanion data) {
+    return AccountRow(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      iconKey: data.iconKey.present ? data.iconKey.value : this.iconKey,
+      color: data.color.present ? data.color.value : this.color,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      archived: data.archived.present ? data.archived.value : this.archived,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRow(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('color: $color, ')
+          ..write('currency: $currency, ')
+          ..write('archived: $archived')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, title, iconKey, color, currency, archived);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AccountRow &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.iconKey == this.iconKey &&
+          other.color == this.color &&
+          other.currency == this.currency &&
+          other.archived == this.archived);
+}
+
+class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> iconKey;
+  final Value<int> color;
+  final Value<String> currency;
+  final Value<bool> archived;
+  final Value<int> rowid;
+  const AccountRowsCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.iconKey = const Value.absent(),
+    this.color = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AccountRowsCompanion.insert({
+    required String id,
+    required String title,
+    required String iconKey,
+    required int color,
+    this.currency = const Value.absent(),
+    this.archived = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       title = Value(title),
+       iconKey = Value(iconKey),
+       color = Value(color);
+  static Insertable<AccountRow> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? iconKey,
+    Expression<int>? color,
+    Expression<String>? currency,
+    Expression<bool>? archived,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (iconKey != null) 'icon_key': iconKey,
+      if (color != null) 'color': color,
+      if (currency != null) 'currency': currency,
+      if (archived != null) 'archived': archived,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AccountRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? title,
+    Value<String>? iconKey,
+    Value<int>? color,
+    Value<String>? currency,
+    Value<bool>? archived,
+    Value<int>? rowid,
+  }) {
+    return AccountRowsCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      iconKey: iconKey ?? this.iconKey,
+      color: color ?? this.color,
+      currency: currency ?? this.currency,
+      archived: archived ?? this.archived,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (iconKey.present) {
+      map['icon_key'] = Variable<String>(iconKey.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (archived.present) {
+      map['archived'] = Variable<bool>(archived.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AccountRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('iconKey: $iconKey, ')
+          ..write('color: $color, ')
+          ..write('currency: $currency, ')
+          ..write('archived: $archived, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -1569,6 +2020,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
   late final $CategoryRowsTable categoryRows = $CategoryRowsTable(this);
   late final $BudgetRowsTable budgetRows = $BudgetRowsTable(this);
   late final $RecurringRowsTable recurringRows = $RecurringRowsTable(this);
+  late final $AccountRowsTable accountRows = $AccountRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1578,6 +2030,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     categoryRows,
     budgetRows,
     recurringRows,
+    accountRows,
   ];
 }
 
@@ -1589,6 +2042,7 @@ typedef $$TransactionRowsTableCreateCompanionBuilder =
       required String categoryId,
       required DateTime date,
       Value<String> note,
+      Value<String> accountId,
       Value<int> rowid,
     });
 typedef $$TransactionRowsTableUpdateCompanionBuilder =
@@ -1599,6 +2053,7 @@ typedef $$TransactionRowsTableUpdateCompanionBuilder =
       Value<String> categoryId,
       Value<DateTime> date,
       Value<String> note,
+      Value<String> accountId,
       Value<int> rowid,
     });
 
@@ -1638,6 +2093,11 @@ class $$TransactionRowsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get accountId => $composableBuilder(
+    column: $table.accountId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1680,6 +2140,11 @@ class $$TransactionRowsTableOrderingComposer
     column: $table.note,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get accountId => $composableBuilder(
+    column: $table.accountId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionRowsTableAnnotationComposer
@@ -1710,6 +2175,9 @@ class $$TransactionRowsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get accountId =>
+      $composableBuilder(column: $table.accountId, builder: (column) => column);
 }
 
 class $$TransactionRowsTableTableManager
@@ -1755,6 +2223,7 @@ class $$TransactionRowsTableTableManager
                 Value<String> categoryId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<String> note = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionRowsCompanion(
                 id: id,
@@ -1763,6 +2232,7 @@ class $$TransactionRowsTableTableManager
                 categoryId: categoryId,
                 date: date,
                 note: note,
+                accountId: accountId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1773,6 +2243,7 @@ class $$TransactionRowsTableTableManager
                 required String categoryId,
                 required DateTime date,
                 Value<String> note = const Value.absent(),
+                Value<String> accountId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionRowsCompanion.insert(
                 id: id,
@@ -1781,6 +2252,7 @@ class $$TransactionRowsTableTableManager
                 categoryId: categoryId,
                 date: date,
                 note: note,
+                accountId: accountId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -2434,6 +2906,225 @@ typedef $$RecurringRowsTableProcessedTableManager =
       RecurringRow,
       PrefetchHooks Function()
     >;
+typedef $$AccountRowsTableCreateCompanionBuilder =
+    AccountRowsCompanion Function({
+      required String id,
+      required String title,
+      required String iconKey,
+      required int color,
+      Value<String> currency,
+      Value<bool> archived,
+      Value<int> rowid,
+    });
+typedef $$AccountRowsTableUpdateCompanionBuilder =
+    AccountRowsCompanion Function({
+      Value<String> id,
+      Value<String> title,
+      Value<String> iconKey,
+      Value<int> color,
+      Value<String> currency,
+      Value<bool> archived,
+      Value<int> rowid,
+    });
+
+class $$AccountRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $AccountRowsTable> {
+  $$AccountRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get archived => $composableBuilder(
+    column: $table.archived,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$AccountRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $AccountRowsTable> {
+  $$AccountRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get iconKey => $composableBuilder(
+    column: $table.iconKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currency => $composableBuilder(
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get archived => $composableBuilder(
+    column: $table.archived,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AccountRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $AccountRowsTable> {
+  $$AccountRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get iconKey =>
+      $composableBuilder(column: $table.iconKey, builder: (column) => column);
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<bool> get archived =>
+      $composableBuilder(column: $table.archived, builder: (column) => column);
+}
+
+class $$AccountRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $AccountRowsTable,
+          AccountRow,
+          $$AccountRowsTableFilterComposer,
+          $$AccountRowsTableOrderingComposer,
+          $$AccountRowsTableAnnotationComposer,
+          $$AccountRowsTableCreateCompanionBuilder,
+          $$AccountRowsTableUpdateCompanionBuilder,
+          (
+            AccountRow,
+            BaseReferences<_$NumoDatabase, $AccountRowsTable, AccountRow>,
+          ),
+          AccountRow,
+          PrefetchHooks Function()
+        > {
+  $$AccountRowsTableTableManager(_$NumoDatabase db, $AccountRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AccountRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AccountRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AccountRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> iconKey = const Value.absent(),
+                Value<int> color = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<bool> archived = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AccountRowsCompanion(
+                id: id,
+                title: title,
+                iconKey: iconKey,
+                color: color,
+                currency: currency,
+                archived: archived,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String title,
+                required String iconKey,
+                required int color,
+                Value<String> currency = const Value.absent(),
+                Value<bool> archived = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AccountRowsCompanion.insert(
+                id: id,
+                title: title,
+                iconKey: iconKey,
+                color: color,
+                currency: currency,
+                archived: archived,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AccountRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $AccountRowsTable,
+      AccountRow,
+      $$AccountRowsTableFilterComposer,
+      $$AccountRowsTableOrderingComposer,
+      $$AccountRowsTableAnnotationComposer,
+      $$AccountRowsTableCreateCompanionBuilder,
+      $$AccountRowsTableUpdateCompanionBuilder,
+      (
+        AccountRow,
+        BaseReferences<_$NumoDatabase, $AccountRowsTable, AccountRow>,
+      ),
+      AccountRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -2446,4 +3137,6 @@ class $NumoDatabaseManager {
       $$BudgetRowsTableTableManager(_db, _db.budgetRows);
   $$RecurringRowsTableTableManager get recurringRows =>
       $$RecurringRowsTableTableManager(_db, _db.recurringRows);
+  $$AccountRowsTableTableManager get accountRows =>
+      $$AccountRowsTableTableManager(_db, _db.accountRows);
 }

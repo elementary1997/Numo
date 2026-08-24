@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:numo/data/accounts_repository.dart';
 import 'package:numo/data/budgets_repository.dart';
 import 'package:numo/data/categories_repository.dart';
 import 'package:numo/data/recurring_repository.dart';
@@ -31,12 +32,14 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   final categoriesRepo = await CategoriesRepository.open(db);
   final budgetsRepo = await BudgetsRepository.open(db);
   final recurringRepo = await RecurringRepository.open(db);
+  final accountsRepo = await AccountsRepository.open(db);
   return ProviderScope(
     overrides: [
       repositoryProvider.overrideWithValue(repo),
       categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
       budgetsRepositoryProvider.overrideWithValue(budgetsRepo),
       recurringRepositoryProvider.overrideWithValue(recurringRepo),
+      accountsRepositoryProvider.overrideWithValue(accountsRepo),
     ],
     child: const NumoApp(),
   );

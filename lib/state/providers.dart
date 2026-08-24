@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/accounts_repository.dart';
 import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
+import '../models/account.dart';
 import '../models/category.dart';
 import '../models/recurring.dart';
 import '../models/transaction.dart';
@@ -52,10 +54,14 @@ final categoriesProvider =
         CategoriesNotifier.new);
 
 /// Категории, доступные для выбора при добавлении операции.
+/// Системная категория переводов скрыта.
 final activeCategoriesProvider =
     Provider.family<List<TxCategory>, bool>((ref, isIncome) => ref
         .watch(categoriesProvider)
-        .where((c) => c.isIncome == isIncome && !c.archived)
+        .where((c) =>
+            c.isIncome == isIncome &&
+            !c.archived &&
+            c.id != Categories.transfer.id)
         .toList());
 
 class TransactionsNotifier extends Notifier<List<Tx>> {
@@ -83,6 +89,38 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
   Future<void> replaceAll(List<Tx> transactions) async {
     state = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
     await ref.read(repositoryProvider).saveAll(state);
+  }
+
+  /// Перевод между счетами: пара связанных операций системной
+  /// категории `transfer`. Суммы могут отличаться (разные валюты).
+  Future<void> createTransfer({
+    required Account from,
+    required Account to,
+    required double amountFrom,
+    required double amountTo,
+    DateTime? date,
+  }) async {
+    final ts = DateTime.now().microsecondsSinceEpoch;
+    final when = date ?? DateTime.now();
+    final note = '${from.title} → ${to.title}';
+    await add(Tx(
+      id: 'trf-$ts-out',
+      type: TxType.expense,
+      amount: amountFrom,
+      categoryId: Categories.transfer.id,
+      date: when,
+      accountId: from.id,
+      note: note,
+    ));
+    await add(Tx(
+      id: 'trf-$ts-in',
+      type: TxType.income,
+      amount: amountTo,
+      categoryId: Categories.transfer.id,
+      date: when,
+      accountId: to.id,
+      note: note,
+    ));
   }
 }
 
@@ -131,6 +169,7 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
   final daily = List<double>.filled(daysInMonth, 0);
 
   for (final t in txs) {
+    if (t.isTransfer) continue; // переводы — не доход и не расход
     if (t.isExpense) {
       expense += t.amount;
       byCategory.update(t.categoryId, (v) => v + t.amount,
@@ -160,6 +199,45 @@ final balanceProvider = Provider<double>((ref) {
       .watch(transactionsProvider)
       .fold(0.0, (sum, t) => sum + t.signedAmount);
 });
+
+final accountsRepositoryProvider = Provider<AccountsRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class AccountsNotifier extends Notifier<List<Account>> {
+  @override
+  List<Account> build() => ref.read(accountsRepositoryProvider).loadAll();
+
+  Future<void> upsert(Account account) async {
+    final exists = state.any((a) => a.id == account.id);
+    state = exists
+        ? [for (final a in state) a.id == account.id ? account : a]
+        : [...state, account];
+    await ref.read(accountsRepositoryProvider).saveAll(state);
+  }
+
+  Future<void> setArchived(String id, bool archived) async {
+    state = [
+      for (final a in state)
+        a.id == id ? a.copyWith(archived: archived) : a,
+    ];
+    await ref.read(accountsRepositoryProvider).saveAll(state);
+  }
+}
+
+final accountsProvider =
+    NotifierProvider<AccountsNotifier, List<Account>>(AccountsNotifier.new);
+
+/// Счета, доступные для выбора при добавлении операции.
+final activeAccountsProvider = Provider<List<Account>>((ref) =>
+    ref.watch(accountsProvider).where((a) => !a.archived).toList());
+
+/// Баланс одного счёта в его валюте.
+final accountBalanceProvider = Provider.family<double, String>(
+    (ref, accountId) => ref
+        .watch(transactionsProvider)
+        .where((t) => t.accountId == accountId)
+        .fold(0.0, (sum, t) => sum + t.signedAmount));
 
 final budgetsRepositoryProvider = Provider<BudgetsRepository>(
   (ref) => throw UnimplementedError('overridden in main()'),
