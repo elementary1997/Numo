@@ -8,7 +8,9 @@ import '../models/category.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 
-Future<void> showAddTransactionSheet(BuildContext context) {
+/// Открывает sheet добавления новой операции, либо редактирования
+/// существующей, если передан [initial].
+Future<void> showAddTransactionSheet(BuildContext context, {Tx? initial}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -17,12 +19,14 @@ Future<void> showAddTransactionSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
     ),
-    builder: (_) => const _AddTransactionSheet(),
+    builder: (_) => _AddTransactionSheet(initial: initial),
   );
 }
 
 class _AddTransactionSheet extends ConsumerStatefulWidget {
-  const _AddTransactionSheet();
+  const _AddTransactionSheet({this.initial});
+
+  final Tx? initial;
 
   @override
   ConsumerState<_AddTransactionSheet> createState() =>
@@ -35,6 +39,23 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
   TxCategory? _category;
   DateTime _date = DateTime.now();
   final _noteController = TextEditingController();
+
+  bool get _isEditing => widget.initial != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final tx = widget.initial;
+    if (tx != null) {
+      _type = tx.type;
+      _raw = tx.amount == tx.amount.roundToDouble()
+          ? tx.amount.toStringAsFixed(0)
+          : tx.amount.toStringAsFixed(2).replaceAll('.', ',');
+      _category = Categories.byId(tx.categoryId);
+      _date = tx.date;
+      _noteController.text = tx.note;
+    }
+  }
 
   double get _amount => double.tryParse(_raw.replaceAll(',', '.')) ?? 0;
 
@@ -81,16 +102,17 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
   Future<void> _save() async {
     final category = _category;
     if (_amount <= 0 || category == null) return;
-    await ref.read(transactionsProvider.notifier).add(
-          Tx(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            type: _type,
-            amount: _amount,
-            categoryId: category.id,
-            date: _date,
-            note: _noteController.text.trim(),
-          ),
-        );
+    final tx = Tx(
+      id: widget.initial?.id ??
+          DateTime.now().microsecondsSinceEpoch.toString(),
+      type: _type,
+      amount: _amount,
+      categoryId: category.id,
+      date: _date,
+      note: _noteController.text.trim(),
+    );
+    final notifier = ref.read(transactionsProvider.notifier);
+    await (_isEditing ? notifier.update(tx) : notifier.add(tx));
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -234,9 +256,11 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                   textStyle: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                child: Text(_type == TxType.expense
-                    ? 'Добавить расход'
-                    : 'Добавить доход'),
+                child: Text(_isEditing
+                    ? 'Сохранить изменения'
+                    : _type == TxType.expense
+                        ? 'Добавить расход'
+                        : 'Добавить доход'),
               ),
             ),
           ],

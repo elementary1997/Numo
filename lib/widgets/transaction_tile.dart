@@ -7,10 +7,16 @@ import '../models/category.dart';
 import '../models/transaction.dart';
 
 class TransactionTile extends StatelessWidget {
-  const TransactionTile({super.key, required this.tx, this.showTime = true});
+  const TransactionTile({
+    super.key,
+    required this.tx,
+    this.showTime = true,
+    this.onTap,
+  });
 
   final Tx tx;
   final bool showTime;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +31,8 @@ class TransactionTile extends StatelessWidget {
     ].join(' · ');
 
     return ListTile(
+      onTap: onTap,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       leading: Container(
         width: 46,

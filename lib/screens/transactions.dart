@@ -6,6 +6,7 @@ import '../core/money.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 import '../widgets/transaction_tile.dart';
+import 'add_transaction.dart';
 
 enum _Filter { all, expense, income }
 
@@ -158,7 +159,10 @@ class _DayGroup extends ConsumerWidget {
                   ),
                 );
             },
-            child: TransactionTile(tx: tx),
+            child: TransactionTile(
+              tx: tx,
+              onTap: () => showAddTransactionSheet(context, initial: tx),
+            ),
           ),
       ],
     );

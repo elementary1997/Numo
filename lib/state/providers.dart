@@ -16,6 +16,13 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
     await ref.read(repositoryProvider).saveAll(state);
   }
 
+  Future<void> update(Tx tx) async {
+    state = [
+      for (final t in state) t.id == tx.id ? tx : t,
+    ]..sort((a, b) => b.date.compareTo(a.date));
+    await ref.read(repositoryProvider).saveAll(state);
+  }
+
   Future<void> remove(String id) async {
     state = state.where((t) => t.id != id).toList();
     await ref.read(repositoryProvider).saveAll(state);

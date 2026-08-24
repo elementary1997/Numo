@@ -8,6 +8,7 @@ import '../models/category.dart';
 import '../state/providers.dart';
 import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
+import 'add_transaction.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -64,7 +65,11 @@ class DashboardScreen extends ConsumerWidget {
               ),
             )
           else
-            ...recent.map((t) => TransactionTile(tx: t, showTime: false)),
+            ...recent.map((t) => TransactionTile(
+                  tx: t,
+                  showTime: false,
+                  onTap: () => showAddTransactionSheet(context, initial: t),
+                )),
         ],
       ),
     );
