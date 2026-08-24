@@ -31,13 +31,20 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   @override
   void initState() {
     super.initState();
-    if (_biometricsSupported) {
+    final enabled =
+        ref.read(securityRepositoryProvider).biometricsEnabled;
+    if (_biometricsSupported && enabled) {
       _localAuth.isDeviceSupported().then((supported) async {
         final canCheck =
             supported && await _localAuth.canCheckBiometrics;
         if (!mounted) return;
         setState(() => _biometricsAvailable = canCheck);
-        if (canCheck) _tryBiometrics(); // авто-попытка при открытии
+        // Авто-попытка — после первого кадра: на macOS вызов до
+        // появления окна молча проваливается.
+        if (canCheck) {
+          WidgetsBinding.instance
+              .addPostFrameCallback((_) => _tryBiometrics());
+        }
       }).catchError((_) {});
     }
   }

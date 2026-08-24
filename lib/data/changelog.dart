@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.5.1',
+    itemsRu: [
+      'Боковая панель больше не пропадает при увеличенном масштабе интерфейса',
+      'Настройка «Вход по биометрии» рядом с PIN — с проверкой и понятной диагностикой',
+    ],
+    itemsEn: [
+      'Sidebar no longer disappears with a larger interface scale',
+      'Dedicated “Biometric unlock” setting next to the PIN, with a test check and clear diagnostics',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.5.0',
     itemsRu: [
       'Автообновление: новая версия скачивается и устанавливается сама, приложение перезапускается',

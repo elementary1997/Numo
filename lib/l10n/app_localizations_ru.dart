@@ -797,6 +797,43 @@ class AppLocalizationsRu extends AppLocalizations {
   String get biometricsReason => 'Разблокировать Numo';
 
   @override
+  String get biometricsTitle => 'Вход по биометрии';
+
+  @override
+  String get biometricsSubtitle =>
+      'Touch ID, Face ID или отпечаток — вместе с PIN-кодом';
+
+  @override
+  String get biometricsNeedPin =>
+      'Сначала установите PIN-код — биометрия работает вместе с ним';
+
+  @override
+  String get biometricsEnabledToast => 'Биометрия включена';
+
+  @override
+  String get biometricsDisabledToast => 'Биометрия отключена';
+
+  @override
+  String get biometricsErrorTitle => 'Биометрия недоступна';
+
+  @override
+  String get biometricsNotEnrolled =>
+      'Биометрия не настроена в системе. Добавьте отпечаток или Face ID в системных настройках и попробуйте снова.';
+
+  @override
+  String get biometricsNotAvailable =>
+      'На этом устройстве нет поддерживаемой биометрии.';
+
+  @override
+  String get biometricsLockedOut =>
+      'Биометрия временно заблокирована — войдите системным паролем и попробуйте снова.';
+
+  @override
+  String biometricsFailed(String message) {
+    return 'Не удалось проверить биометрию: $message';
+  }
+
+  @override
   String whatsNewTitle(String version) {
     return 'Что нового в $version';
   }

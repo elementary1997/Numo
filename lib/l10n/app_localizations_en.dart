@@ -797,6 +797,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biometricsReason => 'Unlock Numo';
 
   @override
+  String get biometricsTitle => 'Biometric unlock';
+
+  @override
+  String get biometricsSubtitle =>
+      'Touch ID, Face ID or fingerprint — alongside your PIN';
+
+  @override
+  String get biometricsNeedPin =>
+      'Set a PIN first — biometrics work alongside it';
+
+  @override
+  String get biometricsEnabledToast => 'Biometrics enabled';
+
+  @override
+  String get biometricsDisabledToast => 'Biometrics disabled';
+
+  @override
+  String get biometricsErrorTitle => 'Biometrics unavailable';
+
+  @override
+  String get biometricsNotEnrolled =>
+      'No biometrics enrolled. Add a fingerprint or Face ID in system settings and try again.';
+
+  @override
+  String get biometricsNotAvailable =>
+      'This device has no supported biometrics.';
+
+  @override
+  String get biometricsLockedOut =>
+      'Biometrics are temporarily locked — sign in with your system password and try again.';
+
+  @override
+  String biometricsFailed(String message) {
+    return 'Biometric check failed: $message';
+  }
+
+  @override
   String whatsNewTitle(String version) {
     return 'What\'s new in $version';
   }

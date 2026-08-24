@@ -1,6 +1,10 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:local_auth/local_auth.dart';
 
 import '../core/l10n.dart';
 import '../models/account.dart';
@@ -75,6 +79,7 @@ class SettingsScreen extends ConsumerWidget {
               title: context.l10n.menuSecurity,
               onTap: () => showSecurityDialog(context, ref),
             ),
+            if (_biometricsPlatform) const _BiometricsTile(),
             item(
               icon: Icons.cloud_sync_outlined,
               title: context.l10n.menuSync,
@@ -124,6 +129,123 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Биометрия доступна как настройка только на платформах,
+/// поддерживаемых local_auth.
+bool get _biometricsPlatform =>
+    !kIsWeb &&
+    (Platform.isMacOS ||
+        Platform.isWindows ||
+        Platform.isAndroid ||
+        Platform.isIOS);
+
+/// Переключатель входа по биометрии: при включении сразу выполняет
+/// тестовую проверку, а при неудаче показывает настоящую причину
+/// (не настроена в системе, нет датчика, заблокирована).
+class _BiometricsTile extends ConsumerStatefulWidget {
+  const _BiometricsTile();
+
+  @override
+  ConsumerState<_BiometricsTile> createState() => _BiometricsTileState();
+}
+
+class _BiometricsTileState extends ConsumerState<_BiometricsTile> {
+  bool _busy = false;
+
+  Future<void> _toggle(bool enable) async {
+    final security = ref.read(securityRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    if (!enable) {
+      await security.setBiometricsEnabled(false);
+      if (!mounted) return;
+      setState(() {});
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+            SnackBar(content: Text(context.l10n.biometricsDisabledToast)));
+      return;
+    }
+    if (!security.hasPin) {
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+            SnackBar(content: Text(context.l10n.biometricsNeedPin)));
+      return;
+    }
+    setState(() => _busy = true);
+    final l10n = context.l10n;
+    String? failure;
+    try {
+      final auth = LocalAuthentication();
+      final ok = await auth.authenticate(
+        localizedReason: l10n.biometricsReason,
+        biometricOnly: true,
+      );
+      if (!ok) failure = l10n.biometricsNotAvailable;
+    } on PlatformException catch (e) {
+      failure = switch (e.code) {
+        'NotEnrolled' => l10n.biometricsNotEnrolled,
+        'NotAvailable' || 'PasscodeNotSet' => l10n.biometricsNotAvailable,
+        'LockedOut' ||
+        'PermanentlyLockedOut' =>
+          l10n.biometricsLockedOut,
+        _ => l10n.biometricsFailed(e.message ?? e.code),
+      };
+    } catch (e) {
+      failure = l10n.biometricsFailed('$e');
+    }
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (failure != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(context.l10n.biometricsErrorTitle),
+          content: Text(failure!),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(context.l10n.ok),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    await security.setBiometricsEnabled(true);
+    if (!mounted) return;
+    setState(() {});
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(
+          SnackBar(content: Text(context.l10n.biometricsEnabledToast)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final security = ref.watch(securityRepositoryProvider);
+    final enabled = security.hasPin && security.biometricsEnabled;
+    return SwitchListTile(
+      dense: true,
+      secondary: _busy
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2))
+          : Icon(Icons.fingerprint_rounded,
+              size: 20, color: theme.colorScheme.primary),
+      title: Text(context.l10n.biometricsTitle,
+          style: theme.textTheme.bodyMedium
+              ?.copyWith(fontWeight: FontWeight.w500)),
+      subtitle: Text(context.l10n.biometricsSubtitle,
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      value: enabled,
+      onChanged: _busy ? null : _toggle,
     );
   }
 }

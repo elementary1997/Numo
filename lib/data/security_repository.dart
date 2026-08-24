@@ -12,6 +12,7 @@ class SecurityRepository {
   static const _saltKey = 'numo.pin.salt';
   static const _hashKey = 'numo.pin.hash';
   static const _lengthKey = 'numo.pin.length';
+  static const _biometricsKey = 'numo.security.biometrics';
 
   final SharedPreferences _prefs;
 
@@ -23,6 +24,15 @@ class SecurityRepository {
 
   /// Длина установленного PIN — столько точек рисует экран блокировки.
   int get pinLength => _prefs.getInt(_lengthKey) ?? 4;
+
+  /// Вход по биометрии (Touch ID / Face ID / отпечаток) в дополнение
+  /// к PIN. По умолчанию включён — экран блокировки сам предложит
+  /// биометрию, если устройство её поддерживает.
+  bool get biometricsEnabled => _prefs.getBool(_biometricsKey) ?? true;
+
+  Future<void> setBiometricsEnabled(bool enabled) async {
+    await _prefs.setBool(_biometricsKey, enabled);
+  }
 
   Future<void> setPin(String pin) async {
     final saltBytes =

@@ -27,6 +27,18 @@ void main() {
       expect(security.verify('4821'), isFalse);
     });
 
+    test('биометрия включена по умолчанию и переключается', () async {
+      SharedPreferences.setMockInitialValues({});
+      final security = await SecurityRepository.open();
+      expect(security.biometricsEnabled, isTrue);
+
+      await security.setBiometricsEnabled(false);
+      expect(security.biometricsEnabled, isFalse);
+
+      await security.setBiometricsEnabled(true);
+      expect(security.biometricsEnabled, isTrue);
+    });
+
     test('PIN не хранится открытым текстом', () async {
       SharedPreferences.setMockInitialValues({});
       final security = await SecurityRepository.open();

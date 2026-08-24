@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/layout.dart';
 import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/account.dart';
@@ -42,7 +43,7 @@ class DashboardScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              if (MediaQuery.sizeOf(context).width < 840)
+              if (windowWidthOf(context) < 840)
                 Text('Numo',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
@@ -55,7 +56,7 @@ class DashboardScreen extends ConsumerWidget {
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
-              if (MediaQuery.sizeOf(context).width < 840)
+              if (windowWidthOf(context) < 840)
               PopupMenuButton<String>(
                 tooltip: context.l10n.menuTooltip,
                 icon: Icon(Icons.more_vert_rounded,

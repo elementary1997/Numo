@@ -1508,6 +1508,66 @@ abstract class AppLocalizations {
   /// **'Разблокировать Numo'**
   String get biometricsReason;
 
+  /// No description provided for @biometricsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход по биометрии'**
+  String get biometricsTitle;
+
+  /// No description provided for @biometricsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Touch ID, Face ID или отпечаток — вместе с PIN-кодом'**
+  String get biometricsSubtitle;
+
+  /// No description provided for @biometricsNeedPin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сначала установите PIN-код — биометрия работает вместе с ним'**
+  String get biometricsNeedPin;
+
+  /// No description provided for @biometricsEnabledToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Биометрия включена'**
+  String get biometricsEnabledToast;
+
+  /// No description provided for @biometricsDisabledToast.
+  ///
+  /// In ru, this message translates to:
+  /// **'Биометрия отключена'**
+  String get biometricsDisabledToast;
+
+  /// No description provided for @biometricsErrorTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Биометрия недоступна'**
+  String get biometricsErrorTitle;
+
+  /// No description provided for @biometricsNotEnrolled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Биометрия не настроена в системе. Добавьте отпечаток или Face ID в системных настройках и попробуйте снова.'**
+  String get biometricsNotEnrolled;
+
+  /// No description provided for @biometricsNotAvailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'На этом устройстве нет поддерживаемой биометрии.'**
+  String get biometricsNotAvailable;
+
+  /// No description provided for @biometricsLockedOut.
+  ///
+  /// In ru, this message translates to:
+  /// **'Биометрия временно заблокирована — войдите системным паролем и попробуйте снова.'**
+  String get biometricsLockedOut;
+
+  /// No description provided for @biometricsFailed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось проверить биометрию: {message}'**
+  String biometricsFailed(String message);
+
   /// No description provided for @whatsNewTitle.
   ///
   /// In ru, this message translates to:

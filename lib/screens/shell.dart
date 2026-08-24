@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../core/l10n.dart';
+import '../core/layout.dart';
 import 'accounts.dart';
 import 'add_transaction.dart';
 import 'analytics.dart';
@@ -75,7 +76,7 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
+    final isWide = windowWidthOf(context) >= _wideBreakpoint;
     return isWide ? _buildWide(context) : _buildCompact(context);
   }
 
