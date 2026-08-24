@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import '../state/providers.dart';
 import '../core/l10n.dart';
+import '../state/providers.dart';
 
 /// Обвязка синхронизации вокруг приложения: при старте предлагает
 /// принять более новые данные из папки синхронизации, а изменения
@@ -73,6 +75,23 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     ref.listen(accountsProvider, (_, __) => schedule());
     ref.listen(budgetsProvider, (_, __) => schedule());
     ref.listen(recurringProvider, (_, __) => schedule());
+
+    // Ненавязчивое уведомление о вышедшей версии (раз при старте).
+    if (!kIsWeb) {
+      ref.listen(updateCheckProvider, (previous, next) {
+        final info = next.valueOrNull;
+        if (info == null) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          duration: const Duration(seconds: 8),
+          content: Text(context.l10n.updateAvailable(info.version)),
+          action: SnackBarAction(
+            label: context.l10n.download,
+            onPressed: () => launchUrl(Uri.parse(info.url),
+                mode: LaunchMode.externalApplication),
+          ),
+        ));
+      });
+    }
     return widget.child;
   }
 }

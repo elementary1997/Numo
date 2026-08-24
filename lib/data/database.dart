@@ -19,6 +19,7 @@ class TransactionRows extends Table {
 }
 
 /// Счета: наличные, карты, вклады. У каждого своя валюта.
+/// У вкладов заполнены ставка и даты открытия/закрытия.
 class AccountRows extends Table {
   TextColumn get id => text()();
   TextColumn get title => text()();
@@ -26,6 +27,10 @@ class AccountRows extends Table {
   IntColumn get color => integer()();
   TextColumn get currency => text().withDefault(const Constant('RUB'))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
+  TextColumn get kind => text().withDefault(const Constant('regular'))();
+  RealColumn get rate => real().nullable()();
+  DateTimeColumn get openedAt => dateTime().nullable()();
+  DateTimeColumn get closesAt => dateTime().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -98,7 +103,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -115,6 +120,12 @@ class NumoDatabase extends _$NumoDatabase {
           }
           if (from < 5) {
             await m.createTable(categoryRuleRows);
+          }
+          if (from < 6) {
+            await m.addColumn(accountRows, accountRows.kind);
+            await m.addColumn(accountRows, accountRows.rate);
+            await m.addColumn(accountRows, accountRows.openedAt);
+            await m.addColumn(accountRows, accountRows.closesAt);
           }
         },
       );

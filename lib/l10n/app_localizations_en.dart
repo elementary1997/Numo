@@ -557,6 +557,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addTransaction => 'New transaction';
 
   @override
+  String get menuTheme => 'Theme';
+
+  @override
+  String get themeSystem => 'System default';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get accountTypeRegular => 'Regular account';
+
+  @override
+  String get accountTypeDeposit => 'Deposit';
+
+  @override
+  String get rateLabel => 'Rate, % per year';
+
+  @override
+  String get openedLabel => 'Opened';
+
+  @override
+  String get closesLabel => 'Closes';
+
+  @override
+  String projectedAtClose(String amount) {
+    return 'At close ≈ $amount';
+  }
+
+  @override
+  String depositBadge(String rate, String date) {
+    return 'Deposit · $rate% · until $date';
+  }
+
+  @override
+  String get expensesForMonth => 'Expenses this month';
+
+  @override
+  String get incomeForMonth => 'Income this month';
+
+  @override
+  String get capitalStructure => 'Portfolio structure';
+
+  @override
+  String get updatesGroup => 'Updates';
+
+  @override
+  String get checkUpdates => 'Check for updates';
+
+  @override
+  String get upToDate => 'You are on the latest version';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Version $version is available';
+  }
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String versionLabel(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get autoCheckUpdates => 'Check automatically';
+
+  @override
   String get csvHeaderDate => 'Date';
 
   @override

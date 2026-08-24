@@ -1,7 +1,10 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../core/l10n.dart';
+import '../state/providers.dart';
 import 'backup_actions.dart';
 import 'settings_sheets.dart';
 
@@ -45,6 +48,11 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => showLanguageDialog(context, ref),
             ),
             item(
+              icon: Icons.brightness_6_rounded,
+              title: context.l10n.menuTheme,
+              onTap: () => showThemeDialog(context, ref),
+            ),
+            item(
               icon: Icons.lock_outline_rounded,
               title: context.l10n.menuSecurity,
               onTap: () => showSecurityDialog(context, ref),
@@ -73,6 +81,113 @@ class SettingsScreen extends ConsumerWidget {
               onTap: () => exportCsv(context, ref),
             ),
           ]),
+          if (!kIsWeb) ...[
+            const SizedBox(height: 14),
+            const _UpdatesCard(),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Обновления: текущая версия, ручная проверка, автопроверка.
+class _UpdatesCard extends ConsumerStatefulWidget {
+  const _UpdatesCard();
+
+  @override
+  ConsumerState<_UpdatesCard> createState() => _UpdatesCardState();
+}
+
+class _UpdatesCardState extends ConsumerState<_UpdatesCard> {
+  String? _version;
+  bool _autoCheck = true;
+  bool _checking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final service = ref.read(updateServiceProvider);
+    service.currentVersion().then((v) {
+      if (mounted) setState(() => _version = v);
+    });
+    service.autoCheckEnabled.then((v) {
+      if (mounted) setState(() => _autoCheck = v);
+    });
+  }
+
+  Future<void> _check() async {
+    setState(() => _checking = true);
+    final info =
+        await ref.read(updateServiceProvider).check(force: true);
+    if (!mounted) return;
+    setState(() => _checking = false);
+    if (info == null) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(SnackBar(content: Text(context.l10n.upToDate)));
+      return;
+    }
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.updateAvailable(info.version)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.l10n.close),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(context.l10n.download),
+          ),
+        ],
+      ),
+    );
+    if (open == true) {
+      await launchUrl(Uri.parse(info.url),
+          mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            dense: true,
+            leading: _checking
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Icon(Icons.system_update_alt_rounded,
+                    size: 20, color: theme.colorScheme.primary),
+            title: Text(context.l10n.checkUpdates,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500)),
+            subtitle: _version == null
+                ? null
+                : Text(context.l10n.versionLabel(_version!)),
+            onTap: _checking ? null : _check,
+          ),
+          SwitchListTile(
+            dense: true,
+            secondary: Icon(Icons.update_rounded,
+                size: 20, color: theme.colorScheme.primary),
+            title: Text(context.l10n.autoCheckUpdates,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w500)),
+            value: _autoCheck,
+            onChanged: (v) async {
+              setState(() => _autoCheck = v);
+              await ref
+                  .read(updateServiceProvider)
+                  .setAutoCheckEnabled(v);
+            },
+          ),
         ],
       ),
     );

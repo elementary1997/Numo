@@ -19,7 +19,9 @@ dependencies:
   google_fonts: ^6.2.1
   http: ^1.6.0
   intl: any
+  package_info_plus: ^9.0.1
   shared_preferences: ^2.5.3
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

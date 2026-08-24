@@ -231,6 +231,22 @@ abstract final class Categories {
   static List<TxCategory> defaultsFor(String languageCode) =>
       languageCode == 'ru' ? defaults : defaultsEn;
 
+  /// Название встроенной категории на данном языке; null для
+  /// пользовательских категорий.
+  static String? defaultTitle(String id, String languageCode) {
+    for (final c in defaults) {
+      if (c.id == id) {
+        return languageCode == 'ru' ? c.title : _titlesEn[id];
+      }
+    }
+    return null;
+  }
+
+  /// Название не менялось пользователем (совпадает с ru- или
+  /// en-дефолтом) — такие можно переводить при смене языка.
+  static bool isUntouchedDefault(String id, String title) =>
+      title == defaultTitle(id, 'ru') || title == defaultTitle(id, 'en');
+
   static const defaults = [
     groceries,
     cafe,

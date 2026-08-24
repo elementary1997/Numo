@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/seed_localization.dart';
 import '../data/sync_service.dart';
 import '../state/providers.dart';
 import '../core/l10n.dart';
@@ -150,6 +151,58 @@ Future<void> showLanguageDialog(BuildContext context, WidgetRef ref) async {
     await prefs.remove('numo.locale');
   } else {
     await prefs.setString('numo.locale', newValue);
+  }
+
+  // Названия встроенных категорий/счёта следуют выбранному языку.
+  final effective = newValue ??
+      (WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
+          ? 'ru'
+          : 'en');
+  await relocalizeSeedData(
+    categories: ref.read(categoriesRepositoryProvider),
+    accounts: ref.read(accountsRepositoryProvider),
+    languageCode: effective,
+  );
+  ref.invalidate(categoriesProvider);
+  ref.invalidate(accountsProvider);
+}
+
+/// Диалог выбора темы оформления.
+Future<void> showThemeDialog(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(themeOverrideProvider);
+  final chosen = await showDialog<String>(
+    context: context,
+    builder: (context) => SimpleDialog(
+      title: Text(context.l10n.menuTheme),
+      children: [
+        for (final (value, label) in [
+          ('system', context.l10n.themeSystem),
+          ('light', context.l10n.themeLight),
+          ('dark', context.l10n.themeDark),
+        ])
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(context).pop(value),
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(
+                (current ?? 'system') == value
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+              ),
+              title: Text(label),
+            ),
+          ),
+      ],
+    ),
+  );
+  if (chosen == null) return;
+  final newValue = chosen == 'system' ? null : chosen;
+  ref.read(themeOverrideProvider.notifier).state = newValue;
+  final prefs = await SharedPreferences.getInstance();
+  if (newValue == null) {
+    await prefs.remove('numo.theme');
+  } else {
+    await prefs.setString('numo.theme', newValue);
   }
 }
 

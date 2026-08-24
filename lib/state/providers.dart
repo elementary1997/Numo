@@ -10,6 +10,7 @@ import '../data/backup.dart';
 import '../data/rules_repository.dart';
 import '../data/security_repository.dart';
 import '../data/sync_service.dart';
+import '../data/update_service.dart';
 import '../models/category_rule.dart';
 import '../models/account.dart';
 import '../models/category.dart';
@@ -141,6 +142,7 @@ class MonthStats {
     required this.income,
     required this.expense,
     required this.byCategory,
+    required this.byCategoryIncome,
     required this.dailyExpense,
   });
 
@@ -150,6 +152,9 @@ class MonthStats {
 
   /// categoryId → сумма расходов, по убыванию.
   final Map<String, double> byCategory;
+
+  /// categoryId → сумма доходов, по убыванию.
+  final Map<String, double> byCategoryIncome;
 
   /// Расходы по дням месяца, индекс 0 — первое число.
   final List<double> dailyExpense;
@@ -171,6 +176,7 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
   var income = 0.0;
   var expense = 0.0;
   final byCategory = <String, double>{};
+  final byCategoryIncome = <String, double>{};
   final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
   final daily = List<double>.filled(daysInMonth, 0);
 
@@ -183,18 +189,20 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
       daily[t.date.day - 1] += t.amount;
     } else {
       income += t.amount;
+      byCategoryIncome.update(t.categoryId, (v) => v + t.amount,
+          ifAbsent: () => t.amount);
     }
   }
 
-  final sorted = Map.fromEntries(
-    byCategory.entries.toList()..sort((a, b) => b.value.compareTo(a.value)),
-  );
+  Map<String, double> sortDesc(Map<String, double> m) => Map.fromEntries(
+      m.entries.toList()..sort((a, b) => b.value.compareTo(a.value)));
 
   return MonthStats(
     month: month,
     income: income,
     expense: expense,
-    byCategory: sorted,
+    byCategory: sortDesc(byCategory),
+    byCategoryIncome: sortDesc(byCategoryIncome),
     dailyExpense: daily,
   );
 });
@@ -316,6 +324,9 @@ final onboardedProvider = StateProvider<bool>((ref) => true);
 /// Язык интерфейса: null — системный (начальное значение задаёт main()).
 final localeOverrideProvider = StateProvider<String?>((ref) => null);
 
+/// Тема: 'light' | 'dark' | null — системная (начальное значение из main()).
+final themeOverrideProvider = StateProvider<String?>((ref) => null);
+
 final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
@@ -330,6 +341,13 @@ BackupData collectBackupData(T Function<T>(ProviderListenable<T>) read) =>
       budgets: read(budgetsProvider),
       recurring: read(recurringProvider),
     );
+
+final updateServiceProvider =
+    Provider<UpdateService>((ref) => UpdateService());
+
+/// Фоновая суточная проверка обновлений (ADR-0010).
+final updateCheckProvider = FutureProvider<UpdateInfo?>(
+    (ref) => ref.watch(updateServiceProvider).check());
 
 final ratesRepositoryProvider =
     Provider<RatesRepository>((ref) => RatesRepository());

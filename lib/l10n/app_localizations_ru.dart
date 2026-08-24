@@ -557,6 +557,77 @@ class AppLocalizationsRu extends AppLocalizations {
   String get addTransaction => 'Новая операция';
 
   @override
+  String get menuTheme => 'Тема';
+
+  @override
+  String get themeSystem => 'Как в системе';
+
+  @override
+  String get themeLight => 'Светлая';
+
+  @override
+  String get themeDark => 'Тёмная';
+
+  @override
+  String get accountTypeRegular => 'Обычный счёт';
+
+  @override
+  String get accountTypeDeposit => 'Вклад';
+
+  @override
+  String get rateLabel => 'Ставка, % годовых';
+
+  @override
+  String get openedLabel => 'Открыт';
+
+  @override
+  String get closesLabel => 'Закрытие';
+
+  @override
+  String projectedAtClose(String amount) {
+    return 'К закрытию ≈ $amount';
+  }
+
+  @override
+  String depositBadge(String rate, String date) {
+    return 'Вклад · $rate% · до $date';
+  }
+
+  @override
+  String get expensesForMonth => 'Расходы за месяц';
+
+  @override
+  String get incomeForMonth => 'Доходы за месяц';
+
+  @override
+  String get capitalStructure => 'Структура капитала';
+
+  @override
+  String get updatesGroup => 'Обновления';
+
+  @override
+  String get checkUpdates => 'Проверить обновления';
+
+  @override
+  String get upToDate => 'У вас последняя версия';
+
+  @override
+  String updateAvailable(String version) {
+    return 'Доступна версия $version';
+  }
+
+  @override
+  String get download => 'Скачать';
+
+  @override
+  String versionLabel(String version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get autoCheckUpdates => 'Проверять автоматически';
+
+  @override
   String get csvHeaderDate => 'Дата';
 
   @override

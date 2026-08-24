@@ -22,6 +22,9 @@ abstract final class Currencies {
       };
 }
 
+/// Тип счёта: обычный или вклад с процентной ставкой.
+enum AccountKind { regular, deposit }
+
 /// Счёт пользователя: наличные, карта, вклад — со своей валютой.
 class Account {
   const Account({
@@ -31,6 +34,10 @@ class Account {
     required this.color,
     this.currency = Currencies.rub,
     this.archived = false,
+    this.kind = AccountKind.regular,
+    this.rate,
+    this.openedAt,
+    this.closesAt,
   });
 
   final String id;
@@ -39,9 +46,28 @@ class Account {
   final Color color;
   final String currency;
   final bool archived;
+  final AccountKind kind;
+
+  /// Ставка вклада, % годовых.
+  final double? rate;
+  final DateTime? openedAt;
+  final DateTime? closesAt;
 
   IconData get icon => CategoryIcons.resolve(iconKey);
   bool get isRub => currency == Currencies.rub;
+  bool get isDeposit => kind == AccountKind.deposit;
+
+  /// Прогноз суммы к дате закрытия вклада: простые проценты от
+  /// текущего баланса за срок «открытие → закрытие». Оценка «≈»:
+  /// пополнения и капитализация не моделируются.
+  double? projectedAtClose(double balance) {
+    if (!isDeposit || rate == null || openedAt == null || closesAt == null) {
+      return null;
+    }
+    final days = closesAt!.difference(openedAt!).inDays;
+    if (days <= 0) return null;
+    return balance * (1 + rate! / 100 * days / 365);
+  }
 
   Account copyWith({
     String? title,
@@ -49,6 +75,10 @@ class Account {
     Color? color,
     String? currency,
     bool? archived,
+    AccountKind? kind,
+    double? rate,
+    DateTime? openedAt,
+    DateTime? closesAt,
   }) =>
       Account(
         id: id,
@@ -57,6 +87,10 @@ class Account {
         color: color ?? this.color,
         currency: currency ?? this.currency,
         archived: archived ?? this.archived,
+        kind: kind ?? this.kind,
+        rate: rate ?? this.rate,
+        openedAt: openedAt ?? this.openedAt,
+        closesAt: closesAt ?? this.closesAt,
       );
 
   Map<String, dynamic> toJson() => {
@@ -66,6 +100,10 @@ class Account {
         'color': color.toARGB32(),
         'currency': currency,
         'archived': archived,
+        'kind': kind.name,
+        'rate': rate,
+        'openedAt': openedAt?.toIso8601String(),
+        'closesAt': closesAt?.toIso8601String(),
       };
 
   factory Account.fromJson(Map<String, dynamic> json) => Account(
@@ -75,6 +113,15 @@ class Account {
         color: Color(json['color'] as int),
         currency: (json['currency'] as String?) ?? Currencies.rub,
         archived: (json['archived'] as bool?) ?? false,
+        kind: AccountKind.values
+            .byName((json['kind'] as String?) ?? 'regular'),
+        rate: (json['rate'] as num?)?.toDouble(),
+        openedAt: json['openedAt'] == null
+            ? null
+            : DateTime.parse(json['openedAt'] as String),
+        closesAt: json['closesAt'] == null
+            ? null
+            : DateTime.parse(json['closesAt'] as String),
       );
 }
 

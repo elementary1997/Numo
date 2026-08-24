@@ -44,6 +44,10 @@ class AccountsRepository {
         color: Color(row.color),
         currency: row.currency,
         archived: row.archived,
+        kind: AccountKind.values.byName(row.kind),
+        rate: row.rate,
+        openedAt: row.openedAt,
+        closesAt: row.closesAt,
       );
 
   static AccountRowsCompanion _toRow(Account a) => AccountRowsCompanion(
@@ -53,5 +57,9 @@ class AccountsRepository {
         color: Value(a.color.toARGB32()),
         currency: Value(a.currency),
         archived: Value(a.archived),
+        kind: Value(a.kind.name),
+        rate: Value(a.rate),
+        openedAt: Value(a.openedAt),
+        closesAt: Value(a.closesAt),
       );
 }

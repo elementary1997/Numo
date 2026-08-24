@@ -1677,6 +1677,47 @@ class $AccountRowsTable extends AccountRows
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('regular'),
+  );
+  static const VerificationMeta _rateMeta = const VerificationMeta('rate');
+  @override
+  late final GeneratedColumn<double> rate = GeneratedColumn<double>(
+    'rate',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _openedAtMeta = const VerificationMeta(
+    'openedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> openedAt = GeneratedColumn<DateTime>(
+    'opened_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _closesAtMeta = const VerificationMeta(
+    'closesAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> closesAt = GeneratedColumn<DateTime>(
+    'closes_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1685,6 +1726,10 @@ class $AccountRowsTable extends AccountRows
     color,
     currency,
     archived,
+    kind,
+    rate,
+    openedAt,
+    closesAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1739,6 +1784,30 @@ class $AccountRowsTable extends AccountRows
         archived.isAcceptableOrUnknown(data['archived']!, _archivedMeta),
       );
     }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    }
+    if (data.containsKey('rate')) {
+      context.handle(
+        _rateMeta,
+        rate.isAcceptableOrUnknown(data['rate']!, _rateMeta),
+      );
+    }
+    if (data.containsKey('opened_at')) {
+      context.handle(
+        _openedAtMeta,
+        openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta),
+      );
+    }
+    if (data.containsKey('closes_at')) {
+      context.handle(
+        _closesAtMeta,
+        closesAt.isAcceptableOrUnknown(data['closes_at']!, _closesAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1772,6 +1841,22 @@ class $AccountRowsTable extends AccountRows
         DriftSqlType.bool,
         data['${effectivePrefix}archived'],
       )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      rate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rate'],
+      ),
+      openedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}opened_at'],
+      ),
+      closesAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}closes_at'],
+      ),
     );
   }
 
@@ -1788,6 +1873,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
   final int color;
   final String currency;
   final bool archived;
+  final String kind;
+  final double? rate;
+  final DateTime? openedAt;
+  final DateTime? closesAt;
   const AccountRow({
     required this.id,
     required this.title,
@@ -1795,6 +1884,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     required this.color,
     required this.currency,
     required this.archived,
+    required this.kind,
+    this.rate,
+    this.openedAt,
+    this.closesAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1805,6 +1898,16 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     map['color'] = Variable<int>(color);
     map['currency'] = Variable<String>(currency);
     map['archived'] = Variable<bool>(archived);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || rate != null) {
+      map['rate'] = Variable<double>(rate);
+    }
+    if (!nullToAbsent || openedAt != null) {
+      map['opened_at'] = Variable<DateTime>(openedAt);
+    }
+    if (!nullToAbsent || closesAt != null) {
+      map['closes_at'] = Variable<DateTime>(closesAt);
+    }
     return map;
   }
 
@@ -1816,6 +1919,14 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       color: Value(color),
       currency: Value(currency),
       archived: Value(archived),
+      kind: Value(kind),
+      rate: rate == null && nullToAbsent ? const Value.absent() : Value(rate),
+      openedAt: openedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(openedAt),
+      closesAt: closesAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(closesAt),
     );
   }
 
@@ -1831,6 +1942,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       color: serializer.fromJson<int>(json['color']),
       currency: serializer.fromJson<String>(json['currency']),
       archived: serializer.fromJson<bool>(json['archived']),
+      kind: serializer.fromJson<String>(json['kind']),
+      rate: serializer.fromJson<double?>(json['rate']),
+      openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
+      closesAt: serializer.fromJson<DateTime?>(json['closesAt']),
     );
   }
   @override
@@ -1843,6 +1958,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       'color': serializer.toJson<int>(color),
       'currency': serializer.toJson<String>(currency),
       'archived': serializer.toJson<bool>(archived),
+      'kind': serializer.toJson<String>(kind),
+      'rate': serializer.toJson<double?>(rate),
+      'openedAt': serializer.toJson<DateTime?>(openedAt),
+      'closesAt': serializer.toJson<DateTime?>(closesAt),
     };
   }
 
@@ -1853,6 +1972,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     int? color,
     String? currency,
     bool? archived,
+    String? kind,
+    Value<double?> rate = const Value.absent(),
+    Value<DateTime?> openedAt = const Value.absent(),
+    Value<DateTime?> closesAt = const Value.absent(),
   }) => AccountRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1860,6 +1983,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     color: color ?? this.color,
     currency: currency ?? this.currency,
     archived: archived ?? this.archived,
+    kind: kind ?? this.kind,
+    rate: rate.present ? rate.value : this.rate,
+    openedAt: openedAt.present ? openedAt.value : this.openedAt,
+    closesAt: closesAt.present ? closesAt.value : this.closesAt,
   );
   AccountRow copyWithCompanion(AccountRowsCompanion data) {
     return AccountRow(
@@ -1869,6 +1996,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       color: data.color.present ? data.color.value : this.color,
       currency: data.currency.present ? data.currency.value : this.currency,
       archived: data.archived.present ? data.archived.value : this.archived,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      rate: data.rate.present ? data.rate.value : this.rate,
+      openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
+      closesAt: data.closesAt.present ? data.closesAt.value : this.closesAt,
     );
   }
 
@@ -1880,14 +2011,28 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           ..write('iconKey: $iconKey, ')
           ..write('color: $color, ')
           ..write('currency: $currency, ')
-          ..write('archived: $archived')
+          ..write('archived: $archived, ')
+          ..write('kind: $kind, ')
+          ..write('rate: $rate, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('closesAt: $closesAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, title, iconKey, color, currency, archived);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    iconKey,
+    color,
+    currency,
+    archived,
+    kind,
+    rate,
+    openedAt,
+    closesAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1897,7 +2042,11 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           other.iconKey == this.iconKey &&
           other.color == this.color &&
           other.currency == this.currency &&
-          other.archived == this.archived);
+          other.archived == this.archived &&
+          other.kind == this.kind &&
+          other.rate == this.rate &&
+          other.openedAt == this.openedAt &&
+          other.closesAt == this.closesAt);
 }
 
 class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
@@ -1907,6 +2056,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
   final Value<int> color;
   final Value<String> currency;
   final Value<bool> archived;
+  final Value<String> kind;
+  final Value<double?> rate;
+  final Value<DateTime?> openedAt;
+  final Value<DateTime?> closesAt;
   final Value<int> rowid;
   const AccountRowsCompanion({
     this.id = const Value.absent(),
@@ -1915,6 +2068,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     this.color = const Value.absent(),
     this.currency = const Value.absent(),
     this.archived = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.rate = const Value.absent(),
+    this.openedAt = const Value.absent(),
+    this.closesAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AccountRowsCompanion.insert({
@@ -1924,6 +2081,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     required int color,
     this.currency = const Value.absent(),
     this.archived = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.rate = const Value.absent(),
+    this.openedAt = const Value.absent(),
+    this.closesAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -1936,6 +2097,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     Expression<int>? color,
     Expression<String>? currency,
     Expression<bool>? archived,
+    Expression<String>? kind,
+    Expression<double>? rate,
+    Expression<DateTime>? openedAt,
+    Expression<DateTime>? closesAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1945,6 +2110,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
       if (color != null) 'color': color,
       if (currency != null) 'currency': currency,
       if (archived != null) 'archived': archived,
+      if (kind != null) 'kind': kind,
+      if (rate != null) 'rate': rate,
+      if (openedAt != null) 'opened_at': openedAt,
+      if (closesAt != null) 'closes_at': closesAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1956,6 +2125,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     Value<int>? color,
     Value<String>? currency,
     Value<bool>? archived,
+    Value<String>? kind,
+    Value<double?>? rate,
+    Value<DateTime?>? openedAt,
+    Value<DateTime?>? closesAt,
     Value<int>? rowid,
   }) {
     return AccountRowsCompanion(
@@ -1965,6 +2138,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
       color: color ?? this.color,
       currency: currency ?? this.currency,
       archived: archived ?? this.archived,
+      kind: kind ?? this.kind,
+      rate: rate ?? this.rate,
+      openedAt: openedAt ?? this.openedAt,
+      closesAt: closesAt ?? this.closesAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1990,6 +2167,18 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (rate.present) {
+      map['rate'] = Variable<double>(rate.value);
+    }
+    if (openedAt.present) {
+      map['opened_at'] = Variable<DateTime>(openedAt.value);
+    }
+    if (closesAt.present) {
+      map['closes_at'] = Variable<DateTime>(closesAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2005,6 +2194,10 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
           ..write('color: $color, ')
           ..write('currency: $currency, ')
           ..write('archived: $archived, ')
+          ..write('kind: $kind, ')
+          ..write('rate: $rate, ')
+          ..write('openedAt: $openedAt, ')
+          ..write('closesAt: $closesAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3181,6 +3374,10 @@ typedef $$AccountRowsTableCreateCompanionBuilder =
       required int color,
       Value<String> currency,
       Value<bool> archived,
+      Value<String> kind,
+      Value<double?> rate,
+      Value<DateTime?> openedAt,
+      Value<DateTime?> closesAt,
       Value<int> rowid,
     });
 typedef $$AccountRowsTableUpdateCompanionBuilder =
@@ -3191,6 +3388,10 @@ typedef $$AccountRowsTableUpdateCompanionBuilder =
       Value<int> color,
       Value<String> currency,
       Value<bool> archived,
+      Value<String> kind,
+      Value<double?> rate,
+      Value<DateTime?> openedAt,
+      Value<DateTime?> closesAt,
       Value<int> rowid,
     });
 
@@ -3230,6 +3431,26 @@ class $$AccountRowsTableFilterComposer
 
   ColumnFilters<bool> get archived => $composableBuilder(
     column: $table.archived,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get closesAt => $composableBuilder(
+    column: $table.closesAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3272,6 +3493,26 @@ class $$AccountRowsTableOrderingComposer
     column: $table.archived,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get rate => $composableBuilder(
+    column: $table.rate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get openedAt => $composableBuilder(
+    column: $table.openedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get closesAt => $composableBuilder(
+    column: $table.closesAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountRowsTableAnnotationComposer
@@ -3300,6 +3541,18 @@ class $$AccountRowsTableAnnotationComposer
 
   GeneratedColumn<bool> get archived =>
       $composableBuilder(column: $table.archived, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<double> get rate =>
+      $composableBuilder(column: $table.rate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get openedAt =>
+      $composableBuilder(column: $table.openedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get closesAt =>
+      $composableBuilder(column: $table.closesAt, builder: (column) => column);
 }
 
 class $$AccountRowsTableTableManager
@@ -3339,6 +3592,10 @@ class $$AccountRowsTableTableManager
                 Value<int> color = const Value.absent(),
                 Value<String> currency = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double?> rate = const Value.absent(),
+                Value<DateTime?> openedAt = const Value.absent(),
+                Value<DateTime?> closesAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountRowsCompanion(
                 id: id,
@@ -3347,6 +3604,10 @@ class $$AccountRowsTableTableManager
                 color: color,
                 currency: currency,
                 archived: archived,
+                kind: kind,
+                rate: rate,
+                openedAt: openedAt,
+                closesAt: closesAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3357,6 +3618,10 @@ class $$AccountRowsTableTableManager
                 required int color,
                 Value<String> currency = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double?> rate = const Value.absent(),
+                Value<DateTime?> openedAt = const Value.absent(),
+                Value<DateTime?> closesAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountRowsCompanion.insert(
                 id: id,
@@ -3365,6 +3630,10 @@ class $$AccountRowsTableTableManager
                 color: color,
                 currency: currency,
                 archived: archived,
+                kind: kind,
+                rate: rate,
+                openedAt: openedAt,
+                closesAt: closesAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

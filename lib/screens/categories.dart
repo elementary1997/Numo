@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/category.dart';
 import '../state/providers.dart';
+import '../widgets/breakdown_card.dart';
 import '../core/l10n.dart';
 
 class CategoriesScreen extends ConsumerWidget {
@@ -11,8 +12,22 @@ class CategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoriesProvider);
-    final expense = categories.where((c) => !c.isIncome).toList();
+    final expense = categories
+        .where((c) => !c.isIncome && c.id != Categories.transfer.id)
+        .toList();
     final income = categories.where((c) => c.isIncome).toList();
+    final now = DateTime.now();
+    final stats =
+        ref.watch(monthStatsProvider(DateTime(now.year, now.month)));
+
+    List<BreakdownEntry> entriesOf(Map<String, double> byCategory) => [
+          for (final e in byCategory.entries)
+            BreakdownEntry(
+              title: categories.byId(e.key).title,
+              color: categories.byId(e.key).color,
+              value: e.value,
+            ),
+        ];
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.menuCategories)),
@@ -24,6 +39,17 @@ class CategoriesScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
         children: [
+          BreakdownCard(
+            title: context.l10n.expensesForMonth,
+            entries: entriesOf(stats.byCategory),
+          ),
+          if (stats.byCategory.isNotEmpty) const SizedBox(height: 14),
+          BreakdownCard(
+            title: context.l10n.incomeForMonth,
+            entries: entriesOf(stats.byCategoryIncome),
+          ),
+          if (stats.byCategoryIncome.isNotEmpty)
+            const SizedBox(height: 20),
           _Section(title: context.l10n.expenses, categories: expense),
           const SizedBox(height: 20),
           _Section(title: context.l10n.income, categories: income),

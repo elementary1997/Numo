@@ -11,6 +11,7 @@ import 'data/database.dart';
 import 'data/recurring_repository.dart';
 import 'data/repository.dart';
 import 'data/rules_repository.dart';
+import 'data/seed_localization.dart';
 import 'data/security_repository.dart';
 import 'data/sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,8 +45,15 @@ Future<void> main() async {
   final prefs = await SharedPreferences.getInstance();
   final onboarded = prefs.getBool(onboardedKey) ?? false;
   final localeOverride = prefs.getString('numo.locale');
+  final themeOverride = prefs.getString('numo.theme');
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
+  // Названия встроенных категорий/счёта следуют текущему языку.
+  await relocalizeSeedData(
+    categories: categoriesRepository,
+    accounts: accountsRepository,
+    languageCode: localeOverride ?? seedLocale,
+  );
   runApp(
     ProviderScope(
       overrides: [
@@ -59,6 +67,7 @@ Future<void> main() async {
         syncServiceProvider.overrideWithValue(syncService),
         onboardedProvider.overrideWith((ref) => onboarded),
         localeOverrideProvider.overrideWith((ref) => localeOverride),
+        themeOverrideProvider.overrideWith((ref) => themeOverride),
       ],
       child: const NumoApp(),
     ),
@@ -73,12 +82,17 @@ class NumoApp extends ConsumerWidget {
     final locked = ref.watch(lockedProvider);
     final onboarded = ref.watch(onboardedProvider);
     final localeOverride = ref.watch(localeOverrideProvider);
+    final themeOverride = ref.watch(themeOverrideProvider);
     return MaterialApp(
       title: 'Numo',
       debugShowCheckedModeBanner: false,
       theme: NumoTheme.light(),
       darkTheme: NumoTheme.dark(),
-      themeMode: ThemeMode.system,
+      themeMode: switch (themeOverride) {
+        'light' => ThemeMode.light,
+        'dark' => ThemeMode.dark,
+        _ => ThemeMode.system,
+      },
       locale: localeOverride == null ? null : Locale(localeOverride),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

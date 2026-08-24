@@ -1100,6 +1100,132 @@ abstract class AppLocalizations {
   /// **'Новая операция'**
   String get addTransaction;
 
+  /// No description provided for @menuTheme.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тема'**
+  String get menuTheme;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как в системе'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In ru, this message translates to:
+  /// **'Светлая'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In ru, this message translates to:
+  /// **'Тёмная'**
+  String get themeDark;
+
+  /// No description provided for @accountTypeRegular.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обычный счёт'**
+  String get accountTypeRegular;
+
+  /// No description provided for @accountTypeDeposit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вклад'**
+  String get accountTypeDeposit;
+
+  /// No description provided for @rateLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ставка, % годовых'**
+  String get rateLabel;
+
+  /// No description provided for @openedLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыт'**
+  String get openedLabel;
+
+  /// No description provided for @closesLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрытие'**
+  String get closesLabel;
+
+  /// No description provided for @projectedAtClose.
+  ///
+  /// In ru, this message translates to:
+  /// **'К закрытию ≈ {amount}'**
+  String projectedAtClose(String amount);
+
+  /// No description provided for @depositBadge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вклад · {rate}% · до {date}'**
+  String depositBadge(String rate, String date);
+
+  /// No description provided for @expensesForMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расходы за месяц'**
+  String get expensesForMonth;
+
+  /// No description provided for @incomeForMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доходы за месяц'**
+  String get incomeForMonth;
+
+  /// No description provided for @capitalStructure.
+  ///
+  /// In ru, this message translates to:
+  /// **'Структура капитала'**
+  String get capitalStructure;
+
+  /// No description provided for @updatesGroup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновления'**
+  String get updatesGroup;
+
+  /// No description provided for @checkUpdates.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверить обновления'**
+  String get checkUpdates;
+
+  /// No description provided for @upToDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас последняя версия'**
+  String get upToDate;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступна версия {version}'**
+  String updateAvailable(String version);
+
+  /// No description provided for @download.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скачать'**
+  String get download;
+
+  /// No description provided for @versionLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия {version}'**
+  String versionLabel(String version);
+
+  /// No description provided for @autoCheckUpdates.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверять автоматически'**
+  String get autoCheckUpdates;
+
   /// No description provided for @csvHeaderDate.
   ///
   /// In ru, this message translates to:

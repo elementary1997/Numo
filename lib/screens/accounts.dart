@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../core/money.dart';
 import '../models/account.dart';
 import '../models/category.dart';
+import '../widgets/breakdown_card.dart';
 import '../state/providers.dart';
 import '../core/l10n.dart';
 
@@ -38,6 +40,7 @@ class AccountsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 96),
         children: [
+          const _CapitalBreakdown(),
           for (final a in active) _AccountTile(account: a),
           if (archived.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -48,6 +51,40 @@ class AccountsScreen extends ConsumerWidget {
               Opacity(opacity: 0.45, child: _AccountTile(account: a)),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Структура капитала: доли счетов в рублёвом эквиваленте.
+class _CapitalBreakdown extends ConsumerWidget {
+  const _CapitalBreakdown();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accounts = ref.watch(activeAccountsProvider);
+    if (accounts.length < 2) return const SizedBox.shrink();
+    final rates = ref.watch(ratesProvider).valueOrNull;
+
+    final entries = <BreakdownEntry>[];
+    for (final a in accounts) {
+      final balance = ref.watch(accountBalanceProvider(a.id));
+      final rate = a.isRub ? 1.0 : rates?.rubFor(a.currency);
+      if (balance <= 0 || rate == null) continue;
+      entries.add(BreakdownEntry(
+        title: a.title,
+        color: a.color,
+        value: balance * rate,
+      ));
+    }
+    entries.sort((a, b) => b.value.compareTo(a.value));
+    if (entries.length < 2) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: BreakdownCard(
+        title: context.l10n.capitalStructure,
+        entries: entries,
       ),
     );
   }
@@ -79,9 +116,18 @@ class _AccountTile extends ConsumerWidget {
       title: Text(account.title,
           style: theme.textTheme.bodyLarge
               ?.copyWith(fontWeight: FontWeight.w700)),
-      subtitle: Text(account.currency,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      subtitle: Text(
+        account.isDeposit && account.rate != null && account.closesAt != null
+            ? context.l10n.depositBadge(
+                account.rate! == account.rate!.roundToDouble()
+                    ? account.rate!.toStringAsFixed(0)
+                    : account.rate!.toString(),
+                DateFormat('dd.MM.yyyy').format(account.closesAt!),
+              )
+            : account.currency,
+        style: theme.textTheme.bodySmall
+            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      ),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -91,6 +137,16 @@ class _AccountTile extends ConsumerWidget {
             style: theme.textTheme.bodyLarge
                 ?.copyWith(fontWeight: FontWeight.w800),
           ),
+          if (account.projectedAtClose(balance) != null)
+            Text(
+              context.l10n.projectedAtClose(formatMoneyIn(
+                  account.projectedAtClose(balance)!,
+                  Currencies.symbol(account.currency))),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.secondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           IconButton(
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
@@ -138,9 +194,13 @@ class _AccountEditor extends ConsumerStatefulWidget {
 
 class _AccountEditorState extends ConsumerState<_AccountEditor> {
   late final TextEditingController _title;
+  late final TextEditingController _rate;
   late String _iconKey;
   late Color _color;
   late String _currency;
+  late AccountKind _kind;
+  DateTime? _openedAt;
+  DateTime? _closesAt;
 
   bool get _isEditing => widget.initial != null;
 
@@ -149,36 +209,60 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     super.initState();
     final a = widget.initial;
     _title = TextEditingController(text: a?.title ?? '');
+    _rate = TextEditingController(
+        text: a?.rate == null
+            ? ''
+            : a!.rate! == a.rate!.roundToDouble()
+                ? a.rate!.toStringAsFixed(0)
+                : a.rate!.toString());
     _iconKey = a?.iconKey ?? 'card';
     _color = a?.color ?? CategoryColors.palette.first;
     _currency = a?.currency ?? Currencies.rub;
+    _kind = a?.kind ?? AccountKind.regular;
+    _openedAt = a?.openedAt;
+    _closesAt = a?.closesAt;
   }
 
   @override
   void dispose() {
     _title.dispose();
+    _rate.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate({required bool opened}) async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: opened ? (_openedAt ?? now) : (_closesAt ?? now),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(now.year + 15),
+    );
+    if (picked != null) {
+      setState(() => opened ? _openedAt = picked : _closesAt = picked);
+    }
   }
 
   Future<void> _save() async {
     final title = _title.text.trim();
     if (title.isEmpty) return;
-    final initial = widget.initial;
-    await ref.read(accountsProvider.notifier).upsert(
-          initial?.copyWith(
-                title: title,
-                iconKey: _iconKey,
-                color: _color,
-                currency: _currency,
-              ) ??
-              Account(
-                id: 'acc-${DateTime.now().microsecondsSinceEpoch}',
-                title: title,
-                iconKey: _iconKey,
-                color: _color,
-                currency: _currency,
-              ),
-        );
+    final isDeposit = _kind == AccountKind.deposit;
+    final account = Account(
+      id: widget.initial?.id ??
+          'acc-${DateTime.now().microsecondsSinceEpoch}',
+      title: title,
+      iconKey: _iconKey,
+      color: _color,
+      currency: _currency,
+      archived: widget.initial?.archived ?? false,
+      kind: _kind,
+      rate: isDeposit
+          ? double.tryParse(_rate.text.replaceAll(',', '.'))
+          : null,
+      openedAt: isDeposit ? (_openedAt ?? DateTime.now()) : null,
+      closesAt: isDeposit ? _closesAt : null,
+    );
+    await ref.read(accountsProvider.notifier).upsert(account);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -248,6 +332,75 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                 ),
               ],
             ),
+            const SizedBox(height: 14),
+            SegmentedButton<AccountKind>(
+              segments: [
+                ButtonSegment(
+                    value: AccountKind.regular,
+                    label: Text(context.l10n.accountTypeRegular)),
+                ButtonSegment(
+                    value: AccountKind.deposit,
+                    label: Text(context.l10n.accountTypeDeposit)),
+              ],
+              selected: {_kind},
+              onSelectionChanged: (s) => setState(() => _kind = s.first),
+              showSelectedIcon: false,
+            ),
+            if (_kind == AccountKind.deposit) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _rate,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        labelText: context.l10n.rateLabel,
+                        filled: true,
+                        fillColor: theme.colorScheme.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none,
+                        ),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ActionChip(
+                      avatar: const Icon(Icons.event_rounded, size: 16),
+                      label: Text(
+                        '${context.l10n.openedLabel}: '
+                        '${_openedAt == null ? '—' : DateFormat('dd.MM.yyyy').format(_openedAt!)}',
+                      ),
+                      onPressed: () => _pickDate(opened: true),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ActionChip(
+                      avatar:
+                          const Icon(Icons.event_available_rounded, size: 16),
+                      label: Text(
+                        '${context.l10n.closesLabel}: '
+                        '${_closesAt == null ? '—' : DateFormat('dd.MM.yyyy').format(_closesAt!)}',
+                      ),
+                      onPressed: () => _pickDate(opened: false),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             const SizedBox(height: 18),
             Text(context.l10n.iconLabel,
                 style: theme.textTheme.labelLarge

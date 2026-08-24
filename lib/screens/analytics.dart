@@ -85,37 +85,7 @@ class AnalyticsScreen extends ConsumerWidget {
             color: stats.net >= 0 ? NumoColors.sky : NumoColors.amber,
           ),
           const SizedBox(height: 20),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.expensesByDay,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 120,
-                    child: DailyBars(
-                      values: stats.dailyExpense,
-                      color: NumoColors.violet,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      for (final d in [1, 8, 15, 22, stats.dailyExpense.length])
-                        Text('$d',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _DailyExpensesCard(stats: stats),
           const SizedBox(height: 20),
           const _CapitalDynamicsCard(),
           const SizedBox(height: 20),
@@ -142,6 +112,82 @@ class AnalyticsScreen extends ConsumerWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// «Расходы по дням» с сеткой значений и выбором дня тапом.
+class _DailyExpensesCard extends StatefulWidget {
+  const _DailyExpensesCard({required this.stats});
+
+  final MonthStats stats;
+
+  @override
+  State<_DailyExpensesCard> createState() => _DailyExpensesCardState();
+}
+
+class _DailyExpensesCardState extends State<_DailyExpensesCard> {
+  int? _selected;
+
+  @override
+  void didUpdateWidget(_DailyExpensesCard old) {
+    super.didUpdateWidget(old);
+    if (old.stats.month != widget.stats.month) _selected = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final stats = widget.stats;
+    final daily = stats.dailyExpense;
+    final maxV = daily.isEmpty ? 0.0 : daily.reduce((a, b) => a > b ? a : b);
+    final shown = _selected ?? (maxV > 0 ? daily.indexOf(maxV) : null);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(context.l10n.expensesByDay,
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const Spacer(),
+                if (shown != null)
+                  Text(
+                    '${DateFormat('d MMMM', context.localeCode).format(DateTime(stats.month.year, stats.month.month, shown + 1))} · ${formatMoney(daily[shown])}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 132,
+              child: DailyBars(
+                values: daily,
+                color: NumoColors.violet,
+                selectedIndex: shown,
+                onBarTap: (i) => setState(() => _selected = i),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                for (final d in [1, 8, 15, 22, daily.length])
+                  Text('$d',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -188,6 +234,7 @@ class _CapitalDynamicsCard extends ConsumerWidget {
               height: 90,
               child: Sparkline(
                 values: normalized,
+                labels: series,
                 color: trendUp ? NumoColors.mint : NumoColors.coral,
               ),
             ),
