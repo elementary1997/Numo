@@ -17,6 +17,13 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter analyze
-      - run: flutter test
+      - run: flutter test --coverage
+      - name: Coverage summary
+        run: |
+          awk -F: '/^LF/{lf+=$2} /^LH/{lh+=$2} END{printf "Line coverage: %.1f%% (%d/%d lines)\n", 100*lh/lf, lh, lf}' coverage/lcov.info | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
       - name: Verify web build
         run: flutter build web
