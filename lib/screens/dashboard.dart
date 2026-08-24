@@ -9,6 +9,7 @@ import '../state/providers.dart';
 import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction.dart';
+import 'categories.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -20,6 +21,7 @@ class DashboardScreen extends ConsumerWidget {
     final stats = ref.watch(monthStatsProvider(month));
     final balance = ref.watch(balanceProvider);
     final recent = ref.watch(transactionsProvider).take(5).toList();
+    final categories = ref.watch(categoriesProvider);
     final theme = Theme.of(context);
 
     return SafeArea(
@@ -40,6 +42,15 @@ class DashboardScreen extends ConsumerWidget {
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
+              IconButton(
+                tooltip: 'Категории',
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const CategoriesScreen()),
+                ),
+                icon: Icon(Icons.sell_outlined,
+                    color: theme.colorScheme.onSurfaceVariant),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -48,7 +59,7 @@ class DashboardScreen extends ConsumerWidget {
           if (stats.byCategory.isNotEmpty) ...[
             _SectionHeader(title: 'Структура трат'),
             const SizedBox(height: 12),
-            _SpendingBreakdown(stats: stats),
+            _SpendingBreakdown(stats: stats, categories: categories),
             const SizedBox(height: 20),
           ],
           _SectionHeader(title: 'Последние операции'),
@@ -226,9 +237,10 @@ class _FlowChip extends StatelessWidget {
 }
 
 class _SpendingBreakdown extends StatelessWidget {
-  const _SpendingBreakdown({required this.stats});
+  const _SpendingBreakdown({required this.stats, required this.categories});
 
   final MonthStats stats;
+  final List<TxCategory> categories;
 
   @override
   Widget build(BuildContext context) {
@@ -236,7 +248,7 @@ class _SpendingBreakdown extends StatelessWidget {
     final entries = stats.byCategory.entries.take(5).toList();
     final values = entries.map((e) => e.value).toList();
     final colors =
-        entries.map((e) => Categories.byId(e.key).color).toList();
+        entries.map((e) => categories.byId(e.key).color).toList();
 
     return Card(
       child: Padding(
@@ -274,7 +286,7 @@ class _SpendingBreakdown extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: _LegendRow(
-                        category: Categories.byId(e.key),
+                        category: categories.byId(e.key),
                         value: e.value,
                         share: stats.expense > 0 ? e.value / stats.expense : 0,
                       ),

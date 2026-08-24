@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
+import '../state/providers.dart';
 
-class TransactionTile extends StatelessWidget {
+class TransactionTile extends ConsumerWidget {
   const TransactionTile({
     super.key,
     required this.tx,
@@ -19,8 +21,8 @@ class TransactionTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final category = Categories.byId(tx.categoryId);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final category = ref.watch(categoriesProvider).byId(tx.categoryId);
     final theme = Theme.of(context);
     final subtitle = [
       if (tx.note.isNotEmpty) tx.note,

@@ -15,6 +15,7 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final month = ref.watch(selectedMonthProvider);
     final stats = ref.watch(monthStatsProvider(month));
+    final categories = ref.watch(categoriesProvider);
     final theme = Theme.of(context);
     final now = DateTime.now();
     final isCurrentMonth =
@@ -122,7 +123,7 @@ class AnalyticsScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             for (final e in stats.byCategory.entries)
               _CategoryRow(
-                category: Categories.byId(e.key),
+                category: categories.byId(e.key),
                 value: e.value,
                 share: stats.expense > 0 ? e.value / stats.expense : 0,
               ),

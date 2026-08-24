@@ -18,11 +18,11 @@ final _rangeProvider = StateProvider<DateTimeRange?>((ref) => null);
 class TransactionsScreen extends ConsumerWidget {
   const TransactionsScreen({super.key});
 
-  bool _matches(Tx tx, String query) {
+  bool _matches(Tx tx, String query, List<TxCategory> categories) {
     if (query.isEmpty) return true;
     final q = query.toLowerCase();
     return tx.note.toLowerCase().contains(q) ||
-        Categories.byId(tx.categoryId).title.toLowerCase().contains(q);
+        categories.byId(tx.categoryId).title.toLowerCase().contains(q);
   }
 
   @override
@@ -31,6 +31,7 @@ class TransactionsScreen extends ConsumerWidget {
     final query = ref.watch(_searchProvider);
     final range = ref.watch(_rangeProvider);
     final all = ref.watch(transactionsProvider);
+    final categories = ref.watch(categoriesProvider);
     final txs = all.where((t) {
       final byType = switch (filter) {
         _Filter.all => true,
@@ -40,7 +41,7 @@ class TransactionsScreen extends ConsumerWidget {
       final byRange = range == null ||
           (!t.date.isBefore(range.start) &&
               t.date.isBefore(range.end.add(const Duration(days: 1))));
-      return byType && byRange && _matches(t, query);
+      return byType && byRange && _matches(t, query, categories);
     }).toList();
     final theme = Theme.of(context);
 

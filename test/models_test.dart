@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numo/models/category.dart';
 import 'package:numo/models/transaction.dart';
@@ -31,16 +32,36 @@ void main() {
 
   group('Categories', () {
     test('byId находит категорию', () {
-      expect(Categories.byId('cafe').title, 'Кафе и рестораны');
+      expect(Categories.defaults.byId('cafe').title, 'Кафе и рестораны');
     });
 
     test('byId с неизвестным id даёт «Прочее», а не падает', () {
-      expect(Categories.byId('unknown'), Categories.other);
+      expect(Categories.defaults.byId('unknown'), Categories.other);
     });
 
-    test('доходные и расходные категории не пересекаются', () {
-      expect(Categories.expense.every((c) => !c.isIncome), isTrue);
-      expect(Categories.income.every((c) => c.isIncome), isTrue);
+    test('у всех встроенных категорий валидные ключи иконок', () {
+      for (final c in Categories.defaults) {
+        expect(CategoryIcons.byKey.containsKey(c.iconKey), isTrue,
+            reason: 'нет иконки для ${c.id}');
+      }
+    });
+
+    test('JSON round-trip сохраняет все поля категории', () {
+      const original = TxCategory(
+        id: 'user-1',
+        title: 'Хобби',
+        iconKey: 'music',
+        color: Color(0xFF6BA8FF),
+        isIncome: false,
+        archived: true,
+      );
+      final restored = TxCategory.fromJson(original.toJson());
+      expect(restored.id, original.id);
+      expect(restored.title, original.title);
+      expect(restored.iconKey, original.iconKey);
+      expect(restored.color, original.color);
+      expect(restored.isIncome, original.isIncome);
+      expect(restored.archived, original.archived);
     });
   });
 }

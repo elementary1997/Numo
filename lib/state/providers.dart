@@ -1,11 +1,53 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/categories_repository.dart';
 import '../data/repository.dart';
+import '../models/category.dart';
 import '../models/transaction.dart';
 
 final repositoryProvider = Provider<TransactionsRepository>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
+
+final categoriesRepositoryProvider = Provider<CategoriesRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class CategoriesNotifier extends Notifier<List<TxCategory>> {
+  @override
+  List<TxCategory> build() => ref.read(categoriesRepositoryProvider).loadAll();
+
+  Future<void> add(TxCategory category) async {
+    state = [...state, category];
+    await ref.read(categoriesRepositoryProvider).saveAll(state);
+  }
+
+  Future<void> update(TxCategory category) async {
+    state = [
+      for (final c in state) c.id == category.id ? category : c,
+    ];
+    await ref.read(categoriesRepositoryProvider).saveAll(state);
+  }
+
+  Future<void> setArchived(String id, bool archived) async {
+    state = [
+      for (final c in state)
+        c.id == id ? c.copyWith(archived: archived) : c,
+    ];
+    await ref.read(categoriesRepositoryProvider).saveAll(state);
+  }
+}
+
+final categoriesProvider =
+    NotifierProvider<CategoriesNotifier, List<TxCategory>>(
+        CategoriesNotifier.new);
+
+/// Категории, доступные для выбора при добавлении операции.
+final activeCategoriesProvider =
+    Provider.family<List<TxCategory>, bool>((ref, isIncome) => ref
+        .watch(categoriesProvider)
+        .where((c) => c.isIncome == isIncome && !c.archived)
+        .toList());
 
 class TransactionsNotifier extends Notifier<List<Tx>> {
   @override

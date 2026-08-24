@@ -2,96 +2,193 @@ import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 
-/// Категория операции. Пока набор фиксированный; пользовательские
-/// категории — следующий шаг.
+/// Каталог иконок категорий. Иконки хранятся по строковому ключу,
+/// а не по codePoint — динамический IconData ломает tree-shake иконок
+/// в release-сборке.
+abstract final class CategoryIcons {
+  static const Map<String, IconData> byKey = {
+    'basket': Icons.shopping_basket_rounded,
+    'restaurant': Icons.restaurant_rounded,
+    'bus': Icons.directions_bus_rounded,
+    'home': Icons.home_rounded,
+    'heart': Icons.favorite_rounded,
+    'movie': Icons.movie_rounded,
+    'bag': Icons.shopping_bag_rounded,
+    'category': Icons.category_rounded,
+    'work': Icons.work_rounded,
+    'laptop': Icons.laptop_mac_rounded,
+    'gift': Icons.card_giftcard_rounded,
+    'car': Icons.directions_car_rounded,
+    'coffee': Icons.local_cafe_rounded,
+    'fitness': Icons.fitness_center_rounded,
+    'school': Icons.school_rounded,
+    'flight': Icons.flight_rounded,
+    'pets': Icons.pets_rounded,
+    'phone': Icons.smartphone_rounded,
+    'music': Icons.music_note_rounded,
+    'book': Icons.menu_book_rounded,
+    'child': Icons.child_care_rounded,
+    'build': Icons.build_rounded,
+    'savings': Icons.savings_rounded,
+    'percent': Icons.percent_rounded,
+  };
+
+  static IconData resolve(String key) =>
+      byKey[key] ?? Icons.category_rounded;
+}
+
+/// Палитра, из которой выбирается цвет категории.
+abstract final class CategoryColors {
+  static const palette = [
+    NumoColors.mint,
+    NumoColors.coral,
+    NumoColors.sky,
+    NumoColors.amber,
+    NumoColors.pink,
+    NumoColors.violet,
+    Color(0xFF9D6BFF),
+    Color(0xFF8E8AA6),
+    Color(0xFF5CD6C0),
+    Color(0xFFFF8A5C),
+    Color(0xFF6BA8FF),
+    Color(0xFFC7E05C),
+  ];
+}
+
+/// Категория операции. Встроенные сидируются при первом запуске,
+/// пользовательские создаются в приложении; и те и другие живут
+/// в хранилище и редактируются одинаково.
 class TxCategory {
   const TxCategory({
     required this.id,
     required this.title,
-    required this.icon,
+    required this.iconKey,
     required this.color,
     this.isIncome = false,
+    this.archived = false,
   });
 
   final String id;
   final String title;
-  final IconData icon;
+  final String iconKey;
   final Color color;
   final bool isIncome;
+
+  /// Архивная категория скрыта из выбора, но продолжает
+  /// корректно отображаться в истории операций.
+  final bool archived;
+
+  IconData get icon => CategoryIcons.resolve(iconKey);
+
+  TxCategory copyWith({
+    String? title,
+    String? iconKey,
+    Color? color,
+    bool? archived,
+  }) =>
+      TxCategory(
+        id: id,
+        title: title ?? this.title,
+        iconKey: iconKey ?? this.iconKey,
+        color: color ?? this.color,
+        isIncome: isIncome,
+        archived: archived ?? this.archived,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'iconKey': iconKey,
+        'color': color.toARGB32(),
+        'isIncome': isIncome,
+        'archived': archived,
+      };
+
+  factory TxCategory.fromJson(Map<String, dynamic> json) => TxCategory(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        iconKey: json['iconKey'] as String,
+        color: Color(json['color'] as int),
+        isIncome: (json['isIncome'] as bool?) ?? false,
+        archived: (json['archived'] as bool?) ?? false,
+      );
 }
 
+/// Встроенный набор категорий — сидируется в хранилище при первом
+/// запуске. После этого источник правды — categoriesProvider;
+/// здесь остаётся только набор по умолчанию и фолбэк [other].
 abstract final class Categories {
   static const groceries = TxCategory(
     id: 'groceries',
     title: 'Продукты',
-    icon: Icons.shopping_basket_rounded,
+    iconKey: 'basket',
     color: NumoColors.mint,
   );
   static const cafe = TxCategory(
     id: 'cafe',
     title: 'Кафе и рестораны',
-    icon: Icons.restaurant_rounded,
+    iconKey: 'restaurant',
     color: NumoColors.coral,
   );
   static const transport = TxCategory(
     id: 'transport',
     title: 'Транспорт',
-    icon: Icons.directions_bus_rounded,
+    iconKey: 'bus',
     color: NumoColors.sky,
   );
   static const home = TxCategory(
     id: 'home',
     title: 'Дом и ЖКХ',
-    icon: Icons.home_rounded,
+    iconKey: 'home',
     color: NumoColors.amber,
   );
   static const health = TxCategory(
     id: 'health',
     title: 'Здоровье',
-    icon: Icons.favorite_rounded,
+    iconKey: 'heart',
     color: NumoColors.pink,
   );
   static const entertainment = TxCategory(
     id: 'entertainment',
     title: 'Развлечения',
-    icon: Icons.movie_rounded,
+    iconKey: 'movie',
     color: NumoColors.violet,
   );
   static const shopping = TxCategory(
     id: 'shopping',
     title: 'Покупки',
-    icon: Icons.shopping_bag_rounded,
+    iconKey: 'bag',
     color: Color(0xFF9D6BFF),
   );
   static const other = TxCategory(
     id: 'other',
     title: 'Прочее',
-    icon: Icons.category_rounded,
+    iconKey: 'category',
     color: Color(0xFF8E8AA6),
   );
   static const salary = TxCategory(
     id: 'salary',
     title: 'Зарплата',
-    icon: Icons.work_rounded,
+    iconKey: 'work',
     color: NumoColors.mint,
     isIncome: true,
   );
   static const freelance = TxCategory(
     id: 'freelance',
     title: 'Подработка',
-    icon: Icons.laptop_mac_rounded,
+    iconKey: 'laptop',
     color: NumoColors.sky,
     isIncome: true,
   );
   static const gifts = TxCategory(
     id: 'gifts',
     title: 'Подарки',
-    icon: Icons.card_giftcard_rounded,
+    iconKey: 'gift',
     color: NumoColors.pink,
     isIncome: true,
   );
 
-  static const expense = [
+  static const defaults = [
     groceries,
     cafe,
     transport,
@@ -100,12 +197,15 @@ abstract final class Categories {
     entertainment,
     shopping,
     other,
+    salary,
+    freelance,
+    gifts,
   ];
+}
 
-  static const income = [salary, freelance, gifts];
-
-  static const all = [...expense, ...income];
-
-  static TxCategory byId(String id) =>
-      all.firstWhere((c) => c.id == id, orElse: () => other);
+/// Поиск категории в списке с фолбэком на «Прочее» —
+/// операция никогда не остаётся без категории.
+extension CategoryLookup on List<TxCategory> {
+  TxCategory byId(String id) =>
+      firstWhere((c) => c.id == id, orElse: () => Categories.other);
 }

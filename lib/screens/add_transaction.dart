@@ -7,6 +7,7 @@ import '../core/theme.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
+import 'categories.dart';
 
 /// Открывает sheet добавления новой операции, либо редактирования
 /// существующей, если передан [initial].
@@ -51,16 +52,13 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
       _raw = tx.amount == tx.amount.roundToDouble()
           ? tx.amount.toStringAsFixed(0)
           : tx.amount.toStringAsFixed(2).replaceAll('.', ',');
-      _category = Categories.byId(tx.categoryId);
+      _category = ref.read(categoriesProvider).byId(tx.categoryId);
       _date = tx.date;
       _noteController.text = tx.note;
     }
   }
 
   double get _amount => double.tryParse(_raw.replaceAll(',', '.')) ?? 0;
-
-  List<TxCategory> get _categories =>
-      _type == TxType.expense ? Categories.expense : Categories.income;
 
   @override
   void dispose() {
@@ -176,12 +174,30 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
             const SizedBox(height: 16),
             SizedBox(
               height: 44,
-              child: ListView.separated(
+              child: Builder(builder: (context) {
+                final categories = ref
+                    .watch(activeCategoriesProvider(_type == TxType.income));
+                return ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
+                itemCount: categories.length + 1,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, i) {
-                  final c = _categories[i];
+                  if (i == categories.length) {
+                    return ActionChip(
+                      avatar: Icon(Icons.add_rounded,
+                          size: 18, color: theme.colorScheme.onSurfaceVariant),
+                      label: const Text('Новая'),
+                      labelStyle: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () => showCategoryEditor(context,
+                          isIncome: _type == TxType.income),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    );
+                  }
+                  final c = categories[i];
                   final selected = _category?.id == c.id;
                   return ChoiceChip(
                     selected: selected,
@@ -205,7 +221,8 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                         borderRadius: BorderRadius.circular(14)),
                   );
                 },
-              ),
+              );
+              }),
             ),
             const SizedBox(height: 12),
             Row(
