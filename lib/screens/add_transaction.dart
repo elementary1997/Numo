@@ -16,6 +16,7 @@ Future<void> showAddTransactionSheet(BuildContext context, {Tx? initial}) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    constraints: const BoxConstraints(maxWidth: 520),
     backgroundColor: Theme.of(context).scaffoldBackgroundColor,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
