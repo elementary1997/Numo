@@ -17,8 +17,11 @@ class TransactionTile extends StatelessWidget {
     final category = Categories.byId(tx.categoryId);
     final theme = Theme.of(context);
     final subtitle = [
-      if (tx.note.isNotEmpty) tx.note else category.title,
-      if (showTime) DateFormat.Hm('ru').format(tx.date),
+      if (tx.note.isNotEmpty) tx.note,
+      if (showTime)
+        DateFormat.Hm('ru').format(tx.date)
+      else
+        DateFormat('d MMM', 'ru').format(tx.date),
     ].join(' · ');
 
     return ListTile(
