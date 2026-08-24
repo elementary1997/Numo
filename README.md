@@ -30,14 +30,21 @@ flutter run -d chrome  # web
 flutter run -d macos   # macOS
 ```
 
-Тесты и статический анализ:
+Тесты и статический анализ (то же, что гоняет CI):
 
 ```bash
-flutter analyze
-flutter test
+make check
 ```
 
 При первом запуске приложение наполняется демо-данными, чтобы графики сразу были наглядными — их можно удалить как обычные операции.
+
+## Документация
+
+- [AGENTS.md](AGENTS.md) — инструкции для AI-агентов (команды, конвенции, gotchas); `CLAUDE.md` — symlink на него
+- [docs/architecture.md](docs/architecture.md) — обзор архитектуры с диаграммой
+- [docs/adr/](docs/adr/INDEX.md) — архитектурные решения (ADR)
+
+Релизы: тег `vX.Y.Z` запускает сборку десктопных версий (Linux/Windows/macOS) в GitHub Actions и публикует артефакты в Releases.
 
 ## Дорожная карта
 
