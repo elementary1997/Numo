@@ -36,6 +36,12 @@ class CategoriesNotifier extends Notifier<List<TxCategory>> {
     ];
     await ref.read(categoriesRepositoryProvider).saveAll(state);
   }
+
+  /// Полная замена данных — используется восстановлением из бэкапа.
+  Future<void> replaceAll(List<TxCategory> categories) async {
+    state = [...categories];
+    await ref.read(categoriesRepositoryProvider).saveAll(state);
+  }
 }
 
 final categoriesProvider =
@@ -67,6 +73,12 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
 
   Future<void> remove(String id) async {
     state = state.where((t) => t.id != id).toList();
+    await ref.read(repositoryProvider).saveAll(state);
+  }
+
+  /// Полная замена данных — используется восстановлением из бэкапа.
+  Future<void> replaceAll(List<Tx> transactions) async {
+    state = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
     await ref.read(repositoryProvider).saveAll(state);
   }
 }

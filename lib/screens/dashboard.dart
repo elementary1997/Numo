@@ -9,6 +9,7 @@ import '../state/providers.dart';
 import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction.dart';
+import 'backup_actions.dart';
 import 'categories.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -42,14 +43,46 @@ class DashboardScreen extends ConsumerWidget {
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               ),
-              IconButton(
-                tooltip: 'Категории',
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const CategoriesScreen()),
-                ),
-                icon: Icon(Icons.sell_outlined,
+              PopupMenuButton<String>(
+                tooltip: 'Меню',
+                icon: Icon(Icons.more_vert_rounded,
                     color: theme.colorScheme.onSurfaceVariant),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                onSelected: (value) => switch (value) {
+                  'categories' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const CategoriesScreen())),
+                  'export' => exportBackup(context, ref),
+                  'import' => importBackup(context, ref),
+                  _ => null,
+                },
+                itemBuilder: (context) => const [
+                  PopupMenuItem(
+                    value: 'categories',
+                    child: ListTile(
+                      leading: Icon(Icons.sell_outlined),
+                      title: Text('Категории'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'export',
+                    child: ListTile(
+                      leading: Icon(Icons.upload_file_rounded),
+                      title: Text('Экспорт данных'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'import',
+                    child: ListTile(
+                      leading: Icon(Icons.download_rounded),
+                      title: Text('Импорт данных'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
