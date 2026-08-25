@@ -10,6 +10,7 @@ import '../data/repository.dart';
 import '../data/backup.dart';
 import '../data/rules_repository.dart';
 import '../data/security_repository.dart';
+import '../data/statement_import.dart' show categorizeByBankCategory;
 import '../data/sync_service.dart';
 import '../data/update_service.dart';
 import '../models/category_rule.dart';
@@ -302,16 +303,24 @@ class RulesNotifier extends Notifier<List<CategoryRule>> {
     await ref.read(rulesRepositoryProvider).saveAll(state);
   }
 
-  /// Применяет правила к существующим операциям (кроме переводов).
+  /// Применяет правила к существующим операциям (кроме переводов);
+  /// операции из «Прочего» дополнительно распределяются по
+  /// банковским рубрикам из описания (импорт выписок).
   /// Возвращает число переклассифицированных операций.
   Future<int> applyToExisting() async {
     final txs = ref.read(transactionsProvider);
     var changed = 0;
     final updated = <Tx>[];
     for (final t in txs) {
-      final matched = !t.isTransfer && t.note.isNotEmpty
-          ? categorizeByRules(t.note, state)
-          : null;
+      String? matched;
+      if (!t.isTransfer && t.note.isNotEmpty) {
+        matched = categorizeByRules(t.note, state);
+        // Банковская рубрика — только фолбэк для неразобранного:
+        // вручную выбранные категории не трогаем.
+        if (matched == null && t.categoryId == Categories.other.id) {
+          matched = categorizeByBankCategory(t.note);
+        }
+      }
       if (matched != null && matched != t.categoryId) {
         changed++;
         updated.add(t.copyWith(categoryId: matched));
