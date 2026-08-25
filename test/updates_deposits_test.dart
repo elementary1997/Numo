@@ -1,11 +1,16 @@
 import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:numo/data/self_updater_io.dart';
 import 'package:numo/data/update_service.dart';
 import 'package:numo/models/account.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('SelfUpdater.macAppPathFor', () {
     test('транслоцированный путь заменяется на /Applications', () {
       expect(
@@ -46,6 +51,67 @@ void main() {
     test('игнорирует build-суффикс', () {
       expect(UpdateService.isNewerVersion('1.0.1', '1.0.0+7'), isTrue);
       expect(UpdateService.isNewerVersion('1.0.0', '1.0.0+7'), isFalse);
+    });
+  });
+
+  group('UpdateService.check', () {
+    // Архивы всех платформ, чтобы тест работал на любом хосте CI.
+    const releaseJson = '{"tag_name": "v9.9.9",'
+        '"html_url": "https://github.com/elementary1997/Numo/releases/tag/v9.9.9",'
+        '"assets": ['
+        '{"name": "numo-macos.zip", "browser_download_url": "https://dl/numo-macos.zip"},'
+        '{"name": "numo-linux-x64.tar.gz", "browser_download_url": "https://dl/numo-linux-x64.tar.gz"},'
+        '{"name": "numo-windows-x64.zip", "browser_download_url": "https://dl/numo-windows-x64.zip"}'
+        ']}';
+
+    setUp(() {
+      PackageInfo.setMockInitialValues(
+        appName: 'Numo',
+        packageName: 'numo',
+        version: '1.0.0',
+        buildNumber: '1',
+        buildSignature: '',
+      );
+    });
+
+    UpdateService serviceCounting(void Function() onHit) =>
+        UpdateService(client: MockClient((_) async {
+          onHit();
+          return http.Response(releaseJson, 200);
+        }));
+
+    test('находит новый релиз вместе со ссылкой на архив платформы',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      final info = await serviceCounting(() {}).check();
+      expect(info!.version, '9.9.9');
+      expect(info.assetUrl, startsWith('https://dl/numo-'));
+    });
+
+    test('в пределах TTL сеть не трогается, архив сохраняется в кэше',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      var hits = 0;
+      final service = serviceCounting(() => hits++);
+      await service.check();
+      final cached = await service.check();
+      expect(hits, 1);
+      expect(cached!.version, '9.9.9');
+      expect(cached.assetUrl, startsWith('https://dl/numo-'));
+    });
+
+    test('просроченный кэш перечитывается из сети', () async {
+      SharedPreferences.setMockInitialValues({
+        'numo.updates.lastCheck': DateTime.now()
+            .subtract(UpdateService.cacheTtl + const Duration(minutes: 1))
+            .toIso8601String(),
+        'numo.updates.latestVersion': '1.0.0',
+        'numo.updates.latestUrl': 'https://old',
+      });
+      var hits = 0;
+      final info = await serviceCounting(() => hits++).check();
+      expect(hits, 1);
+      expect(info!.version, '9.9.9');
     });
   });
 

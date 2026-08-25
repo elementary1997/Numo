@@ -52,7 +52,14 @@ class UpdateService {
   static const _lastCheckKey = 'numo.updates.lastCheck';
   static const _cachedVersionKey = 'numo.updates.latestVersion';
   static const _cachedUrlKey = 'numo.updates.latestUrl';
+  static const _cachedAssetKey = 'numo.updates.latestAsset';
   static const _disabledKey = 'numo.updates.disabled';
+
+  /// Свежесть кэша проверки. Час, а не сутки: суточный кэш скрывал
+  /// свежий релиз до завтра даже после перезапуска приложения.
+  /// Анонимный лимит GitHub API — 60 запросов/час с IP, один GET
+  /// в час незаметен.
+  static const cacheTtl = Duration(hours: 1);
 
   static final _url = Uri.parse(
       'https://api.github.com/repos/elementary1997/Numo/releases/latest');
@@ -116,14 +123,16 @@ class UpdateService {
     final lastCheckRaw = prefs.getString(_lastCheckKey);
     final lastCheck =
         lastCheckRaw == null ? null : DateTime.tryParse(lastCheckRaw);
-    final cacheFresh = lastCheck != null &&
-        DateTime.now().difference(lastCheck) < const Duration(hours: 24);
+    final cacheFresh =
+        lastCheck != null && DateTime.now().difference(lastCheck) < cacheTtl;
 
     String? latestVersion;
     String? latestUrl;
+    String? latestAsset;
     if (!force && cacheFresh) {
       latestVersion = prefs.getString(_cachedVersionKey);
       latestUrl = prefs.getString(_cachedUrlKey);
+      latestAsset = prefs.getString(_cachedAssetKey);
     } else {
       try {
         final response = await _client.get(_url, headers: {
@@ -134,9 +143,17 @@ class UpdateService {
         latestVersion =
             (json['tag_name'] as String?)?.replaceFirst('v', '');
         latestUrl = json['html_url'] as String?;
+        latestAsset = _assetUrlFrom(json);
         if (latestVersion != null && latestUrl != null) {
           await prefs.setString(_cachedVersionKey, latestVersion);
           await prefs.setString(_cachedUrlKey, latestUrl);
+          // Без ссылки на архив кнопка «Обновить» открывала бы
+          // страницу релиза вместо самообновления.
+          if (latestAsset == null) {
+            await prefs.remove(_cachedAssetKey);
+          } else {
+            await prefs.setString(_cachedAssetKey, latestAsset);
+          }
           await prefs.setString(
               _lastCheckKey, DateTime.now().toIso8601String());
         }
@@ -148,7 +165,8 @@ class UpdateService {
     if (latestVersion == null || latestUrl == null) return null;
     final current = await currentVersion();
     if (!isNewerVersion(latestVersion, current)) return null;
-    return UpdateInfo(version: latestVersion, url: latestUrl);
+    return UpdateInfo(
+        version: latestVersion, url: latestUrl, assetUrl: latestAsset);
   }
 
   /// Ссылка на архив текущей платформы из JSON релиза.

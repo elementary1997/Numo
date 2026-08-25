@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +28,13 @@ class SyncRoot extends ConsumerStatefulWidget {
 }
 
 class _SyncRootState extends ConsumerState<SyncRoot> {
+  Timer? _updateRecheck;
+  AppLifecycleListener? _lifecycle;
+
+  /// Версия, о которой уже показано уведомление, — чтобы
+  /// перепроверки не спамили одним и тем же снекбаром.
+  String? _notifiedUpdateVersion;
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +43,23 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
       await _checkForNewer();
       await _checkStatements();
     });
+    // Desktop-приложение живёт открытым днями — одной проверки при
+    // старте мало, чтобы узнать о вышедшем релизе. Перепроверяем
+    // раз в час и при возврате фокуса окна (сетевой запрос при этом
+    // ограничен часовым кэшем UpdateService).
+    if (!kIsWeb) {
+      _updateRecheck = Timer.periodic(const Duration(hours: 1),
+          (_) => ref.invalidate(updateCheckProvider));
+      _lifecycle = AppLifecycleListener(
+          onResume: () => ref.invalidate(updateCheckProvider));
+    }
+  }
+
+  @override
+  void dispose() {
+    _updateRecheck?.cancel();
+    _lifecycle?.dispose();
+    super.dispose();
   }
 
   /// Новые файлы в папке выписок: предлагаем импорт первого из них.
@@ -155,11 +181,13 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     ref.listen(recurringProvider, (_, __) => schedule());
     ref.listen(goalsProvider, (_, __) => schedule());
 
-    // Ненавязчивое уведомление о вышедшей версии (раз при старте).
+    // Ненавязчивое уведомление о вышедшей версии — один раз на
+    // версию за сессию (перепроверки идут раз в час и по фокусу).
     if (!kIsWeb) {
       ref.listen(updateCheckProvider, (previous, next) {
         final info = next.valueOrNull;
-        if (info == null) return;
+        if (info == null || info.version == _notifiedUpdateVersion) return;
+        _notifiedUpdateVersion = info.version;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           duration: const Duration(seconds: 10),
           content: Text(context.l10n.updateAvailable(info.version)),
