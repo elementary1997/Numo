@@ -77,21 +77,32 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
   @override
   List<Tx> build() => ref.read(repositoryProvider).loadAll();
 
-  Future<void> add(Tx tx) async {
-    state = [tx, ...state]..sort((a, b) => b.date.compareTo(a.date));
-    await ref.read(repositoryProvider).saveAll(state);
+  Future<void> add(Tx tx) => addAll([tx]);
+
+  /// Пакетное добавление/обновление по id (одиночные операции,
+  /// переводы, импорт выписок) — точечная запись без перезаписи
+  /// всей таблицы.
+  Future<void> addAll(List<Tx> txs) async {
+    if (txs.isEmpty) return;
+    final ids = {for (final t in txs) t.id};
+    state = [
+      ...txs,
+      ...state.where((t) => !ids.contains(t.id)),
+    ]..sort((a, b) => b.date.compareTo(a.date));
+    await ref.read(repositoryProvider).upsertAll(txs);
   }
 
   Future<void> update(Tx tx) async {
+    if (!state.any((t) => t.id == tx.id)) return;
     state = [
       for (final t in state) t.id == tx.id ? tx : t,
     ]..sort((a, b) => b.date.compareTo(a.date));
-    await ref.read(repositoryProvider).saveAll(state);
+    await ref.read(repositoryProvider).upsert(tx);
   }
 
   Future<void> remove(String id) async {
     state = state.where((t) => t.id != id).toList();
-    await ref.read(repositoryProvider).saveAll(state);
+    await ref.read(repositoryProvider).removeById(id);
   }
 
   /// Полная замена данных — используется восстановлением из бэкапа.
@@ -112,24 +123,26 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
     final ts = DateTime.now().microsecondsSinceEpoch;
     final when = date ?? DateTime.now();
     final note = '${from.title} → ${to.title}';
-    await add(Tx(
-      id: 'trf-$ts-out',
-      type: TxType.expense,
-      amount: amountFrom,
-      categoryId: Categories.transfer.id,
-      date: when,
-      accountId: from.id,
-      note: note,
-    ));
-    await add(Tx(
-      id: 'trf-$ts-in',
-      type: TxType.income,
-      amount: amountTo,
-      categoryId: Categories.transfer.id,
-      date: when,
-      accountId: to.id,
-      note: note,
-    ));
+    await addAll([
+      Tx(
+        id: 'trf-$ts-out',
+        type: TxType.expense,
+        amount: amountFrom,
+        categoryId: Categories.transfer.id,
+        date: when,
+        accountId: from.id,
+        note: note,
+      ),
+      Tx(
+        id: 'trf-$ts-in',
+        type: TxType.income,
+        amount: amountTo,
+        categoryId: Categories.transfer.id,
+        date: when,
+        accountId: to.id,
+        note: note,
+      ),
+    ]);
   }
 }
 

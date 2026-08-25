@@ -51,6 +51,10 @@ class TransactionsRepository {
 
   List<Tx> loadAll() => List.unmodifiable(_cache);
 
+  /// Полная замена набора — только для восстановления из бэкапа,
+  /// синхронизации и массовой переклассификации. Для обычных
+  /// добавлений/правок использовать [upsert]/[removeById]: они не
+  /// переписывают всю таблицу.
   Future<void> saveAll(List<Tx> transactions) async {
     _cache = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
     await _db.transaction(() async {
@@ -59,6 +63,30 @@ class TransactionsRepository {
         batch.insertAll(_db.transactionRows, _cache.map(_toRow));
       });
     });
+  }
+
+  /// Точечная вставка/обновление: одна батч-запись затронутых строк
+  /// вместо перезаписи всей таблицы.
+  Future<void> upsertAll(List<Tx> transactions) async {
+    if (transactions.isEmpty) return;
+    final ids = {for (final t in transactions) t.id};
+    _cache = [
+      ...transactions,
+      ..._cache.where((t) => !ids.contains(t.id)),
+    ]..sort((a, b) => b.date.compareTo(a.date));
+    await _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+          _db.transactionRows, transactions.map(_toRow));
+    });
+  }
+
+  Future<void> upsert(Tx tx) => upsertAll([tx]);
+
+  /// Точечное удаление одной операции.
+  Future<void> removeById(String id) async {
+    _cache = _cache.where((t) => t.id != id).toList();
+    await (_db.delete(_db.transactionRows)..where((t) => t.id.equals(id)))
+        .go();
   }
 
   static Tx _fromRow(TransactionRow row) => Tx(

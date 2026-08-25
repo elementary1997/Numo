@@ -118,11 +118,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     final toImport =
         parsed.where((r) => r.importable).map((r) => r.tx!).toList();
     if (toImport.isEmpty) return;
-    final notifier = ref.read(transactionsProvider.notifier);
-    await notifier.replaceAll([
-      ...ref.read(transactionsProvider),
-      ...toImport,
-    ]);
+    await ref.read(transactionsProvider.notifier).addAll(toImport);
     if (!mounted) return;
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context)
