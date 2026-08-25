@@ -40,11 +40,26 @@ const bankCategoryMap = <String, String>{
   'маркетплейсы': 'shopping',
   'зачисление зарплаты': 'salary',
   'зарплата': 'salary',
+  // Переводы людям — видимая категория расходов 'transfers',
+  // а не системная 'transfer' (та — для переводов между счетами Numo).
+  'переводы': 'transfers',
+  'перевод на карту': 'transfers',
+  'перевод с карты': 'transfers',
+  'перевод по сбп': 'transfers',
+  'исходящий перевод': 'transfers',
+  'пополнение': 'topups',
+  'пополнения': 'topups',
+  'входящий перевод': 'topups',
+  'зачисление': 'topups',
+  'внесение наличных': 'topups',
+  'вклады': 'deposits',
+  'вклады и счета': 'deposits',
+  'открытие вклада': 'deposits',
+  'капитализация': 'deposits',
 };
 
 /// Категория по банковской рубрике из описания операции;
-/// null — рубрика неизвестна (например, «Переводы» намеренно
-/// не мапится: половинка перевода — не системная операция Numo).
+/// null — рубрика неизвестна.
 String? categorizeByBankCategory(String note) {
   final head = note.split('·').first.trim().toLowerCase();
   if (head.isEmpty) return null;

@@ -150,10 +150,16 @@ void main() {
           'health');
       // Рубрика без продавца — тоже распознаётся.
       expect(categorizeByBankCategory('Фастфуд'), 'cafe');
+      // Переводы, пополнения и вклады — видимые категории.
+      expect(categorizeByBankCategory('Перевод на карту · ИВАН И.'),
+          'transfers');
+      expect(categorizeByBankCategory('Входящий перевод · МАРИЯ П.'),
+          'topups');
+      expect(categorizeByBankCategory('Вклады и счета · СберВклад'),
+          'deposits');
     });
 
-    test('неизвестная рубрика и переводы не мапятся', () {
-      expect(categorizeByBankCategory('Перевод на карту · ИВАН И.'), isNull);
+    test('неизвестная рубрика не мапится', () {
       expect(categorizeByBankCategory('SOMETHING ELSE'), isNull);
       expect(categorizeByBankCategory(''), isNull);
     });

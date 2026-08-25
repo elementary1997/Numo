@@ -25,10 +25,12 @@ class CategoriesRepository {
     final rows = await db.select(db.categoryRows).get();
     if (rows.isNotEmpty) {
       final repo = CategoriesRepository._(db, rows.map(_fromRow).toList());
-      // Системные категории появлялись позже — дозаводим их
-      // пользователям, сидированным до их появления.
+      // Встроенные категории пополняются со временем («Переводы»,
+      // «Пополнения», «Вклады», системные) — дозаводим недостающие
+      // пользователям, сидированным раньше. Удалить категорию нельзя,
+      // поэтому отсутствие id означает «появилась после установки».
       final missing = [
-        for (final c in [Categories.transfer, Categories.adjustment])
+        for (final c in Categories.defaultsFor(seedLocale))
           if (!repo._cache.any((existing) => existing.id == c.id)) c,
       ];
       if (missing.isNotEmpty) {
