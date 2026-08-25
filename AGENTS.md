@@ -8,9 +8,9 @@ Numo — кроссплатформенное приложение контро�
 
 ## Dev environment
 
-- Flutter stable (Dart SDK ≥ 3.9). На этой машине (WSL2) SDK лежит в `~/tools/flutter/bin` и добавлен в PATH через `~/.bashrc`.
+- Flutter stable (Dart SDK ≥ 3.9). Конвенция на всех dev-машинах: SDK лежит в `~/tools/flutter/bin`; если его нет в PATH, добавлять явно (`export PATH="$HOME/tools/flutter/bin:$PATH"`). Разработка ведётся и на macOS, и на Linux/WSL2 — проект от машины не зависит.
 - Никаких переменных окружения и секретов проект не требует.
-- Быстрая проверка руками: `flutter run -d web-server --web-port 8377` и открыть `http://localhost:8377`; в WSL2 работает и `flutter run -d linux` (окно через WSLg).
+- Быстрая проверка руками: `flutter run -d web-server --web-port 8377` и открыть `http://localhost:8377`; на desktop работает `flutter run -d macos` / `-d linux` (в WSL2 — окно через WSLg).
 
 ## Build & test
 
@@ -29,13 +29,14 @@ YOU MUST: прогнать `make check` перед каждым коммитом
 
 Подробнее — `docs/architecture.md`. Кратко, поток данных в один конец:
 
-Репозитории (`TransactionsRepository`, `CategoriesRepository` поверх drift/SQLite, write-through кэш) → Riverpod-провайдеры (`state/providers.dart`: операции, категории + производные `monthStatsProvider`, `balanceProvider`) → экраны (`screens/`) → переиспользуемые виджеты (`widgets/`).
+Репозитории (`lib/data/*_repository.dart` поверх drift/SQLite, write-through кэш) → Riverpod-провайдеры (`state/providers.dart`: операции, категории, счета, бюджеты, цели, правила, регулярные + производные `monthStatsProvider`, `balanceProvider`, `netWorthProvider`) → экраны (`screens/`) → переиспользуемые виджеты (`widgets/`).
 
-- `lib/models/` — доменные типы (`Tx`, `TxCategory`). Сумма `Tx.amount` всегда положительная, знак определяет `TxType`; в баланс идёт `signedAmount`.
-- `lib/data/database.dart` — схема drift (`NumoDatabase`); после её изменения запускать `dart run build_runner build --delete-conflicting-outputs` и поднимать `schemaVersion` с миграцией.
-- `lib/data/repository.dart`, `lib/data/categories_repository.dart` — ЕДИНСТВЕННЫЕ точки чтения/записи хранилища.
+- `lib/models/` — доменные типы (`Tx`, `TxCategory`, `Account`, `Goal`, `RecurringRule`, `CategoryRule`). Сумма `Tx.amount` всегда положительная, знак определяет `TxType`; в баланс идёт `signedAmount`; переводы и корректировки (`isSystem`) исключаются из статистики доходов/расходов.
+- `lib/data/database.dart` — схема drift (`NumoDatabase`, 7 таблиц); после её изменения запускать `dart run build_runner build --delete-conflicting-outputs` и поднимать `schemaVersion` с миграцией.
+- Репозитории в `lib/data/` — ЕДИНСТВЕННЫЕ точки чтения/записи хранилища: `repository.dart` (операции), `categories_repository.dart`, `accounts_repository.dart`, `budgets_repository.dart`, `goals_repository.dart`, `recurring_repository.dart`, `rules_repository.dart`, `security_repository.dart`.
+- Сервисы в `lib/data/`: `sync_service.dart` (LWW-синхронизация через облачную папку), `ai_service.dart` (LLM-разбор по явному действию), `rates_repository.dart` (курсы ЦБ), `update_service.dart` + `self_updater*.dart` (автообновление), `statement_import.dart`/`statement_parsers.dart`/`pdf_text.dart` (импорт банковских выписок CSV/OFX/XLSX/PDF), `backup.dart`, `csv.dart`.
 - `lib/widgets/charts.dart` — все графики рисуются собственными `CustomPainter`.
-- `lib/core/` — тема (`NumoColors`, `NumoTheme`) и форматирование денег.
+- `lib/core/` — тема (`NumoColors`, `NumoTheme`), форматирование денег, layout и UI-масштаб.
 
 ## Conventions
 
@@ -56,7 +57,7 @@ YOU MUST: прогнать `make check` перед каждым коммитом
 ## Security
 
 - Секретов в репо нет и быть не должно. Данные пользователя живут локально (drift/SQLite).
-- Единственный разрешённый сетевой вызов — дневные курсы ЦБ РФ с суточным кэшем (ADR-0007, `lib/data/rates_repository.dart`). НЕ добавлять другие сетевые вызовы и аналитику без явного решения в ADR.
+- Разрешённые сетевые вызовы (каждый закреплён ADR): дневные курсы ЦБ РФ с суточным кэшем (ADR-0007, `rates_repository.dart`); проверка обновлений и скачивание сборок с GitHub Releases (ADR-0010, `update_service.dart`, `self_updater_io.dart`); запросы к LLM-провайдеру с ключом пользователя, только по явному действию и только с агрегированной сводкой — заметки операций устройство не покидают (ADR-0011, `ai_service.dart`); плюс google_fonts докачивает шрифт в рантайме. НЕ добавлять другие сетевые вызовы и аналитику без явного решения в ADR.
 
 ## Gotchas
 
