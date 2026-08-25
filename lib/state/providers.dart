@@ -294,20 +294,18 @@ class RulesNotifier extends Notifier<List<CategoryRule>> {
   Future<int> applyToExisting() async {
     final txs = ref.read(transactionsProvider);
     var changed = 0;
-    final updated = [
-      for (final t in txs)
-        if (!t.isTransfer &&
-            t.note.isNotEmpty &&
-            categorizeByRules(t.note, state) != null &&
-            categorizeByRules(t.note, state) != t.categoryId)
-          () {
-            changed++;
-            return t.copyWith(
-                categoryId: categorizeByRules(t.note, state));
-          }()
-        else
-          t,
-    ];
+    final updated = <Tx>[];
+    for (final t in txs) {
+      final matched = !t.isTransfer && t.note.isNotEmpty
+          ? categorizeByRules(t.note, state)
+          : null;
+      if (matched != null && matched != t.categoryId) {
+        changed++;
+        updated.add(t.copyWith(categoryId: matched));
+      } else {
+        updated.add(t);
+      }
+    }
     if (changed > 0) {
       await ref.read(transactionsProvider.notifier).replaceAll(updated);
     }

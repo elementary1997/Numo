@@ -192,21 +192,15 @@ class AiService {
       if (!isAnthropic && key != null && key.isNotEmpty)
         'authorization': 'Bearer $key',
     };
-    final body = isAnthropic
-        ? {
-            'model': await model,
-            'max_tokens': 1200,
-            'messages': [
-              {'role': 'user', 'content': prompt + jsonEncode(summary)}
-            ],
-          }
-        : {
-            'model': await model,
-            'max_tokens': 1200,
-            'messages': [
-              {'role': 'user', 'content': prompt + jsonEncode(summary)}
-            ],
-          };
+    // Тело совпадает для Messages API и chat/completions:
+    // model + max_tokens + messages читаются одинаково.
+    final body = {
+      'model': await model,
+      'max_tokens': 1200,
+      'messages': [
+        {'role': 'user', 'content': prompt + jsonEncode(summary)}
+      ],
+    };
     final response = await _client
         .post(
           Uri.parse(await endpoint),
