@@ -722,6 +722,18 @@ abstract class AppLocalizations {
   /// **'Импортировано операций: {count}'**
   String importedToast(int count);
 
+  /// No description provided for @importedFilesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уже импортированные файлы'**
+  String get importedFilesTitle;
+
+  /// No description provided for @showMoreCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать ещё ({count})'**
+  String showMoreCount(int count);
+
   /// No description provided for @columnN.
   ///
   /// In ru, this message translates to:

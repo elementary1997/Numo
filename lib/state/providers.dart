@@ -4,6 +4,7 @@ import '../data/accounts_repository.dart';
 import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
 import '../data/goals_repository.dart';
+import '../data/imports_repository.dart';
 import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
@@ -275,6 +276,33 @@ final accountBalanceProvider = Provider.family<double, String>(
         .watch(transactionsProvider)
         .where((t) => t.accountId == accountId)
         .fold(0.0, (sum, t) => sum + t.signedAmount));
+
+final importsRepositoryProvider = Provider<ImportsRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class ImportsNotifier extends Notifier<List<ImportRecord>> {
+  @override
+  List<ImportRecord> build() => ref.read(importsRepositoryProvider).loadAll();
+
+  /// Записывает успешный импорт в журнал.
+  Future<void> record({
+    required String fileName,
+    required int opsCount,
+  }) async {
+    final repo = ref.read(importsRepositoryProvider);
+    await repo.add(ImportRecord(
+      id: 'impfile-${DateTime.now().microsecondsSinceEpoch}',
+      fileName: fileName,
+      importedAt: DateTime.now(),
+      opsCount: opsCount,
+    ));
+    state = repo.loadAll();
+  }
+}
+
+final importsProvider =
+    NotifierProvider<ImportsNotifier, List<ImportRecord>>(ImportsNotifier.new);
 
 final rulesRepositoryProvider = Provider<RulesRepository>(
   (ref) => throw UnimplementedError('overridden in main()'),

@@ -114,6 +114,8 @@
   "moreRows": "… and {count} more rows",
   "importButton": "Import {count} transactions",
   "importedToast": "Transactions imported: {count}",
+  "importedFilesTitle": "Imported files",
+  "showMoreCount": "Show more ({count})",
   "columnN": "Column {n}",
   "noneOption": "— none —",
   "skippedRow": "skipped",

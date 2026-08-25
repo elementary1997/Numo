@@ -107,6 +107,17 @@ class CategoryRuleRows extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Журнал импортов выписок: какой файл, когда и сколько операций.
+class ImportRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get fileName => text()();
+  DateTimeColumn get importedAt => dateTime()();
+  IntColumn get opsCount => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   TransactionRows,
   CategoryRows,
@@ -115,6 +126,7 @@ class CategoryRuleRows extends Table {
   AccountRows,
   CategoryRuleRows,
   GoalRows,
+  ImportRows,
 ])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
@@ -122,7 +134,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -151,6 +163,9 @@ class NumoDatabase extends _$NumoDatabase {
           }
           if (from < 8) {
             await m.addColumn(goalRows, goalRows.accountId);
+          }
+          if (from < 9) {
+            await m.createTable(importRows);
           }
         },
       );

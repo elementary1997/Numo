@@ -2987,6 +2987,318 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
   }
 }
 
+class $ImportRowsTable extends ImportRows
+    with TableInfo<$ImportRowsTable, ImportRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ImportRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileNameMeta = const VerificationMeta(
+    'fileName',
+  );
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+    'file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _importedAtMeta = const VerificationMeta(
+    'importedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> importedAt = GeneratedColumn<DateTime>(
+    'imported_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _opsCountMeta = const VerificationMeta(
+    'opsCount',
+  );
+  @override
+  late final GeneratedColumn<int> opsCount = GeneratedColumn<int>(
+    'ops_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, fileName, importedAt, opsCount];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'import_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ImportRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(
+        _fileNameMeta,
+        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    if (data.containsKey('imported_at')) {
+      context.handle(
+        _importedAtMeta,
+        importedAt.isAcceptableOrUnknown(data['imported_at']!, _importedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_importedAtMeta);
+    }
+    if (data.containsKey('ops_count')) {
+      context.handle(
+        _opsCountMeta,
+        opsCount.isAcceptableOrUnknown(data['ops_count']!, _opsCountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_opsCountMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ImportRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ImportRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      fileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_name'],
+      )!,
+      importedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}imported_at'],
+      )!,
+      opsCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ops_count'],
+      )!,
+    );
+  }
+
+  @override
+  $ImportRowsTable createAlias(String alias) {
+    return $ImportRowsTable(attachedDatabase, alias);
+  }
+}
+
+class ImportRow extends DataClass implements Insertable<ImportRow> {
+  final String id;
+  final String fileName;
+  final DateTime importedAt;
+  final int opsCount;
+  const ImportRow({
+    required this.id,
+    required this.fileName,
+    required this.importedAt,
+    required this.opsCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['file_name'] = Variable<String>(fileName);
+    map['imported_at'] = Variable<DateTime>(importedAt);
+    map['ops_count'] = Variable<int>(opsCount);
+    return map;
+  }
+
+  ImportRowsCompanion toCompanion(bool nullToAbsent) {
+    return ImportRowsCompanion(
+      id: Value(id),
+      fileName: Value(fileName),
+      importedAt: Value(importedAt),
+      opsCount: Value(opsCount),
+    );
+  }
+
+  factory ImportRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ImportRow(
+      id: serializer.fromJson<String>(json['id']),
+      fileName: serializer.fromJson<String>(json['fileName']),
+      importedAt: serializer.fromJson<DateTime>(json['importedAt']),
+      opsCount: serializer.fromJson<int>(json['opsCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'fileName': serializer.toJson<String>(fileName),
+      'importedAt': serializer.toJson<DateTime>(importedAt),
+      'opsCount': serializer.toJson<int>(opsCount),
+    };
+  }
+
+  ImportRow copyWith({
+    String? id,
+    String? fileName,
+    DateTime? importedAt,
+    int? opsCount,
+  }) => ImportRow(
+    id: id ?? this.id,
+    fileName: fileName ?? this.fileName,
+    importedAt: importedAt ?? this.importedAt,
+    opsCount: opsCount ?? this.opsCount,
+  );
+  ImportRow copyWithCompanion(ImportRowsCompanion data) {
+    return ImportRow(
+      id: data.id.present ? data.id.value : this.id,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      importedAt: data.importedAt.present
+          ? data.importedAt.value
+          : this.importedAt,
+      opsCount: data.opsCount.present ? data.opsCount.value : this.opsCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportRow(')
+          ..write('id: $id, ')
+          ..write('fileName: $fileName, ')
+          ..write('importedAt: $importedAt, ')
+          ..write('opsCount: $opsCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, fileName, importedAt, opsCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ImportRow &&
+          other.id == this.id &&
+          other.fileName == this.fileName &&
+          other.importedAt == this.importedAt &&
+          other.opsCount == this.opsCount);
+}
+
+class ImportRowsCompanion extends UpdateCompanion<ImportRow> {
+  final Value<String> id;
+  final Value<String> fileName;
+  final Value<DateTime> importedAt;
+  final Value<int> opsCount;
+  final Value<int> rowid;
+  const ImportRowsCompanion({
+    this.id = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.importedAt = const Value.absent(),
+    this.opsCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ImportRowsCompanion.insert({
+    required String id,
+    required String fileName,
+    required DateTime importedAt,
+    required int opsCount,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       fileName = Value(fileName),
+       importedAt = Value(importedAt),
+       opsCount = Value(opsCount);
+  static Insertable<ImportRow> custom({
+    Expression<String>? id,
+    Expression<String>? fileName,
+    Expression<DateTime>? importedAt,
+    Expression<int>? opsCount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (fileName != null) 'file_name': fileName,
+      if (importedAt != null) 'imported_at': importedAt,
+      if (opsCount != null) 'ops_count': opsCount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ImportRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? fileName,
+    Value<DateTime>? importedAt,
+    Value<int>? opsCount,
+    Value<int>? rowid,
+  }) {
+    return ImportRowsCompanion(
+      id: id ?? this.id,
+      fileName: fileName ?? this.fileName,
+      importedAt: importedAt ?? this.importedAt,
+      opsCount: opsCount ?? this.opsCount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (importedAt.present) {
+      map['imported_at'] = Variable<DateTime>(importedAt.value);
+    }
+    if (opsCount.present) {
+      map['ops_count'] = Variable<int>(opsCount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ImportRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('fileName: $fileName, ')
+          ..write('importedAt: $importedAt, ')
+          ..write('opsCount: $opsCount, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -3001,6 +3313,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     this,
   );
   late final $GoalRowsTable goalRows = $GoalRowsTable(this);
+  late final $ImportRowsTable importRows = $ImportRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3013,6 +3326,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     accountRows,
     categoryRuleRows,
     goalRows,
+    importRows,
   ];
 }
 
@@ -4608,6 +4922,186 @@ typedef $$GoalRowsTableProcessedTableManager =
       GoalRow,
       PrefetchHooks Function()
     >;
+typedef $$ImportRowsTableCreateCompanionBuilder =
+    ImportRowsCompanion Function({
+      required String id,
+      required String fileName,
+      required DateTime importedAt,
+      required int opsCount,
+      Value<int> rowid,
+    });
+typedef $$ImportRowsTableUpdateCompanionBuilder =
+    ImportRowsCompanion Function({
+      Value<String> id,
+      Value<String> fileName,
+      Value<DateTime> importedAt,
+      Value<int> opsCount,
+      Value<int> rowid,
+    });
+
+class $$ImportRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $ImportRowsTable> {
+  $$ImportRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get importedAt => $composableBuilder(
+    column: $table.importedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get opsCount => $composableBuilder(
+    column: $table.opsCount,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ImportRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $ImportRowsTable> {
+  $$ImportRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get importedAt => $composableBuilder(
+    column: $table.importedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get opsCount => $composableBuilder(
+    column: $table.opsCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ImportRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $ImportRowsTable> {
+  $$ImportRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get importedAt => $composableBuilder(
+    column: $table.importedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get opsCount =>
+      $composableBuilder(column: $table.opsCount, builder: (column) => column);
+}
+
+class $$ImportRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $ImportRowsTable,
+          ImportRow,
+          $$ImportRowsTableFilterComposer,
+          $$ImportRowsTableOrderingComposer,
+          $$ImportRowsTableAnnotationComposer,
+          $$ImportRowsTableCreateCompanionBuilder,
+          $$ImportRowsTableUpdateCompanionBuilder,
+          (
+            ImportRow,
+            BaseReferences<_$NumoDatabase, $ImportRowsTable, ImportRow>,
+          ),
+          ImportRow,
+          PrefetchHooks Function()
+        > {
+  $$ImportRowsTableTableManager(_$NumoDatabase db, $ImportRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ImportRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ImportRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ImportRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> fileName = const Value.absent(),
+                Value<DateTime> importedAt = const Value.absent(),
+                Value<int> opsCount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ImportRowsCompanion(
+                id: id,
+                fileName: fileName,
+                importedAt: importedAt,
+                opsCount: opsCount,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String fileName,
+                required DateTime importedAt,
+                required int opsCount,
+                Value<int> rowid = const Value.absent(),
+              }) => ImportRowsCompanion.insert(
+                id: id,
+                fileName: fileName,
+                importedAt: importedAt,
+                opsCount: opsCount,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ImportRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $ImportRowsTable,
+      ImportRow,
+      $$ImportRowsTableFilterComposer,
+      $$ImportRowsTableOrderingComposer,
+      $$ImportRowsTableAnnotationComposer,
+      $$ImportRowsTableCreateCompanionBuilder,
+      $$ImportRowsTableUpdateCompanionBuilder,
+      (ImportRow, BaseReferences<_$NumoDatabase, $ImportRowsTable, ImportRow>),
+      ImportRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -4626,4 +5120,6 @@ class $NumoDatabaseManager {
       $$CategoryRuleRowsTableTableManager(_db, _db.categoryRuleRows);
   $$GoalRowsTableTableManager get goalRows =>
       $$GoalRowsTableTableManager(_db, _db.goalRows);
+  $$ImportRowsTableTableManager get importRows =>
+      $$ImportRowsTableTableManager(_db, _db.importRows);
 }
