@@ -18,6 +18,23 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.7.0',
+    itemsRu: [
+      'Импорт выписок распределяет операции по категориям банка — «Прочее» больше не растёт',
+      'Кнопка «Применить к существующим» в правилах раскладывает уже импортированное по категориям',
+      'Уведомление о новой версии приходит надёжно: проверка раз в час и при возврате к окну',
+      'macOS: окно сразу открывается с боковой панелью и запоминает размер',
+      'API-ключ AI-разбора переехал в системное хранилище секретов',
+    ],
+    itemsEn: [
+      'Statement import assigns categories from bank rubrics — no more everything in Other',
+      '“Apply to existing” in rules reclassifies already imported operations',
+      'New-version notifications are reliable: re-check hourly and on window focus',
+      'macOS: the window opens with the sidebar right away and remembers its size',
+      'The AI review API key moved into the system secret storage',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.6.1',
     itemsRu: [
       'Масштаб интерфейса исправлен: контент больше не обрезается, боковая панель на месте при любом масштабе',
