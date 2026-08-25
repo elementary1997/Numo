@@ -120,7 +120,21 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     if (toImport.isEmpty) return;
     await ref.read(transactionsProvider.notifier).addAll(toImport);
     if (!mounted) return;
-    Navigator.of(context).pop();
+    // Экран живёт двумя жизнями: пушится из уведомления о найденной
+    // выписке или встроен в боковую панель. Во втором случае pop()
+    // снимал корневой маршрут — оставался чёрный экран.
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      setState(() {
+        _rows = null;
+        _dateColumn = null;
+        _amountColumn = null;
+        _noteColumn = null;
+        _unsignedIsExpense = false;
+      });
+    }
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
