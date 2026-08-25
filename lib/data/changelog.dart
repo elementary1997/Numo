@@ -18,6 +18,19 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.8.0',
+    itemsRu: [
+      'Новые категории: «Переводы», «Вклады» и «Пополнения» — переводы и пополнения из выписок больше не падают в «Прочее»',
+      'Журнал импортов: список уже загруженных файлов прямо на экране импорта',
+      'Исправлен чёрный экран после импорта из бокового меню',
+    ],
+    itemsEn: [
+      'New categories: Transfers, Deposits and Top-ups — statement transfers no longer land in Other',
+      'Import journal: previously imported files listed right on the import screen',
+      'Fixed the black screen after importing from the sidebar section',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.7.0',
     itemsRu: [
       'Импорт выписок распределяет операции по категориям банка — «Прочее» больше не растёт',
