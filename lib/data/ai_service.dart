@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
+import 'secret_store.dart';
 
 /// Провайдер LLM-разбора. Anthropic говорит на Messages API,
 /// остальные — OpenAI-совместимый chat/completions (Cloud.ru,
@@ -44,7 +45,9 @@ enum AiProvider { anthropic, cloudru, lmstudio, custom }
 /// месяцам, балансы и бюджеты; заметки операций не покидают
 /// устройство. Запрос выполняется исключительно по явному действию.
 class AiService {
-  AiService({http.Client? client}) : _client = client ?? http.Client();
+  AiService({http.Client? client, SecretStore? secrets})
+      : _client = client ?? http.Client(),
+        _secrets = secrets ?? SecretStore();
 
   static const _providerPref = 'numo.ai.provider';
   static const _endpointPref = 'numo.ai.endpoint';
@@ -53,6 +56,10 @@ class AiService {
 
   final http.Client _client;
 
+  /// Ключ — секрет: живёт в системном хранилище (ADR-0013),
+  /// а не в plaintext-prefs, как endpoint и модель.
+  final SecretStore _secrets;
+
   Future<AiProvider> get provider async {
     final raw =
         (await SharedPreferences.getInstance()).getString(_providerPref);
@@ -60,8 +67,7 @@ class AiService {
         .firstWhere((p) => p.name == raw, orElse: () => AiProvider.anthropic);
   }
 
-  Future<String?> get apiKey async =>
-      (await SharedPreferences.getInstance()).getString(_keyPref);
+  Future<String?> get apiKey => _secrets.read(_keyPref);
 
   Future<String> get endpoint async {
     final prefs = await SharedPreferences.getInstance();
@@ -96,8 +102,12 @@ class AiService {
     Future<void> setOrRemove(String pref, String value) async =>
         value.isEmpty ? await prefs.remove(pref) : await prefs.setString(pref, value);
     await setOrRemove(_endpointPref, endpoint);
-    await setOrRemove(_keyPref, key);
     await setOrRemove(_modelPref, model);
+    if (key.isEmpty) {
+      await _secrets.delete(_keyPref);
+    } else {
+      await _secrets.write(_keyPref, key);
+    }
   }
 
   /// Агрегированная сводка для модели: последние [months] месяцев.
