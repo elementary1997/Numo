@@ -1753,6 +1753,204 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Заметка'**
   String get csvHeaderNote;
+
+  /// No description provided for @statsConvertedByCbr.
+  ///
+  /// In ru, this message translates to:
+  /// **'Валютные операции пересчитаны в рубли по курсу ЦБ'**
+  String get statsConvertedByCbr;
+
+  /// No description provided for @statsNoRateFor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет курса для {currencies} — эти суммы посчитаны как рубли'**
+  String statsNoRateFor(String currencies);
+
+  /// No description provided for @backupNotJson.
+  ///
+  /// In ru, this message translates to:
+  /// **'Файл не является корректным JSON'**
+  String get backupNotJson;
+
+  /// No description provided for @backupNotNumo.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это не файл бэкапа Numo'**
+  String get backupNotNumo;
+
+  /// No description provided for @backupTooNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бэкап создан более новой версией приложения (v{version})'**
+  String backupTooNew(int version);
+
+  /// No description provided for @backupCorrupted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Файл бэкапа повреждён'**
+  String get backupCorrupted;
+
+  /// No description provided for @menuShared.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общий счёт'**
+  String get menuShared;
+
+  /// No description provided for @sharedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общий счёт'**
+  String get sharedTitle;
+
+  /// No description provided for @sharedIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общие счета и операции по ним обмениваются через папку в вашем облаке: каждый участник пишет свой файл, данные сливаются по времени изменения.'**
+  String get sharedIntro;
+
+  /// No description provided for @sharedFolderLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Папка обмена'**
+  String get sharedFolderLabel;
+
+  /// No description provided for @sharedNoFolder.
+  ///
+  /// In ru, this message translates to:
+  /// **'Папка не выбрана'**
+  String get sharedNoFolder;
+
+  /// No description provided for @sharedChooseFolder.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбрать папку'**
+  String get sharedChooseFolder;
+
+  /// No description provided for @sharedForgetFolder.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отключить'**
+  String get sharedForgetFolder;
+
+  /// No description provided for @sharedFolderHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Дайте второму участнику доступ к этой же папке в облаке и попросите указать её в своём Numo'**
+  String get sharedFolderHint;
+
+  /// No description provided for @sharedMyName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Моё имя'**
+  String get sharedMyName;
+
+  /// No description provided for @sharedMembers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Участники'**
+  String get sharedMembers;
+
+  /// No description provided for @sharedAddMember.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить человека'**
+  String get sharedAddMember;
+
+  /// No description provided for @sharedMemberNameLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя'**
+  String get sharedMemberNameLabel;
+
+  /// No description provided for @sharedNoMembers.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока только вы'**
+  String get sharedNoMembers;
+
+  /// No description provided for @sharedSyncNow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизировать сейчас'**
+  String get sharedSyncNow;
+
+  /// No description provided for @sharedPulled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Принято изменений: {count}'**
+  String sharedPulled(int count);
+
+  /// No description provided for @sharedNothingNew.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новых изменений нет'**
+  String get sharedNothingNew;
+
+  /// No description provided for @sharedLastSync.
+  ///
+  /// In ru, this message translates to:
+  /// **'Последняя сверка: {when}'**
+  String sharedLastSync(String when);
+
+  /// No description provided for @sharedNeverSynced.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сверки ещё не было'**
+  String get sharedNeverSynced;
+
+  /// No description provided for @sharedAccountToggle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Общий счёт'**
+  String get sharedAccountToggle;
+
+  /// No description provided for @sharedAccountHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Операции по этому счёту уедут в папку обмена и станут видны участникам'**
+  String get sharedAccountHint;
+
+  /// No description provided for @sharedAuthor.
+  ///
+  /// In ru, this message translates to:
+  /// **'Внёс: {name}'**
+  String sharedAuthor(String name);
+
+  /// No description provided for @sharedWebUnsupported.
+  ///
+  /// In ru, this message translates to:
+  /// **'На веб-версии общие счета недоступны — нет доступа к папкам'**
+  String get sharedWebUnsupported;
+
+  /// No description provided for @sharedRemoveMemberTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить участника?'**
+  String get sharedRemoveMemberTitle;
+
+  /// No description provided for @sharedRemoveMemberBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Операции, которые он внёс, останутся — исчезнет только подпись'**
+  String get sharedRemoveMemberBody;
+
+  /// No description provided for @removeAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить'**
+  String get removeAction;
+
+  /// No description provided for @updateDidNotApply.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновление до {version} не установилось'**
+  String updateDidNotApply(String version);
+
+  /// No description provided for @updateNoWriteAccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет прав на запись в папку, где стоит Numo. Скачайте новую версию со страницы релиза и распакуйте её сами — или перенесите приложение в свою папку пользователя.'**
+  String get updateNoWriteAccess;
 }
 
 class _AppLocalizationsDelegate

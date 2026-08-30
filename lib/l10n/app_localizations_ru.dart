@@ -935,4 +935,122 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get csvHeaderNote => 'Заметка';
+
+  @override
+  String get statsConvertedByCbr =>
+      'Валютные операции пересчитаны в рубли по курсу ЦБ';
+
+  @override
+  String statsNoRateFor(String currencies) {
+    return 'Нет курса для $currencies — эти суммы посчитаны как рубли';
+  }
+
+  @override
+  String get backupNotJson => 'Файл не является корректным JSON';
+
+  @override
+  String get backupNotNumo => 'Это не файл бэкапа Numo';
+
+  @override
+  String backupTooNew(int version) {
+    return 'Бэкап создан более новой версией приложения (v$version)';
+  }
+
+  @override
+  String get backupCorrupted => 'Файл бэкапа повреждён';
+
+  @override
+  String get menuShared => 'Общий счёт';
+
+  @override
+  String get sharedTitle => 'Общий счёт';
+
+  @override
+  String get sharedIntro =>
+      'Общие счета и операции по ним обмениваются через папку в вашем облаке: каждый участник пишет свой файл, данные сливаются по времени изменения.';
+
+  @override
+  String get sharedFolderLabel => 'Папка обмена';
+
+  @override
+  String get sharedNoFolder => 'Папка не выбрана';
+
+  @override
+  String get sharedChooseFolder => 'Выбрать папку';
+
+  @override
+  String get sharedForgetFolder => 'Отключить';
+
+  @override
+  String get sharedFolderHint =>
+      'Дайте второму участнику доступ к этой же папке в облаке и попросите указать её в своём Numo';
+
+  @override
+  String get sharedMyName => 'Моё имя';
+
+  @override
+  String get sharedMembers => 'Участники';
+
+  @override
+  String get sharedAddMember => 'Добавить человека';
+
+  @override
+  String get sharedMemberNameLabel => 'Имя';
+
+  @override
+  String get sharedNoMembers => 'Пока только вы';
+
+  @override
+  String get sharedSyncNow => 'Синхронизировать сейчас';
+
+  @override
+  String sharedPulled(int count) {
+    return 'Принято изменений: $count';
+  }
+
+  @override
+  String get sharedNothingNew => 'Новых изменений нет';
+
+  @override
+  String sharedLastSync(String when) {
+    return 'Последняя сверка: $when';
+  }
+
+  @override
+  String get sharedNeverSynced => 'Сверки ещё не было';
+
+  @override
+  String get sharedAccountToggle => 'Общий счёт';
+
+  @override
+  String get sharedAccountHint =>
+      'Операции по этому счёту уедут в папку обмена и станут видны участникам';
+
+  @override
+  String sharedAuthor(String name) {
+    return 'Внёс: $name';
+  }
+
+  @override
+  String get sharedWebUnsupported =>
+      'На веб-версии общие счета недоступны — нет доступа к папкам';
+
+  @override
+  String get sharedRemoveMemberTitle => 'Удалить участника?';
+
+  @override
+  String get sharedRemoveMemberBody =>
+      'Операции, которые он внёс, останутся — исчезнет только подпись';
+
+  @override
+  String get removeAction => 'Удалить';
+
+  @override
+  String updateDidNotApply(String version) {
+    return 'Обновление до $version не установилось';
+  }
+
+  @override
+  String get updateNoWriteAccess =>
+      'Нет прав на запись в папку, где стоит Numo. Скачайте новую версию со страницы релиза и распакуйте её сами — или перенесите приложение в свою папку пользователя.';
 }

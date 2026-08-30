@@ -9,4 +9,6 @@ class SelfUpdater {
   }) async {
     throw UnsupportedError('Self-update is not available on web');
   }
+
+  static bool canWriteToInstallDir() => false;
 }

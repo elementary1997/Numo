@@ -935,4 +935,122 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get csvHeaderNote => 'Note';
+
+  @override
+  String get statsConvertedByCbr =>
+      'Foreign-currency amounts converted to rubles at the CBR rate';
+
+  @override
+  String statsNoRateFor(String currencies) {
+    return 'No rate for $currencies — those amounts are counted as rubles';
+  }
+
+  @override
+  String get backupNotJson => 'The file is not valid JSON';
+
+  @override
+  String get backupNotNumo => 'This is not a Numo backup file';
+
+  @override
+  String backupTooNew(int version) {
+    return 'The backup was created by a newer app version (v$version)';
+  }
+
+  @override
+  String get backupCorrupted => 'The backup file is damaged';
+
+  @override
+  String get menuShared => 'Shared account';
+
+  @override
+  String get sharedTitle => 'Shared account';
+
+  @override
+  String get sharedIntro =>
+      'Shared accounts and their transactions travel through a folder in your cloud: every member writes their own file, and data merges by change time.';
+
+  @override
+  String get sharedFolderLabel => 'Shared folder';
+
+  @override
+  String get sharedNoFolder => 'No folder selected';
+
+  @override
+  String get sharedChooseFolder => 'Choose folder';
+
+  @override
+  String get sharedForgetFolder => 'Disconnect';
+
+  @override
+  String get sharedFolderHint =>
+      'Give the other person access to this same cloud folder and ask them to select it in their Numo';
+
+  @override
+  String get sharedMyName => 'My name';
+
+  @override
+  String get sharedMembers => 'Members';
+
+  @override
+  String get sharedAddMember => 'Add a person';
+
+  @override
+  String get sharedMemberNameLabel => 'Name';
+
+  @override
+  String get sharedNoMembers => 'Just you so far';
+
+  @override
+  String get sharedSyncNow => 'Sync now';
+
+  @override
+  String sharedPulled(int count) {
+    return 'Changes received: $count';
+  }
+
+  @override
+  String get sharedNothingNew => 'Nothing new';
+
+  @override
+  String sharedLastSync(String when) {
+    return 'Last sync: $when';
+  }
+
+  @override
+  String get sharedNeverSynced => 'Never synced yet';
+
+  @override
+  String get sharedAccountToggle => 'Shared account';
+
+  @override
+  String get sharedAccountHint =>
+      'Transactions on this account go to the shared folder and become visible to members';
+
+  @override
+  String sharedAuthor(String name) {
+    return 'Added by $name';
+  }
+
+  @override
+  String get sharedWebUnsupported =>
+      'Shared accounts are unavailable on the web — no folder access';
+
+  @override
+  String get sharedRemoveMemberTitle => 'Remove member?';
+
+  @override
+  String get sharedRemoveMemberBody =>
+      'Transactions they added stay — only the attribution disappears';
+
+  @override
+  String get removeAction => 'Remove';
+
+  @override
+  String updateDidNotApply(String version) {
+    return 'The update to $version did not install';
+  }
+
+  @override
+  String get updateNoWriteAccess =>
+      'No write access to the folder where Numo is installed. Download the new version from the release page and unpack it yourself — or move the app into your user folder.';
 }

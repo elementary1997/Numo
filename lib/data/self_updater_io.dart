@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -32,6 +33,21 @@ class SelfUpdater {
       return '/Applications/Numo.app';
     }
     return appPath;
+  }
+
+  /// Есть ли право писать в папку установки. На Windows приложение,
+  /// распакованное в Program Files, обновиться на месте не может —
+  /// лучше сказать об этом до скачивания архива, чем после.
+  static bool canWriteToInstallDir() {
+    if (!Platform.isWindows) return true;
+    try {
+      final probe = File('${installPath()}/.numo-write-probe');
+      probe.writeAsStringSync('');
+      probe.deleteSync();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Скачивает [assetUrl], готовит установку и завершает приложение.
@@ -89,21 +105,30 @@ class SelfUpdater {
     final pid = pid_();
 
     if (Platform.isWindows) {
-      final script = File('${work.path}/update.bat');
-      script.writeAsStringSync('''
-@echo off
-:waitloop
-tasklist /FI "PID eq $pid" 2>NUL | find "$pid" >NUL
-if not errorlevel 1 (
-  timeout /T 1 /NOBREAK >NUL
-  goto waitloop
-)
-robocopy "${extractDir.path}" "$target" /E /IS /IT > "%TEMP%\\numo-update.log" 2>&1
-start "" "$target\\numo.exe"
-''');
+      // Источником может оказаться вложенная папка архива.
+      final source = resolveSourceDir(extractDir.path, 'numo.exe');
+      final script = File('${work.path}/update.ps1');
+      // PowerShell вместо .bat: cmd читает файл в кодировке консоли
+      // (в русской Windows — CP866), а Dart пишет UTF-8, поэтому путь
+      // вида C:\Users\Павел\AppData\Local\Temp\… приезжал битым и
+      // обновление молча не вставало. UTF-8 с BOM PowerShell понимает
+      // при любой локали.
+      script.writeAsBytesSync([
+        0xEF, 0xBB, 0xBF,
+        ...utf8.encode(
+            windowsUpdateScript(pid: pid, source: source, target: target)),
+      ]);
       await Process.start(
-        'cmd',
-        ['/c', script.path],
+        'powershell',
+        [
+          '-NoProfile',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-WindowStyle',
+          'Hidden',
+          '-File',
+          script.path,
+        ],
         mode: ProcessStartMode.detached,
         runInShell: false,
       );
@@ -129,13 +154,14 @@ open "$target"
       await Process.start(script.path, [],
           mode: ProcessStartMode.detached);
     } else {
+      final source = resolveSourceDir(extractDir.path, 'numo');
       final script = File('${work.path}/update.sh');
       script.writeAsStringSync('''
 #!/bin/sh
 exec > /tmp/numo-update.log 2>&1
 set -x
 while kill -0 $pid 2>/dev/null; do sleep 0.5; done
-cp -rf "${extractDir.path}/." "$target/"
+cp -rf "$source/." "$target/"
 chmod +x "$target/numo"
 "$target/numo" >/dev/null 2>&1 &
 ''');
@@ -149,4 +175,45 @@ chmod +x "$target/numo"
   }
 
   static int pid_() => pid;
+
+  /// Корень распакованного архива: папка, где реально лежит [marker].
+  /// Архив может содержать файлы в корне, а может — во вложенной папке;
+  /// копировать нужно содержимое той, где лежит исполняемый файл.
+  static String resolveSourceDir(String extractedPath, String marker) {
+    if (File('$extractedPath/$marker').existsSync()) return extractedPath;
+    final nested = Directory(extractedPath)
+        .listSync()
+        .whereType<Directory>()
+        .where((d) => File('${d.path}/$marker').existsSync())
+        .toList();
+    return nested.length == 1 ? nested.single.path : extractedPath;
+  }
+
+  /// PowerShell-скрипт подмены файлов на Windows. Вынесен отдельно,
+  /// чтобы проверяться тестом: ошибка здесь видна только на живой
+  /// машине после выхода приложения.
+  static String windowsUpdateScript({
+    required int pid,
+    required String source,
+    required String target,
+  }) {
+    String quote(String path) => "'${path.replaceAll("'", "''")}'";
+    return '''
+\$ErrorActionPreference = 'Stop'
+Start-Transcript -Path (Join-Path \$env:TEMP 'numo-update.log') -Force | Out-Null
+try {
+  # Ждём, пока закроется само приложение: файлы заняты, пока оно живо.
+  Wait-Process -Id $pid -Timeout 120 -ErrorAction SilentlyContinue
+  Copy-Item -Path (Join-Path ${quote(source)} '*') -Destination ${quote(target)} -Recurse -Force
+  Write-Output 'update: files copied'
+} catch {
+  Write-Output "update failed: \$_"
+} finally {
+  Stop-Transcript | Out-Null
+  # Приложение запускаем в любом случае — даже если подмена не удалась,
+  # пользователь не должен остаться без Numo.
+  Start-Process -FilePath (Join-Path ${quote(target)} 'numo.exe')
+}
+''';
+  }
 }

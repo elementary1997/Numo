@@ -53,6 +53,7 @@ class UpdateService {
   static const _cachedVersionKey = 'numo.updates.latestVersion';
   static const _cachedUrlKey = 'numo.updates.latestUrl';
   static const _disabledKey = 'numo.updates.disabled';
+  static const _pendingKey = 'numo.updates.pendingVersion';
 
   static final _url = Uri.parse(
       'https://api.github.com/repos/elementary1997/Numo/releases/latest');
@@ -74,6 +75,24 @@ class UpdateService {
 
   Future<String> currentVersion() async =>
       (await PackageInfo.fromPlatform()).version;
+
+  /// Помечает, что установка [version] запущена. Подмена файлов идёт
+  /// уже после выхода приложения, поэтому её провал виден только по
+  /// тому, что после перезапуска версия осталась прежней.
+  Future<void> markPending(String version) async =>
+      (await SharedPreferences.getInstance())
+          .setString(_pendingKey, version);
+
+  /// Версия, обновление до которой не встало; null — всё в порядке.
+  /// Отметку снимает в любом случае — сообщение показывается один раз.
+  Future<String?> takeFailedUpdate() async {
+    final prefs = await SharedPreferences.getInstance();
+    final pending = prefs.getString(_pendingKey);
+    if (pending == null) return null;
+    await prefs.remove(_pendingKey);
+    final current = await currentVersion();
+    return isNewerVersion(pending, current) ? pending : null;
+  }
 
   /// Ручная проверка с различением «нет сети» и «нет обновлений».
   Future<UpdateCheckResult> checkManually() async {

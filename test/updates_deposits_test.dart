@@ -23,6 +23,37 @@ void main() {
     });
   });
 
+  group('SelfUpdater.windowsUpdateScript', () {
+    test('ждёт процесс и копирует файлы средствами PowerShell', () {
+      final ps = SelfUpdater.windowsUpdateScript(
+        pid: 4242,
+        source: r'C:\Users\Павел\AppData\Local\Temp\numo-update-1\extracted',
+        target: r'C:\Users\Павел\Numo',
+      );
+
+      expect(ps, contains('Wait-Process -Id 4242'));
+      expect(ps, contains('Copy-Item'));
+      // Приложение поднимается даже при неудачной подмене.
+      expect(ps, contains('finally'));
+      expect(ps, contains('Start-Process'));
+      // Кириллица в пути должна дожить до скрипта как есть.
+      expect(ps, contains('Павел'));
+      // Старый .bat падал на этих командах при кириллице в %TEMP%.
+      expect(ps, isNot(contains('robocopy')));
+      expect(ps, isNot(contains('tasklist')));
+      expect(ps, isNot(contains('timeout /T')));
+    });
+
+    test('одинарная кавычка в пути экранируется', () {
+      final ps = SelfUpdater.windowsUpdateScript(
+        pid: 1,
+        source: r"C:\Users\O'Brien\tmp",
+        target: r"C:\Users\O'Brien\Numo",
+      );
+      expect(ps, contains("O''Brien"));
+    });
+  });
+
   group('platformAssetName', () {
     test('выбирает архив своей платформы', () {
       expect(platformAssetName(platformOverride: 'windows'),

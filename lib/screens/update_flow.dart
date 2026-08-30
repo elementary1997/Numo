@@ -16,6 +16,33 @@ Future<void> runUpdateFlow(BuildContext context, UpdateInfo info) async {
     return;
   }
 
+  // Папка установки недоступна для записи (Program Files и подобное):
+  // качать 30 МБ, чтобы упереться в права, незачем.
+  if (!SelfUpdater.canWriteToInstallDir()) {
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.updateFailed),
+        content: Text(context.l10n.updateNoWriteAccess),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(context.l10n.close),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(context.l10n.openPage),
+          ),
+        ],
+      ),
+    );
+    if (open == true) {
+      await launchUrl(Uri.parse(info.url),
+          mode: LaunchMode.externalApplication);
+    }
+    return;
+  }
+
   final progress = ValueNotifier<double?>(null);
   String? failure;
 
@@ -50,6 +77,9 @@ Future<void> runUpdateFlow(BuildContext context, UpdateInfo info) async {
   );
 
   try {
+    // Ставим отметку до выхода: если подмена файлов не удастся,
+    // при следующем запуске приложение об этом скажет.
+    await UpdateService().markPending(info.version);
     await SelfUpdater.downloadAndInstall(
       assetUrl,
       onProgress: (value) => progress.value = value,
