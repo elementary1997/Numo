@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui' show Color;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -59,6 +60,29 @@ void main() {
         target: r"C:\Users\O'Brien\Numo",
       );
       expect(ps, contains("O''Brien"));
+    });
+  });
+
+  group('SelfUpdater: замена приложения на macOS', () {
+    test('старое приложение удаляется только после удачной распаковки',
+        () {
+      // Скрипт собирается в downloadAndInstall, поэтому проверяем
+      // сам файл: порядок шагов здесь важнее всего остального —
+      // прежняя версия удаляла .app до копирования и при ошибке
+      // оставляла пользователя без приложения.
+      final source = File('lib/data/self_updater_io.dart').readAsStringSync();
+      // Блок macOS-скрипта: от проверки архива до Linux-ветки.
+      final macBlock = source.substring(
+          source.indexOf('Numo.app not found'),
+          source.indexOf('resolveSourceDir(extractDir.path, \'numo\')'));
+
+      expect(macBlock, contains(r'staging="$target.new"'));
+      expect(macBlock, contains('if ! ditto'));
+      // Откат, если переместить новую копию на место не удалось.
+      expect(macBlock, contains('rolling back'));
+      expect(macBlock.indexOf('ditto'),
+          lessThan(macBlock.indexOf(r'mv "$target"')),
+          reason: 'копирование должно предшествовать удалению старого');
     });
   });
 

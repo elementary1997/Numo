@@ -13,4 +13,5 @@ class SelfUpdater {
   static bool canWriteToInstallDir() => false;
 
   static String get updateLogPath => '';
+  static String readUpdateLogTail({int lines = 20}) => '';
 }

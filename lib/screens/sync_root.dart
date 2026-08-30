@@ -193,12 +193,42 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     final failed =
         await ref.read(updateServiceProvider).takeFailedUpdate();
     if (failed == null || !mounted) return;
+    final logTail = SelfUpdater.readUpdateLogTail();
     // Диалог, а не снекбар: у неудачи есть причина, и её надо показать.
     final action = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.updateDidNotApply(failed)),
-        content: Text(context.l10n.updateDidNotApplyBody),
+        content: SizedBox(
+          width: 460,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(context.l10n.updateDidNotApplyBody),
+              if (logTail.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                // Хвост лога прямо в диалоге: причину видно сразу,
+                // искать файл не нужно.
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 220),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      logTail,
+                      style: const TextStyle(
+                          fontFamily: 'monospace', fontSize: 11),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop('log'),

@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.12.2',
+    itemsRu: [
+      'macOS: неудачное обновление больше не может оставить без приложения',
+      'Если обновление не встало, причина показывается прямо в диалоге',
+    ],
+    itemsEn: [
+      'macOS: a failed update can no longer leave you without the app',
+      'When an update does not apply, the reason is shown right in the dialog',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.12.1',
     itemsRu: [
       'Windows: подмена файлов при обновлении надёжнее, а причину неудачи видно в логе',

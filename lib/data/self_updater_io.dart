@@ -41,13 +41,38 @@ class SelfUpdater {
       ? '${Platform.environment['TEMP'] ?? r'C:\Windows\Temp'}\\numo-update.log'
       : '/tmp/numo-update.log';
 
-  /// Есть ли право писать в папку установки. На Windows приложение,
-  /// распакованное в Program Files, обновиться на месте не может —
-  /// лучше сказать об этом до скачивания архива, чем после.
-  static bool canWriteToInstallDir() {
-    if (!Platform.isWindows) return true;
+  /// Последние строки лога подмены файлов — их показывает диалог
+  /// «обновление не установилось», чтобы причину не приходилось
+  /// искать в файловой системе.
+  static String readUpdateLogTail({int lines = 20}) {
     try {
-      final probe = File('${installPath()}/.numo-write-probe');
+      final file = File(updateLogPath);
+      if (!file.existsSync()) return '';
+      final content = file.readAsStringSync();
+      final all = content
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .toList();
+      return all.length <= lines
+          ? all.join('\n')
+          : all.sublist(all.length - lines).join('\n');
+    } catch (_) {
+      return '';
+    }
+  }
+
+  /// Есть ли право писать туда, куда встанет обновление. На Windows
+  /// это папка приложения (в Program Files прав нет), на macOS —
+  /// папка, где лежит Numo.app (обычно /Applications, куда без
+  /// администратора тоже не записать). Сказать об этом лучше до
+  /// скачивания архива, чем после.
+  static bool canWriteToInstallDir() {
+    try {
+      // На macOS цель — сам бандл, писать нужно в его родителя.
+      final dir = Platform.isMacOS
+          ? File(installPath()).parent.path
+          : installPath();
+      final probe = File('$dir/.numo-write-probe');
       probe.writeAsStringSync('');
       probe.deleteSync();
       return true;
@@ -146,14 +171,36 @@ class SelfUpdater {
       }
       // Лог всей подмены — для диагностики, если обновление не встало.
       final script = File('${work.path}/update.sh');
+      // Старое приложение удаляется только после того, как новое
+      // успешно распаковано рядом: иначе неудачное копирование
+      // оставляло пользователя вообще без Numo.
       script.writeAsStringSync('''
 #!/bin/sh
 exec > /tmp/numo-update.log 2>&1
 set -x
 while kill -0 $pid 2>/dev/null; do sleep 0.5; done
-rm -rf "$target"
-ditto "$newApp" "$target"
-xattr -cr "$target" || true
+staging="$target.new"
+backup="$target.old"
+rm -rf "\$staging" "\$backup"
+if ! ditto "$newApp" "\$staging"; then
+  echo "update failed: ditto could not write \$staging"
+  open "$target"
+  exit 1
+fi
+if [ -d "$target" ] && ! mv "$target" "\$backup"; then
+  echo "update failed: no permission to replace $target"
+  rm -rf "\$staging"
+  open "$target"
+  exit 1
+fi
+if mv "\$staging" "$target"; then
+  rm -rf "\$backup"
+  xattr -cr "$target" || true
+  echo "update: replaced $target"
+else
+  echo "update failed: could not move staging into place, rolling back"
+  [ -d "\$backup" ] && mv "\$backup" "$target"
+fi
 open "$target"
 ''');
       await Process.run('chmod', ['+x', script.path]);
@@ -167,7 +214,11 @@ open "$target"
 exec > /tmp/numo-update.log 2>&1
 set -x
 while kill -0 $pid 2>/dev/null; do sleep 0.5; done
-cp -rf "$source/." "$target/"
+if cp -rf "$source/." "$target/"; then
+  echo "update: files copied"
+else
+  echo "update failed: could not copy into $target"
+fi
 chmod +x "$target/numo"
 "$target/numo" >/dev/null 2>&1 &
 ''');
