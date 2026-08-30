@@ -2,6 +2,70 @@ import '../models/category_rule.dart';
 import '../models/transaction.dart';
 import 'csv.dart';
 
+/// Категории, которые банки пишут в выписках, → id встроенных
+/// категорий Numo. Сбер-парсер ставит категорию банка в начало
+/// описания («Категория · Продавец»); ключи — в нижнем регистре.
+/// Пользовательские правила всегда приоритетнее этой таблицы.
+const bankCategoryMap = <String, String>{
+  'супермаркеты': 'groceries',
+  'продукты': 'groceries',
+  'рестораны и кафе': 'cafe',
+  'кафе и рестораны': 'cafe',
+  'рестораны': 'cafe',
+  'фастфуд': 'cafe',
+  'кофейни': 'cafe',
+  'автомобиль': 'transport',
+  'транспорт': 'transport',
+  'такси': 'transport',
+  'азс': 'transport',
+  'парковки': 'transport',
+  'коммунальные платежи, связь, интернет': 'home',
+  'коммунальные платежи': 'home',
+  'жкх': 'home',
+  'связь': 'home',
+  'мобильная связь': 'home',
+  'дом и ремонт': 'home',
+  'все для дома': 'home',
+  'аптеки': 'health',
+  'здоровье и красота': 'health',
+  'красота и здоровье': 'health',
+  'медицинские услуги': 'health',
+  'медицина': 'health',
+  'развлечения': 'entertainment',
+  'отдых и развлечения': 'entertainment',
+  'кино': 'entertainment',
+  'одежда и аксессуары': 'shopping',
+  'одежда и обувь': 'shopping',
+  'универсальные магазины': 'shopping',
+  'маркетплейсы': 'shopping',
+  'зачисление зарплаты': 'salary',
+  'зарплата': 'salary',
+  // Переводы людям — видимая категория расходов 'transfers',
+  // а не системная 'transfer' (та — для переводов между счетами Numo).
+  'переводы': 'transfers',
+  'перевод на карту': 'transfers',
+  'перевод с карты': 'transfers',
+  'перевод по сбп': 'transfers',
+  'исходящий перевод': 'transfers',
+  'пополнение': 'topups',
+  'пополнения': 'topups',
+  'входящий перевод': 'topups',
+  'зачисление': 'topups',
+  'внесение наличных': 'topups',
+  'вклады': 'deposits',
+  'вклады и счета': 'deposits',
+  'открытие вклада': 'deposits',
+  'капитализация': 'deposits',
+};
+
+/// Категория по банковской рубрике из описания операции;
+/// null — рубрика неизвестна.
+String? categorizeByBankCategory(String note) {
+  final head = note.split('·').first.trim().toLowerCase();
+  if (head.isEmpty) return null;
+  return bankCategoryMap[head];
+}
+
 /// Назначение колонок CSV-файла полям операции.
 class ColumnMapping {
   const ColumnMapping({
@@ -104,7 +168,9 @@ abstract final class StatementImporter {
       final isExpense =
           rawAmount < 0 || (mapping.unsignedIsExpense && rawAmount > 0);
       final amount = rawAmount.abs();
-      final categoryId = categorizeByRules(note, rules) ?? 'other';
+      final categoryId = categorizeByRules(note, rules) ??
+          categorizeByBankCategory(note) ??
+          'other';
       final key = '$accountId|$date|$rawAmount|$note';
       final occurrence =
           occurrences.update(key, (v) => v + 1, ifAbsent: () => 1);

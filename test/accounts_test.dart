@@ -46,7 +46,7 @@ void main() {
     txRepo = await TransactionsRepository.open(db);
     accountsRepo = await AccountsRepository.open(db);
     await accountsRepo.saveAll([Accounts.main, cash, usd]);
-    // Автор операции берётся из справочника участников (ADR-0013).
+    // Автор операции берётся из справочника участников (ADR-0014).
     membersRepo = await MembersRepository.open(db);
     container = ProviderContainer(overrides: [
       repositoryProvider.overrideWithValue(txRepo),

@@ -21,8 +21,9 @@ class RulesScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(context.l10n.menuRules),
         actions: [
-          if (rules.isNotEmpty)
-            TextButton.icon(
+          // Кнопка доступна и без правил: она же распределяет
+          // «Прочее» по банковским рубрикам из импорта выписок.
+          TextButton.icon(
               onPressed: () async {
                 final changed = await ref
                     .read(rulesProvider.notifier)

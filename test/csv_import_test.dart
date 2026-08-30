@@ -170,4 +170,52 @@ void main() {
     expect(categorizeByRules('вокал', rules), 'other');
     expect(categorizeByRules('ничего', rules), isNull);
   });
+
+  group('categorizeByBankCategory', () {
+    test('банковская рубрика перед « · » мапится на категорию Numo', () {
+      expect(
+          categorizeByBankCategory(
+              'Супермаркеты · PYATEROCHKA 5026 Dzerzhinsk RUS'),
+          'groceries');
+      expect(categorizeByBankCategory('Автомобиль · GAZPROMNEFT AZS 205'),
+          'transport');
+      expect(categorizeByBankCategory('Здоровье и красота · АПТЕКА 33'),
+          'health');
+      // Рубрика без продавца — тоже распознаётся.
+      expect(categorizeByBankCategory('Фастфуд'), 'cafe');
+      // Переводы, пополнения и вклады — видимые категории.
+      expect(categorizeByBankCategory('Перевод на карту · ИВАН И.'),
+          'transfers');
+      expect(categorizeByBankCategory('Входящий перевод · МАРИЯ П.'),
+          'topups');
+      expect(categorizeByBankCategory('Вклады и счета · СберВклад'),
+          'deposits');
+    });
+
+    test('неизвестная рубрика не мапится', () {
+      expect(categorizeByBankCategory('SOMETHING ELSE'), isNull);
+      expect(categorizeByBankCategory(''), isNull);
+    });
+
+    test('в импорте пользовательское правило приоритетнее рубрики банка',
+        () {
+      final parsed = StatementImporter.parseRows(
+        rows: [
+          ['01.08.2026', '-100', 'Супермаркеты · PYATEROCHKA 1234'],
+          ['02.08.2026', '-200', 'Автомобиль · GAZPROMNEFT AZS 205'],
+        ],
+        mapping: const ColumnMapping(
+            dateColumn: 0, amountColumn: 1, noteColumn: 2),
+        accountId: 'main',
+        rules: [
+          const CategoryRule(
+              id: '1', pattern: 'pyaterochka', categoryId: 'shopping'),
+        ],
+        existingIds: const {},
+      );
+      final txs = parsed.map((r) => r.tx!).toList();
+      expect(txs[0].categoryId, 'shopping'); // правило победило рубрику
+      expect(txs[1].categoryId, 'transport'); // рубрика банка как фолбэк
+    });
+  });
 }

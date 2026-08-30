@@ -349,6 +349,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get importedFilesTitle => 'Imported files';
+
+  @override
+  String showMoreCount(int count) {
+    return 'Show more ($count)';
+  }
+
+  @override
   String columnN(int n) {
     return 'Column $n';
   }

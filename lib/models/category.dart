@@ -167,6 +167,20 @@ abstract final class Categories {
     iconKey: 'bag',
     color: Color(0xFF9D6BFF),
   );
+  /// Переводы людям и между своими банками — видимая категория
+  /// расходов (в отличие от системной [transfer] между счетами Numo).
+  static const transfers = TxCategory(
+    id: 'transfers',
+    title: 'Переводы',
+    iconKey: 'swap',
+    color: Color(0xFF6BA8FF),
+  );
+  static const deposits = TxCategory(
+    id: 'deposits',
+    title: 'Вклады',
+    iconKey: 'savings',
+    color: Color(0xFF5CD6C0),
+  );
   static const other = TxCategory(
     id: 'other',
     title: 'Прочее',
@@ -192,6 +206,13 @@ abstract final class Categories {
     title: 'Подарки',
     iconKey: 'gift',
     color: NumoColors.pink,
+    isIncome: true,
+  );
+  static const topups = TxCategory(
+    id: 'topups',
+    title: 'Пополнения',
+    iconKey: 'cash',
+    color: NumoColors.amber,
     isIncome: true,
   );
 
@@ -236,10 +257,13 @@ abstract final class Categories {
     'health': 'Health',
     'entertainment': 'Entertainment',
     'shopping': 'Shopping',
+    'transfers': 'Transfers',
+    'deposits': 'Deposits',
     'other': 'Other',
     'salary': 'Salary',
     'freelance': 'Side income',
     'gifts': 'Gifts',
+    'topups': 'Top-ups',
     'transfer': 'Transfer',
     'adjustment': 'Adjustment',
   };
@@ -272,10 +296,13 @@ abstract final class Categories {
     health,
     entertainment,
     shopping,
+    transfers,
+    deposits,
     other,
     salary,
     freelance,
     gifts,
+    topups,
     transfer,
     adjustment,
   ];

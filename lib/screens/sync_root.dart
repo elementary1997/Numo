@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +30,12 @@ class SyncRoot extends ConsumerStatefulWidget {
 }
 
 class _SyncRootState extends ConsumerState<SyncRoot> {
+  Timer? _updateRecheck;
   AppLifecycleListener? _lifecycle;
+
+  /// Версия, о которой уже показано уведомление, — чтобы
+  /// перепроверки не спамили одним и тем же снекбаром.
+  String? _notifiedUpdateVersion;
 
   /// Когда общие счета сверялись в последний раз — окно на desktop
   /// получает фокус часто, дёргать облако на каждый щелчок незачем.
@@ -37,7 +44,6 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
   @override
   void initState() {
     super.initState();
-    _lifecycle = AppLifecycleListener(onResume: _syncOnResume);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _showWhatsNew();
       await _reportFailedUpdate();
@@ -45,61 +51,26 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
       await _pullShared();
       await _checkStatements();
     });
+    // Desktop-приложение живёт открытым днями — одной проверки при
+    // старте мало, чтобы узнать о вышедшем релизе. Перепроверяем
+    // раз в час и при возврате фокуса окна (сетевой запрос при этом
+    // ограничен часовым кэшем UpdateService).
+    if (!kIsWeb) {
+      _updateRecheck = Timer.periodic(const Duration(hours: 1),
+          (_) => ref.invalidate(updateCheckProvider));
+      _lifecycle = AppLifecycleListener(onResume: () {
+        ref.invalidate(updateCheckProvider);
+        // Пока Numo был свёрнут, второй участник мог что-то добавить.
+        _syncSharedOnResume();
+      });
+    }
   }
 
   @override
   void dispose() {
+    _updateRecheck?.cancel();
     _lifecycle?.dispose();
     super.dispose();
-  }
-
-  /// Возврат в приложение — тихая сверка общих счетов: пока Numo был
-  /// свёрнут, второй участник мог что-то добавить.
-  Future<void> _syncOnResume() async {
-    if (!ref.read(sharedSyncProvider).enabled) return;
-    final last = _lastResumeSync;
-    if (last != null &&
-        DateTime.now().difference(last) < const Duration(minutes: 1)) {
-      return;
-    }
-    _lastResumeSync = DateTime.now();
-    final applied = await syncSharedAccounts(ref);
-    if (applied == 0 || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.sharedPulled(applied))),
-    );
-  }
-
-  /// Если прошлое обновление не встало (частый случай на Windows —
-  /// нет прав на папку установки), говорим об этом прямо и предлагаем
-  /// скачать сборку руками.
-  Future<void> _reportFailedUpdate() async {
-    if (kIsWeb) return;
-    final failed =
-        await ref.read(updateServiceProvider).takeFailedUpdate();
-    if (failed == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 12),
-      content: Text(context.l10n.updateDidNotApply(failed)),
-      action: SnackBarAction(
-        label: context.l10n.openPage,
-        onPressed: () => launchUrl(
-          Uri.parse('https://github.com/elementary1997/Numo/releases/latest'),
-          mode: LaunchMode.externalApplication,
-        ),
-      ),
-    ));
-  }
-
-  /// Общие счета (ADR-0013): при запуске забираем файлы участников,
-  /// сливаем изменения и выкладываем свой файл.
-  Future<void> _pullShared() async {
-    if (!ref.read(sharedSyncProvider).enabled) return;
-    final applied = await syncSharedAccounts(ref);
-    if (applied == 0 || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(context.l10n.sharedPulled(applied))),
-    );
   }
 
   /// Новые файлы в папке выписок: предлагаем импорт первого из них.
@@ -169,6 +140,55 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     );
   }
 
+  /// Если прошлое обновление не встало (частый случай на Windows —
+  /// нет прав на папку установки), говорим об этом прямо и предлагаем
+  /// скачать сборку руками.
+  Future<void> _reportFailedUpdate() async {
+    if (kIsWeb) return;
+    final failed =
+        await ref.read(updateServiceProvider).takeFailedUpdate();
+    if (failed == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 12),
+      content: Text(context.l10n.updateDidNotApply(failed)),
+      action: SnackBarAction(
+        label: context.l10n.openPage,
+        onPressed: () => launchUrl(
+          Uri.parse('https://github.com/elementary1997/Numo/releases/latest'),
+          mode: LaunchMode.externalApplication,
+        ),
+      ),
+    ));
+  }
+
+  /// Общие счета (ADR-0014): при запуске забираем файлы участников,
+  /// сливаем изменения и выкладываем свой файл.
+  Future<void> _pullShared() async {
+    if (!ref.read(sharedSyncProvider).enabled) return;
+    final applied = await syncSharedAccounts(ref);
+    if (applied == 0 || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.sharedPulled(applied))),
+    );
+  }
+
+  /// Тихая сверка общих счетов при возврате в приложение, не чаще
+  /// раза в минуту.
+  Future<void> _syncSharedOnResume() async {
+    if (!ref.read(sharedSyncProvider).enabled) return;
+    final last = _lastResumeSync;
+    if (last != null &&
+        DateTime.now().difference(last) < const Duration(minutes: 1)) {
+      return;
+    }
+    _lastResumeSync = DateTime.now();
+    final applied = await syncSharedAccounts(ref);
+    if (applied == 0 || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.sharedPulled(applied))),
+    );
+  }
+
   Future<void> _checkForNewer() async {
     final newer = await ref.read(syncServiceProvider).checkForNewer();
     if (newer == null || !mounted) return;
@@ -230,11 +250,13 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     ref.listen(recurringProvider, (_, __) => schedule());
     ref.listen(goalsProvider, (_, __) => schedule());
 
-    // Ненавязчивое уведомление о вышедшей версии (раз при старте).
+    // Ненавязчивое уведомление о вышедшей версии — один раз на
+    // версию за сессию (перепроверки идут раз в час и по фокусу).
     if (!kIsWeb) {
       ref.listen(updateCheckProvider, (previous, next) {
         final info = next.valueOrNull;
-        if (info == null) return;
+        if (info == null || info.version == _notifiedUpdateVersion) return;
+        _notifiedUpdateVersion = info.version;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           duration: const Duration(seconds: 10),
           content: Text(context.l10n.updateAvailable(info.version)),

@@ -27,7 +27,7 @@ class AccountsRepository {
 
   List<Account> loadAll() => List.unmodifiable(_cache);
 
-  /// Слияние счетов от других участников (ADR-0013): чужой счёт
+  /// Слияние счетов от других участников (ADR-0014): чужой счёт
   /// принимается, если его отметка изменения новее локальной.
   /// Возвращает число применённых изменений.
   Future<int> mergeAll(Iterable<Account> incoming) async {

@@ -101,7 +101,7 @@ void main() {
     test('чужая операция добавляется, своя более свежая — побеждает',
         () async {
       final repo = await TransactionsRepository.open(db, seedDemo: false);
-      await repo.insertAll([
+      await repo.upsertAll(touch: false, [
         tx('a', amount: 100, updatedAt: DateTime(2026, 8, 10, 12)),
       ]);
 
@@ -121,7 +121,7 @@ void main() {
 
     test('более свежая чужая правка перекрывает локальную', () async {
       final repo = await TransactionsRepository.open(db, seedDemo: false);
-      await repo.insertAll([
+      await repo.upsertAll(touch: false, [
         tx('a', amount: 100, updatedAt: DateTime(2026, 8, 10)),
       ]);
 
@@ -134,7 +134,7 @@ void main() {
 
     test('удаление у второго участника не воскресает', () async {
       final repo = await TransactionsRepository.open(db, seedDemo: false);
-      await repo.insertAll([
+      await repo.upsertAll(touch: false, [
         tx('a', updatedAt: DateTime(2026, 8, 10)),
       ]);
 
@@ -156,8 +156,8 @@ void main() {
 
   test('удаление мягкое: строка остаётся надгробием', () async {
     final repo = await TransactionsRepository.open(db, seedDemo: false);
-    await repo.insertAll([tx('a'), tx('b')]);
-    await repo.deleteOne('a');
+    await repo.upsertAll(touch: false, [tx('a'), tx('b')]);
+    await repo.removeById('a');
 
     expect(repo.loadAll().map((t) => t.id), ['b']);
     expect(repo.allRows(), hasLength(2));

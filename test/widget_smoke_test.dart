@@ -13,6 +13,7 @@ import 'package:numo/data/security_repository.dart';
 import 'package:numo/data/sync_service.dart';
 import 'package:numo/data/database.dart';
 import 'package:numo/data/goals_repository.dart';
+import 'package:numo/data/imports_repository.dart';
 import 'package:numo/data/members_repository.dart';
 import 'package:numo/data/shared_sync.dart';
 import 'package:numo/data/repository.dart';
@@ -41,6 +42,7 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   final accountsRepo = await AccountsRepository.open(db);
   final rulesRepo = await RulesRepository.open(db);
   final goalsRepo = await GoalsRepository.open(db);
+  final importsRepo = await ImportsRepository.open(db);
   final securityRepo = await SecurityRepository.open();
   final membersRepo = await MembersRepository.open(db);
   final syncService = await SyncService.open();
@@ -60,6 +62,7 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
       accountsRepositoryProvider.overrideWithValue(accountsRepo),
       rulesRepositoryProvider.overrideWithValue(rulesRepo),
       goalsRepositoryProvider.overrideWithValue(goalsRepo),
+      importsRepositoryProvider.overrideWithValue(importsRepo),
     ],
     child: const NumoApp(),
   );

@@ -18,7 +18,7 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
-    version: '1.7.0',
+    version: '1.9.0',
     itemsRu: [
       'Общие счета: ведите счёт вместе с другим человеком через общую папку в облаке — операции сливаются, а не затирают друг друга',
       'В ленте видно, кто из участников внёс операцию',
@@ -32,6 +32,36 @@ const changelog = <ChangelogEntry>[
       'Foreign-currency accounts no longer skew the stats: amounts are converted to rubles at the CBR rate',
       'Statement import no longer drops identical transactions made on the same day',
       'Windows: auto-update no longer breaks on non-Latin characters in the user folder path',
+    ],
+  ),
+  ChangelogEntry(
+    version: '1.8.0',
+    itemsRu: [
+      'Новые категории: «Переводы», «Вклады» и «Пополнения» — переводы и пополнения из выписок больше не падают в «Прочее»',
+      'Журнал импортов: список уже загруженных файлов прямо на экране импорта',
+      'Исправлен чёрный экран после импорта из бокового меню',
+    ],
+    itemsEn: [
+      'New categories: Transfers, Deposits and Top-ups — statement transfers no longer land in Other',
+      'Import journal: previously imported files listed right on the import screen',
+      'Fixed the black screen after importing from the sidebar section',
+    ],
+  ),
+  ChangelogEntry(
+    version: '1.7.0',
+    itemsRu: [
+      'Импорт выписок распределяет операции по категориям банка — «Прочее» больше не растёт',
+      'Кнопка «Применить к существующим» в правилах раскладывает уже импортированное по категориям',
+      'Уведомление о новой версии приходит надёжно: проверка раз в час и при возврате к окну',
+      'macOS: окно сразу открывается с боковой панелью и запоминает размер',
+      'API-ключ AI-разбора переехал в системное хранилище секретов',
+    ],
+    itemsEn: [
+      'Statement import assigns categories from bank rubrics — no more everything in Other',
+      '“Apply to existing” in rules reclassifies already imported operations',
+      'New-version notifications are reliable: re-check hourly and on window focus',
+      'macOS: the window opens with the sidebar right away and remembers its size',
+      'The AI review API key moved into the system secret storage',
     ],
   ),
   ChangelogEntry(

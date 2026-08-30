@@ -263,7 +263,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     super.dispose();
   }
 
-  /// Счёт виден участникам и уезжает в папку обмена (ADR-0013).
+  /// Счёт виден участникам и уезжает в папку обмена (ADR-0014).
   bool _shared = false;
 
   Future<void> _pickDate({required bool opened}) async {

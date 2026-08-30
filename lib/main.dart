@@ -13,6 +13,7 @@ import 'data/categories_repository.dart';
 import 'data/database.dart';
 import 'data/goals_repository.dart';
 import 'data/members_repository.dart';
+import 'data/imports_repository.dart';
 import 'data/recurring_repository.dart';
 import 'data/repository.dart';
 import 'data/rules_repository.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
       await AccountsRepository.open(database, seedLocale: seedLocale);
   final rulesRepository = await RulesRepository.open(database);
   final goalsRepository = await GoalsRepository.open(database);
+  final importsRepository = await ImportsRepository.open(database);
   final securityRepository = await SecurityRepository.open();
   final membersRepository = await MembersRepository.open(database,
       meName: seedLocale == 'ru' ? 'Я' : 'Me');
@@ -78,6 +80,7 @@ Future<void> main() async {
         accountsRepositoryProvider.overrideWithValue(accountsRepository),
         rulesRepositoryProvider.overrideWithValue(rulesRepository),
         goalsRepositoryProvider.overrideWithValue(goalsRepository),
+        importsRepositoryProvider.overrideWithValue(importsRepository),
         securityRepositoryProvider.overrideWithValue(securityRepository),
         membersRepositoryProvider.overrideWithValue(membersRepository),
         syncServiceProvider.overrideWithValue(syncService),

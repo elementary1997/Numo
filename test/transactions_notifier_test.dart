@@ -1,9 +1,12 @@
+import 'dart:ui' show Color;
+
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numo/data/database.dart';
 import 'package:numo/data/members_repository.dart';
 import 'package:numo/data/repository.dart';
+import 'package:numo/models/account.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:numo/state/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +32,7 @@ void main() {
     });
     db = NumoDatabase(NativeDatabase.memory());
     final repo = await TransactionsRepository.open(db);
-    // Автор операции берётся из справочника участников (ADR-0013).
+    // Автор операции берётся из справочника участников (ADR-0014).
     final members = await MembersRepository.open(db);
     container = ProviderContainer(
       overrides: [
@@ -81,6 +84,50 @@ void main() {
     await notifier.add(tx('a', 100));
     await notifier.remove('a');
     expect(container.read(transactionsProvider), isEmpty);
+  });
+
+  test('remove переживает перезагрузку из репозитория', () async {
+    final notifier = container.read(transactionsProvider.notifier);
+    await notifier.add(tx('a', 100));
+    await notifier.add(tx('b', 200));
+    await notifier.remove('a');
+
+    final reloaded = await TransactionsRepository.open(db);
+    expect(reloaded.loadAll().single.id, 'b');
+  });
+
+  test('addAll дедуплицирует по id и переживает перезагрузку', () async {
+    final notifier = container.read(transactionsProvider.notifier);
+    await notifier.add(tx('a', 100, day: 3));
+    // 'a' приходит повторно с новой суммой — обновляется, не дублируется.
+    await notifier.addAll([tx('a', 111, day: 3), tx('b', 200, day: 7)]);
+
+    final ids = container.read(transactionsProvider).map((t) => t.id).toList();
+    expect(ids, ['b', 'a']);
+
+    final reloaded = await TransactionsRepository.open(db);
+    final byId = {for (final t in reloaded.loadAll()) t.id: t};
+    expect(byId.length, 2);
+    expect(byId['a']!.amount, 111);
+  });
+
+  test('createTransfer создаёт пару системных операций и сохраняет их',
+      () async {
+    const from = Account(
+        id: 'acc-1', title: 'Карта', iconKey: 'card', color: Color(0xFF000000));
+    const to = Account(
+        id: 'acc-2', title: 'Нал', iconKey: 'cash', color: Color(0xFF000000));
+    final notifier = container.read(transactionsProvider.notifier);
+    await notifier.createTransfer(
+        from: from, to: to, amountFrom: 500, amountTo: 500);
+
+    final txs = container.read(transactionsProvider);
+    expect(txs.length, 2);
+    expect(txs.every((t) => t.isTransfer), isTrue);
+    expect(txs.fold(0.0, (s, t) => s + t.signedAmount), 0);
+
+    final reloaded = await TransactionsRepository.open(db);
+    expect(reloaded.loadAll().length, 2);
   });
 
   test('точечные вставка, правка и удаление доходят до базы', () async {

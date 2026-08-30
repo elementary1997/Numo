@@ -12,7 +12,7 @@ import 'package:numo/models/member.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Сквозная проверка обмена через папку (ADR-0013): два устройства,
+/// Сквозная проверка обмена через папку (ADR-0014): два устройства,
 /// одна папка, настоящие файлы на диске.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -66,7 +66,7 @@ void main() {
 
   test('операции ходят между участниками в обе стороны', () async {
     // Паша записал покупку и выложил свой файл.
-    await repoA.insertAll([expense('a1', 700, authorId: pasha.id)]);
+    await repoA.upsertAll(touch: false, [expense('a1', 700, authorId: pasha.id)]);
     await sync.publish(
       me: pasha,
       accounts: [family],
@@ -80,7 +80,7 @@ void main() {
     expect(repoB.loadAll().single.amount, 700);
 
     // Аня добавила свою операцию и выложила файл.
-    await repoB.insertAll([expense('b1', 250, authorId: anya.id)]);
+    await repoB.upsertAll(touch: false, [expense('b1', 250, authorId: anya.id)]);
     await sync.publish(
       me: anya,
       accounts: [family],
@@ -105,7 +105,7 @@ void main() {
   });
 
   test('удаление у одного участника доезжает до второго', () async {
-    await repoA.insertAll([expense('a1', 700, authorId: pasha.id)]);
+    await repoA.upsertAll(touch: false, [expense('a1', 700, authorId: pasha.id)]);
     await sync.publish(
         me: pasha, accounts: [family], transactions: repoA.allRows());
     await repoB
@@ -113,7 +113,7 @@ void main() {
     expect(repoB.loadAll(), hasLength(1));
 
     // Аня удаляет общую операцию и публикует надгробие.
-    await repoB.deleteOne('a1');
+    await repoB.removeById('a1');
     await sync.publish(
         me: anya, accounts: [family], transactions: repoB.allRows());
 
@@ -131,7 +131,7 @@ void main() {
       iconKey: 'gift',
       color: Color(0xFFF072B6),
     );
-    await repoA.insertAll([
+    await repoA.upsertAll(touch: false, [
       Tx(
         id: 'a1',
         type: TxType.expense,
@@ -162,7 +162,7 @@ void main() {
       iconKey: 'cash',
       color: Color(0xFF3DDC97),
     );
-    await repoA.insertAll([
+    await repoA.upsertAll(touch: false, [
       expense('shared', 700, authorId: pasha.id),
       Tx(
         id: 'secret',

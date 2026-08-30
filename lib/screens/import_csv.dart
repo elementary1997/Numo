@@ -28,6 +28,11 @@ class ImportCsvScreen extends ConsumerStatefulWidget {
 
 class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
   List<List<String>>? _rows;
+  String? _fileName;
+
+  /// Сколько записей журнала импортов показано (пагинация).
+  int _historyShown = _historyPageSize;
+  static const _historyPageSize = 10;
 
   @override
   void initState() {
@@ -82,6 +87,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     final guessed = StatementImporter.guessMapping(rows.first);
     setState(() {
       _rows = rows;
+      _fileName = file.name;
       _dateColumn = guessed?.dateColumn;
       _amountColumn = guessed?.amountColumn;
       _noteColumn = guessed?.noteColumn;
@@ -119,8 +125,25 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
         parsed.where((r) => r.importable).map((r) => r.tx!).toList();
     if (toImport.isEmpty) return;
     await ref.read(transactionsProvider.notifier).addAll(toImport);
+    await ref.read(importsProvider.notifier).record(
+        fileName: _fileName ?? '—', opsCount: toImport.length);
     if (!mounted) return;
-    Navigator.of(context).pop();
+    // Экран живёт двумя жизнями: пушится из уведомления о найденной
+    // выписке или встроен в боковую панель. Во втором случае pop()
+    // снимал корневой маршрут — оставался чёрный экран.
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      setState(() {
+        _rows = null;
+        _fileName = null;
+        _dateColumn = null;
+        _amountColumn = null;
+        _noteColumn = null;
+        _unsignedIsExpense = false;
+      });
+    }
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(
@@ -140,27 +163,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.importStatementTitle)),
       body: _rows == null
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.table_view_rounded,
-                      size: 56, color: theme.colorScheme.onSurfaceVariant),
-                  const SizedBox(height: 16),
-                  Text(
-                    context.l10n.chooseCsvPrompt,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton.icon(
-                    onPressed: _pickFile,
-                    icon: const Icon(Icons.upload_file_rounded),
-                    label: Text(context.l10n.chooseFile),
-                  ),
-                ],
-              ),
-            )
+          ? _buildStart(context)
           : ListView(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
               children: [
@@ -233,6 +236,77 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  /// Стартовое состояние: выбор файла + журнал уже импортированных
+  /// файлов с пагинацией («Показать ещё» по [_historyPageSize]).
+  Widget _buildStart(BuildContext context) {
+    final theme = Theme.of(context);
+    final history = ref.watch(importsProvider);
+
+    final picker = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.table_view_rounded,
+            size: 56, color: theme.colorScheme.onSurfaceVariant),
+        const SizedBox(height: 16),
+        Text(
+          context.l10n.chooseCsvPrompt,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyLarge
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          onPressed: _pickFile,
+          icon: const Icon(Icons.upload_file_rounded),
+          label: Text(context.l10n.chooseFile),
+        ),
+      ],
+    );
+
+    if (history.isEmpty) return Center(child: picker);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 40),
+      children: [
+        Center(child: picker),
+        const SizedBox(height: 32),
+        Text(context.l10n.importedFilesTitle,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 4),
+        for (final record in history.take(_historyShown))
+          ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.task_alt_rounded,
+                size: 20, color: theme.colorScheme.primary),
+            title: Text(
+              record.fileName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              '${DateFormat('d MMM yyyy, HH:mm', context.localeCode).format(record.importedAt)}'
+              ' · ${context.l10n.importedToast(record.opsCount)}',
+            ),
+          ),
+        if (history.length > _historyShown)
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () => setState(
+                  () => _historyShown += _historyPageSize),
+              icon: const Icon(Icons.expand_more_rounded, size: 18),
+              label: Text(context.l10n
+                  .showMoreCount(history.length - _historyShown)),
+            ),
+          ),
+      ],
     );
   }
 

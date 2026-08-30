@@ -59,9 +59,13 @@ class TransactionsRepository {
   List<Tx> loadAll() =>
       List.unmodifiable(_cache.where((t) => !t.isDeleted));
 
-  /// Всё, включая надгробия — для публикации в общую папку.
+  /// Всё, включая надгробия — для публикации в общую папку (ADR-0014).
   List<Tx> allRows() => List.unmodifiable(_cache);
 
+  /// Полная замена набора — только для восстановления из бэкапа,
+  /// синхронизации и массовой переклассификации. Для обычных
+  /// добавлений/правок использовать [upsert]/[removeById]: они не
+  /// переписывают всю таблицу.
   Future<void> saveAll(List<Tx> transactions) async {
     _cache = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
     await _db.transaction(() async {
@@ -72,44 +76,43 @@ class TransactionsRepository {
     });
   }
 
-  /// Добавляет операции, не переписывая таблицу целиком: одна вставка
-  /// вместо «удалить всё и записать заново». На тысячах операций
-  /// разница между постоянным и линейным временем добавления.
-  Future<void> insertAll(Iterable<Tx> transactions,
-      {String? authorId}) async {
+  /// Точечная вставка/обновление: одна батч-запись затронутых строк
+  /// вместо перезаписи всей таблицы.
+  /// [touch] переставляет отметку изменения на «сейчас» — так ведёт
+  /// себя любая локальная правка. Восстановление данных передаёт
+  /// `touch: false`, чтобы сохранить исходные отметки для слияния.
+  Future<void> upsertAll(
+    List<Tx> transactions, {
+    String? authorId,
+    bool touch = true,
+  }) async {
+    if (transactions.isEmpty) return;
     final now = DateTime.now();
-    final added = [
+    // Отметка изменения и автор нужны слиянию общих счетов (ADR-0014).
+    final stamped = [
       for (final tx in transactions)
         tx.copyWith(
-          updatedAt: tx.updatedAt ?? now,
+          updatedAt: touch ? now : (tx.updatedAt ?? now),
           authorId: tx.authorId ?? authorId,
         ),
     ];
-    if (added.isEmpty) return;
-    _cache = [..._cache, ...added]
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final ids = {for (final t in stamped) t.id};
+    _cache = [
+      ...stamped,
+      ..._cache.where((t) => !ids.contains(t.id)),
+    ]..sort((a, b) => b.date.compareTo(a.date));
     await _db.batch((batch) {
       batch.insertAllOnConflictUpdate(
-          _db.transactionRows, added.map(_toRow).toList());
+          _db.transactionRows, stamped.map(_toRow));
     });
   }
 
-  Future<void> insert(Tx tx, {String? authorId}) =>
-      insertAll([tx], authorId: authorId);
-
-  /// Обновляет одну операцию по id, переставляя отметку изменения:
-  /// по ней разрешается конфликт при слиянии общих счетов.
-  Future<void> updateOne(Tx tx) async {
-    final updated = tx.copyWith(updatedAt: DateTime.now());
-    _cache = [
-      for (final t in _cache) t.id == tx.id ? updated : t,
-    ]..sort((a, b) => b.date.compareTo(a.date));
-    await _db.update(_db.transactionRows).replace(_toRow(updated));
-  }
+  Future<void> upsert(Tx tx, {String? authorId}) =>
+      upsertAll([tx], authorId: authorId);
 
   /// Мягкое удаление: строка остаётся надгробием, иначе файл второго
-  /// участника воскресил бы операцию при следующем слиянии.
-  Future<void> deleteOne(String id) async {
+  /// участника общего счёта воскресил бы операцию при слиянии.
+  Future<void> removeById(String id) async {
     final now = DateTime.now();
     Tx? removed;
     _cache = [
@@ -124,7 +127,7 @@ class TransactionsRepository {
     await _db.update(_db.transactionRows).replace(_toRow(tombstone));
   }
 
-  /// Слияние операций из файлов других участников (ADR-0013):
+  /// Слияние операций из файлов других участников (ADR-0014):
   /// побеждает более поздняя отметка изменения, при равенстве —
   /// запись с большим `authorId`, чтобы результат не зависел от
   /// порядка чтения файлов. Возвращает число применённых изменений.

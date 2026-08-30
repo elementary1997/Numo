@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers.dart';
 
-/// Сверка общих счетов (ADR-0013): забрать файлы других участников,
+/// Сверка общих счетов (ADR-0014): забрать файлы других участников,
 /// слить их данные с локальными и выложить свой файл.
 /// Возвращает число применённых чужих изменений.
 Future<int> syncSharedAccounts(WidgetRef ref) async {

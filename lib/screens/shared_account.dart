@@ -11,7 +11,7 @@ import '../models/member.dart';
 import '../state/providers.dart';
 import '../state/shared_sync_actions.dart';
 
-/// Настройка общих счетов (ADR-0013): папка обмена, моё имя,
+/// Настройка общих счетов (ADR-0014): папка обмена, моё имя,
 /// участники и ручная сверка.
 class SharedAccountScreen extends ConsumerStatefulWidget {
   const SharedAccountScreen({super.key});

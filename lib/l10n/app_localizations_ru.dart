@@ -349,6 +349,14 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get importedFilesTitle => 'Уже импортированные файлы';
+
+  @override
+  String showMoreCount(int count) {
+    return 'Показать ещё ($count)';
+  }
+
+  @override
   String columnN(int n) {
     return 'Колонка $n';
   }

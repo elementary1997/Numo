@@ -4,6 +4,7 @@ import '../data/accounts_repository.dart';
 import '../data/budgets_repository.dart';
 import '../data/categories_repository.dart';
 import '../data/goals_repository.dart';
+import '../data/imports_repository.dart';
 import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
@@ -11,6 +12,7 @@ import '../data/backup.dart';
 import '../data/members_repository.dart';
 import '../data/rules_repository.dart';
 import '../data/security_repository.dart';
+import '../data/statement_import.dart' show categorizeByBankCategory;
 import '../data/shared_sync.dart';
 import '../data/sync_service.dart';
 import '../data/update_service.dart';
@@ -94,30 +96,30 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
   @override
   List<Tx> build() => ref.read(repositoryProvider).loadAll();
 
-  Future<void> add(Tx tx) async {
+  Future<void> add(Tx tx) => addAll([tx]);
+
+  /// Пакетное добавление/обновление по id (одиночные операции,
+  /// переводы, импорт выписок) — точечная запись без перезаписи
+  /// всей таблицы.
+  Future<void> addAll(List<Tx> txs) async {
+    if (txs.isEmpty) return;
     final repo = ref.read(repositoryProvider);
-    await repo.insert(tx, authorId: ref.read(myMemberIdProvider));
+    await repo.upsertAll(txs, authorId: ref.read(myMemberIdProvider));
+    // Состояние берём из репозитория: он проставил отметку изменения
+    // и автора, нужных слиянию общих счетов (ADR-0014).
     state = repo.loadAll();
   }
 
   Future<void> update(Tx tx) async {
+    if (!state.any((t) => t.id == tx.id)) return;
     final repo = ref.read(repositoryProvider);
-    await repo.updateOne(tx);
+    await repo.upsert(tx);
     state = repo.loadAll();
   }
 
   Future<void> remove(String id) async {
     final repo = ref.read(repositoryProvider);
-    await repo.deleteOne(id);
-    state = repo.loadAll();
-  }
-
-  /// Пачка операций одной вставкой — импорт выписки.
-  Future<void> addAll(List<Tx> transactions) async {
-    if (transactions.isEmpty) return;
-    final repo = ref.read(repositoryProvider);
-    await repo.insertAll(transactions,
-        authorId: ref.read(myMemberIdProvider));
+    await repo.removeById(id);
     state = repo.loadAll();
   }
 
@@ -148,8 +150,7 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
     final ts = DateTime.now().microsecondsSinceEpoch;
     final when = date ?? DateTime.now();
     final note = '${from.title} → ${to.title}';
-    final repo = ref.read(repositoryProvider);
-    await repo.insertAll(authorId: ref.read(myMemberIdProvider), [
+    await addAll([
       Tx(
         id: 'trf-$ts-out',
         type: TxType.expense,
@@ -169,7 +170,6 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
         note: note,
       ),
     ]);
-    state = repo.loadAll();
   }
 }
 
@@ -262,6 +262,7 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
   final txs = ref.watch(transactionsProvider).where(
         (t) => t.date.year == month.year && t.date.month == month.month,
       );
+
   final toRub = ref.watch(rubAmountProvider);
 
   var income = 0.0;
@@ -327,14 +328,12 @@ class AccountsNotifier extends Notifier<List<Account>> {
     final now = DateTime.now();
     state = [
       for (final a in state)
-        a.id == id
-            ? a.copyWith(archived: archived, updatedAt: now)
-            : a,
+        a.id == id ? a.copyWith(archived: archived, updatedAt: now) : a,
     ];
     await ref.read(accountsRepositoryProvider).saveAll(state);
   }
 
-  /// Слияние общих счетов из файлов других участников.
+  /// Слияние общих счетов из файлов других участников (ADR-0014).
   Future<int> mergeAll(List<Account> incoming) async {
     final repo = ref.read(accountsRepositoryProvider);
     final changed = await repo.mergeAll(incoming);
@@ -364,6 +363,33 @@ final accountBalanceProvider = Provider.family<double, String>(
         .where((t) => t.accountId == accountId)
         .fold(0.0, (sum, t) => sum + t.signedAmount));
 
+final importsRepositoryProvider = Provider<ImportsRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class ImportsNotifier extends Notifier<List<ImportRecord>> {
+  @override
+  List<ImportRecord> build() => ref.read(importsRepositoryProvider).loadAll();
+
+  /// Записывает успешный импорт в журнал.
+  Future<void> record({
+    required String fileName,
+    required int opsCount,
+  }) async {
+    final repo = ref.read(importsRepositoryProvider);
+    await repo.add(ImportRecord(
+      id: 'impfile-${DateTime.now().microsecondsSinceEpoch}',
+      fileName: fileName,
+      importedAt: DateTime.now(),
+      opsCount: opsCount,
+    ));
+    state = repo.loadAll();
+  }
+}
+
+final importsProvider =
+    NotifierProvider<ImportsNotifier, List<ImportRecord>>(ImportsNotifier.new);
+
 final rulesRepositoryProvider = Provider<RulesRepository>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
@@ -391,19 +417,27 @@ class RulesNotifier extends Notifier<List<CategoryRule>> {
     await ref.read(rulesRepositoryProvider).saveAll(state);
   }
 
-  /// Применяет правила к существующим операциям (кроме переводов).
+  /// Применяет правила к существующим операциям (кроме переводов);
+  /// операции из «Прочего» дополнительно распределяются по
+  /// банковским рубрикам из описания (импорт выписок).
   /// Возвращает число переклассифицированных операций.
   Future<int> applyToExisting() async {
     final txs = ref.read(transactionsProvider);
     var changed = 0;
     final updated = <Tx>[];
     for (final t in txs) {
-      final match = t.isTransfer || t.note.isEmpty
-          ? null
-          : categorizeByRules(t.note, state);
-      if (match != null && match != t.categoryId) {
+      String? matched;
+      if (!t.isTransfer && t.note.isNotEmpty) {
+        matched = categorizeByRules(t.note, state);
+        // Банковская рубрика — только фолбэк для неразобранного:
+        // вручную выбранные категории не трогаем.
+        if (matched == null && t.categoryId == Categories.other.id) {
+          matched = categorizeByBankCategory(t.note);
+        }
+      }
+      if (matched != null && matched != t.categoryId) {
         changed++;
-        updated.add(t.copyWith(categoryId: match));
+        updated.add(t.copyWith(categoryId: matched));
       } else {
         updated.add(t);
       }
@@ -497,7 +531,7 @@ final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
 
-/// Снимок общих счетов для публикации в общую папку (ADR-0013):
+/// Снимок общих счетов для публикации в общую папку (ADR-0014):
 /// я, счета с флагом «общий» и все операции по ним, включая надгробия
 /// удалённых — иначе удаление не доедет до второго участника.
 ({

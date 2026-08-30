@@ -15,7 +15,7 @@ class TransactionRows extends Table {
   TextColumn get accountId => text().withDefault(const Constant('main'))();
 
   /// Время последнего изменения и «надгробие» удаления — по ним
-  /// сливаются данные участников общего счёта (ADR-0013).
+  /// сливаются данные участников общего счёта (ADR-0014).
   DateTimeColumn get updatedAt => dateTime().nullable()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
@@ -52,8 +52,8 @@ class AccountRows extends Table {
   DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get closesAt => dateTime().nullable()();
 
-  /// Общий счёт: уезжает в общую папку и сливается с данными
-  /// других участников (ADR-0013).
+  /// Общий счёт: уезжает в папку обмена и сливается с данными
+  /// других участников (ADR-0014).
   BoolColumn get shared => boolean().withDefault(const Constant(false))();
   DateTimeColumn get updatedAt => dateTime().nullable()();
 
@@ -132,6 +132,17 @@ class CategoryRuleRows extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// Журнал импортов выписок: какой файл, когда и сколько операций.
+class ImportRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get fileName => text()();
+  DateTimeColumn get importedAt => dateTime()();
+  IntColumn get opsCount => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 @DriftDatabase(tables: [
   TransactionRows,
   CategoryRows,
@@ -140,6 +151,7 @@ class CategoryRuleRows extends Table {
   AccountRows,
   CategoryRuleRows,
   GoalRows,
+  ImportRows,
   MemberRows,
 ])
 class NumoDatabase extends _$NumoDatabase {
@@ -148,7 +160,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -179,7 +191,10 @@ class NumoDatabase extends _$NumoDatabase {
             await m.addColumn(goalRows, goalRows.accountId);
           }
           if (from < 9) {
-            // Общие счета (ADR-0013): отметки изменения, надгробия
+            await m.createTable(importRows);
+          }
+          if (from < 10) {
+            // Общие счета (ADR-0014): отметки изменения, надгробия
             // удалений, автор операции и справочник участников.
             await m.addColumn(transactionRows, transactionRows.updatedAt);
             await m.addColumn(transactionRows, transactionRows.deletedAt);
