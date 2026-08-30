@@ -18,6 +18,23 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.7.0',
+    itemsRu: [
+      'Общие счета: ведите счёт вместе с другим человеком через общую папку в облаке — операции сливаются, а не затирают друг друга',
+      'В ленте видно, кто из участников внёс операцию',
+      'Валютные счета больше не искажают статистику: суммы сводятся в рубли по курсу ЦБ',
+      'Импорт выписки перестал терять одинаковые операции за один день',
+      'Windows: автообновление больше не срывается на кириллице в пути к папке пользователя',
+    ],
+    itemsEn: [
+      'Shared accounts: keep an account together with another person through a shared cloud folder — changes merge instead of overwriting each other',
+      'The feed shows which member added a transaction',
+      'Foreign-currency accounts no longer skew the stats: amounts are converted to rubles at the CBR rate',
+      'Statement import no longer drops identical transactions made on the same day',
+      'Windows: auto-update no longer breaks on non-Latin characters in the user folder path',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.6.1',
     itemsRu: [
       'Масштаб интерфейса исправлен: контент больше не обрезается, боковая панель на месте при любом масштабе',
