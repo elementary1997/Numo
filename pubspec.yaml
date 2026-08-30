@@ -1,7 +1,7 @@
 name: numo
 description: "Numo — контроль трат и анализ личных финансов. Все платформы, современный UI."
 publish_to: 'none'
-version: 1.12.2+24
+version: 1.13.0+25
 
 environment:
   sdk: ^3.9.0
@@ -24,6 +24,7 @@ dependencies:
   intl: any
   local_auth: ^3.0.1
   package_info_plus: ^9.0.1
+  qr: ^3.0.2
   shared_preferences: ^2.5.3
   timezone: ^0.10.1
   url_launcher: ^6.3.2

@@ -147,21 +147,24 @@ class _DonutPainter extends CustomPainter {
       ..color = trackColor;
     canvas.drawArc(rect, 0, 2 * pi, false, track);
 
-    final total = values.fold(0.0, (a, b) => a + b);
-    if (total <= 0) return;
+    final sweeps = donutSweeps(values);
+    if (sweeps.isEmpty) return;
 
     const gap = 0.035; // зазор между секторами, радианы
     var start = -pi / 2;
-    for (var i = 0; i < values.length; i++) {
-      final sweep = (values[i] / total) * 2 * pi * progress;
+    for (var i = 0; i < sweeps.length; i++) {
+      final sweep = sweeps[i] * progress;
       final paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round
         ..color = colors[i % colors.length];
-      final effectiveSweep = max(0.0, sweep - gap);
-      if (effectiveSweep > 0.01) {
-        canvas.drawArc(rect, start + gap / 2, effectiveSweep, false, paint);
+      // Зазор не должен съедать сам сегмент: у мелких долей он меньше.
+      final effectiveGap = min(gap, sweep * 0.4);
+      final effectiveSweep = sweep - effectiveGap;
+      if (effectiveSweep > 0.005) {
+        canvas.drawArc(
+            rect, start + effectiveGap / 2, effectiveSweep, false, paint);
       }
       start += sweep;
     }
@@ -170,6 +173,48 @@ class _DonutPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DonutPainter old) =>
       old.progress != progress || old.values != values;
+}
+
+/// Наименьшая заметная дуга сектора (радианы, ≈6°). Доля в один
+/// процент — это 3,6°: без нижней границы такой сектор превращается
+/// в невидимую царапину.
+const minDonutSweep = 0.105;
+
+/// Углы секторов пончика: мелкие доли получают минимальную заметную
+/// дугу, а крупные ужимаются пропорционально, чтобы круг оставался
+/// полным. Вынесено из художника, чтобы проверяться тестами.
+List<double> donutSweeps(List<double> values, {double? minSweep}) {
+  final positive = values.map((v) => v < 0 ? 0.0 : v).toList();
+  final total = positive.fold(0.0, (a, b) => a + b);
+  if (total <= 0) return const [];
+
+  final floor = minSweep ?? minDonutSweep;
+  const fullCircle = 2 * pi;
+  // Если даже равные доли меньше минимума (секторов очень много),
+  // делим круг поровну — иначе на всех не хватит.
+  if (floor * positive.length >= fullCircle) {
+    return List.filled(positive.length, fullCircle / positive.length);
+  }
+
+  final sweeps = positive.map((v) => v / total * fullCircle).toList();
+  // Сколько круга занимают поднятые до минимума сектора и сколько
+  // остаётся на пропорциональные.
+  var liftedCount = 0;
+  var restShare = 0.0;
+  for (final sweep in sweeps) {
+    if (sweep < floor) {
+      liftedCount++;
+    } else {
+      restShare += sweep;
+    }
+  }
+  if (liftedCount == 0) return sweeps;
+
+  final available = fullCircle - floor * liftedCount;
+  return [
+    for (final sweep in sweeps)
+      if (sweep < floor) floor else sweep / restShare * available,
+  ];
 }
 
 /// Плавная линия с градиентной заливкой, сеткой и аккуратными

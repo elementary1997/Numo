@@ -23,6 +23,7 @@ import 'package:numo/data/update_service.dart';
 import 'package:numo/models/member.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:numo/state/providers.dart';
+import 'package:numo/widgets/qr_code.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void useMobileViewport(WidgetTester tester) {
@@ -375,5 +376,25 @@ void main() {
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       handle.dispose();
     });
+  });
+
+  testWidgets('код приглашения показывается вместе с QR', (tester) async {
+    useMobileViewport(tester);
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Меню'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Общий счёт').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Показать код'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(InviteQr), findsOneWidget);
+    // Тот же код, что и текстом: расходиться им негде.
+    final qr = tester.widget<InviteQr>(find.byType(InviteQr));
+    expect(qr.data, startsWith('numo1:'));
+    expect(find.text(qr.data), findsOneWidget);
   });
 }

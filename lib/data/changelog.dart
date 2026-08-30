@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.13.0',
+    itemsRu: [
+      'QR-код приглашения: покажите его близкому — снимет телефоном',
+      'Мелкие доли на круговой диаграмме больше не пропадают',
+    ],
+    itemsEn: [
+      'Invite QR code: show it and the other person just points a phone at it',
+      'Small slices on the donut chart no longer vanish',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.12.2',
     itemsRu: [
       'macOS: неудачное обновление больше не может оставить без приложения',

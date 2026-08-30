@@ -14,6 +14,7 @@ import '../models/transaction.dart';
 import '../models/account.dart';
 import '../models/member.dart';
 import '../state/providers.dart';
+import '../widgets/qr_code.dart';
 import '../state/shared_sync_actions.dart';
 
 /// Настройка общих счетов (ADR-0014): папка обмена, моё имя,
@@ -251,6 +252,14 @@ class _SharedAccountScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Рядом сидящему проще снять код телефоном, чем пересылать.
+            Center(
+              child: InviteQr(
+                data: me.inviteCode,
+                semanticsLabel: context.l10n.sharedMyCode,
+              ),
+            ),
+            const SizedBox(height: 14),
             SelectableText(
               me.inviteCode,
               style: theme.textTheme.bodyMedium?.copyWith(
