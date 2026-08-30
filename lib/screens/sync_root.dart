@@ -37,6 +37,10 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
   /// перепроверки не спамили одним и тем же снекбаром.
   String? _notifiedUpdateVersion;
 
+  /// Первый ответ проверки обновлений уже получен — дальше о новой
+  /// версии можно говорить снекбаром.
+  bool _firstUpdateCheckSeen = false;
+
   /// Когда общие счета сверялись в последний раз — окно на desktop
   /// получает фокус часто, дёргать облако на каждый щелчок незачем.
   DateTime? _lastResumeSync;
@@ -256,6 +260,16 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
       ref.listen(updateCheckProvider, (previous, next) {
         final info = next.valueOrNull;
         if (info == null || info.version == _notifiedUpdateVersion) return;
+        // Про отложенную версию напоминает только баннер на дашборде.
+        if (info.version == ref.read(dismissedUpdateProvider)) return;
+        // При запуске о версии говорит баннер на дашборде; снекбар
+        // нужен для другого случая — окно открыто, и релиз вышел
+        // прямо сейчас, а пользователь смотрит не на «Обзор».
+        if (!_firstUpdateCheckSeen) {
+          _firstUpdateCheckSeen = true;
+          _notifiedUpdateVersion = info.version;
+          return;
+        }
         _notifiedUpdateVersion = info.version;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           duration: const Duration(seconds: 10),

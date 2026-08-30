@@ -381,5 +381,13 @@
   "sharedCodeIsMine": "Это ваш собственный код",
   "sharedMemberAdded": "{name} теперь в списке участников",
   "@sharedMemberAdded": {"placeholders": {"name": {"type": "String"}}},
-  "sharedAddManually": "Ввести имя вручную"
+  "sharedAddManually": "Ввести имя вручную",
+  "updateBannerTitle": "Доступна версия {version}",
+  "@updateBannerTitle": {"placeholders": {"version": {"type": "String"}}},
+  "updateBannerBody": "Приложение обновится само: скачает сборку, закроется и запустится заново",
+  "updateLater": "Позже",
+  "updateInstalledVersion": "Установлена {version}",
+  "@updateInstalledVersion": {"placeholders": {"version": {"type": "String"}}},
+  "updateAvailableShort": "Доступна {version}",
+  "@updateAvailableShort": {"placeholders": {"version": {"type": "String"}}}
 }

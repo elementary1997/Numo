@@ -18,6 +18,7 @@ import 'package:numo/data/members_repository.dart';
 import 'package:numo/data/shared_sync.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/main.dart';
+import 'package:numo/data/update_service.dart';
 import 'package:numo/models/member.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:numo/state/providers.dart';
@@ -29,7 +30,11 @@ void useMobileViewport(WidgetTester tester) {
   addTearDown(tester.view.reset);
 }
 
-Future<Widget> buildApp({List<Tx> transactions = const []}) async {
+Future<Widget> buildApp({
+  List<Tx> transactions = const [],
+  UpdateInfo? availableUpdate,
+  String? dismissedUpdate,
+}) async {
   SharedPreferences.setMockInitialValues({
     'numo.transactions.migrated-to-drift.v1': true,
   });
@@ -63,6 +68,9 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
       accountsRepositoryProvider.overrideWithValue(accountsRepo),
       rulesRepositoryProvider.overrideWithValue(rulesRepo),
       goalsRepositoryProvider.overrideWithValue(goalsRepo),
+      if (availableUpdate != null)
+        updateCheckProvider.overrideWith((ref) async => availableUpdate),
+      dismissedUpdateProvider.overrideWith((ref) => dismissedUpdate),
       importsRepositoryProvider.overrideWithValue(importsRepo),
     ],
     child: const NumoApp(),
@@ -237,5 +245,55 @@ void main() {
     expect(find.text('Это не похоже на код приглашения Numo'),
         findsOneWidget);
     expect(find.text('Пока только вы'), findsOneWidget);
+  });
+
+  group('уведомление о новой версии', () {
+    const info = UpdateInfo(
+      version: '9.9.9',
+      url: 'https://example.com/release',
+      assetUrl: 'https://example.com/numo.zip',
+    );
+
+    testWidgets('баннер на дашборде виден и не исчезает сам',
+        (tester) async {
+      useMobileViewport(tester);
+      await tester.pumpWidget(await buildApp(availableUpdate: info));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Доступна версия 9.9.9'), findsOneWidget);
+
+      // Снекбар живёт 10 секунд — баннер должен пережить это с запасом.
+      await tester.pump(const Duration(seconds: 30));
+      expect(find.text('Доступна версия 9.9.9'), findsOneWidget);
+    });
+
+    testWidgets('«Позже» убирает баннер до следующего релиза',
+        (tester) async {
+      useMobileViewport(tester);
+      await tester.pumpWidget(await buildApp(availableUpdate: info));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Позже'));
+      await tester.pumpAndSettle();
+      expect(find.text('Доступна версия 9.9.9'), findsNothing);
+    });
+
+    testWidgets('отложенная версия не показывается при запуске',
+        (tester) async {
+      useMobileViewport(tester);
+      await tester.pumpWidget(await buildApp(
+          availableUpdate: info, dismissedUpdate: '9.9.9'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Доступна версия 9.9.9'), findsNothing);
+    });
+
+    testWidgets('без обновления баннера нет', (tester) async {
+      useMobileViewport(tester);
+      await tester.pumpWidget(await buildApp());
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Доступна версия'), findsNothing);
+    });
   });
 }

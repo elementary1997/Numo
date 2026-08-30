@@ -11,6 +11,7 @@ import '../state/providers.dart';
 import '../widgets/account_avatar.dart';
 import '../widgets/charts.dart';
 import '../widgets/transaction_tile.dart';
+import '../widgets/update_banner.dart';
 import 'accounts.dart';
 import 'add_transaction.dart';
 import 'backup_actions.dart';
@@ -226,6 +227,9 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
+          // Напоминание о вышедшей версии живёт здесь, а не в снекбаре:
+          // его нельзя пропустить, отвернувшись на десять секунд.
+          const UpdateBanner(),
           _BalanceCard(netWorth: netWorth, stats: stats),
           const SizedBox(height: 12),
           const _AccountsStrip(),

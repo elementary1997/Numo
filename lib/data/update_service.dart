@@ -55,6 +55,7 @@ class UpdateService {
   static const _cachedAssetKey = 'numo.updates.latestAsset';
   static const _disabledKey = 'numo.updates.disabled';
   static const _pendingKey = 'numo.updates.pendingVersion';
+  static const _dismissedKey = 'numo.updates.dismissedVersion';
 
   /// Свежесть кэша проверки. Час, а не сутки: суточный кэш скрывал
   /// свежий релиз до завтра даже после перезапуска приложения.
@@ -82,6 +83,15 @@ class UpdateService {
 
   Future<String> currentVersion() async =>
       (await PackageInfo.fromPlatform()).version;
+
+  /// Версия, о которой пользователь сказал «позже»: баннер про неё
+  /// больше не показывается, но следующий релиз снова напомнит о себе.
+  Future<String?> get dismissedVersion async =>
+      (await SharedPreferences.getInstance()).getString(_dismissedKey);
+
+  Future<void> dismissVersion(String version) async =>
+      (await SharedPreferences.getInstance())
+          .setString(_dismissedKey, version);
 
   /// Помечает, что установка [version] запущена. Подмена файлов идёт
   /// уже после выхода приложения, поэтому её провал виден только по

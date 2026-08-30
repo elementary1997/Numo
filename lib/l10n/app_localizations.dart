@@ -2029,6 +2029,36 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Ввести имя вручную'**
   String get sharedAddManually;
+
+  /// No description provided for @updateBannerTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступна версия {version}'**
+  String updateBannerTitle(String version);
+
+  /// No description provided for @updateBannerBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Приложение обновится само: скачает сборку, закроется и запустится заново'**
+  String get updateBannerBody;
+
+  /// No description provided for @updateLater.
+  ///
+  /// In ru, this message translates to:
+  /// **'Позже'**
+  String get updateLater;
+
+  /// No description provided for @updateInstalledVersion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Установлена {version}'**
+  String updateInstalledVersion(String version);
+
+  /// No description provided for @updateAvailableShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доступна {version}'**
+  String updateAvailableShort(String version);
 }
 
 class _AppLocalizationsDelegate

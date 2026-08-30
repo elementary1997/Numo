@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../core/l10n.dart';
 import '../core/layout.dart';
+import '../state/providers.dart';
 import 'accounts.dart';
 import 'add_transaction.dart';
 import 'analytics.dart';
@@ -67,14 +69,14 @@ final _destinations = <_Destination>[
 /// Индексы, после которых в сайдбаре рисуется разделитель.
 const _sidebarDividersAfter = {3, 11};
 
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
 
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell> {
   int _index = 0;
 
   @override
@@ -134,6 +136,10 @@ class _HomeShellState extends State<HomeShell> {
                           _SidebarRow(
                             destination: _destinations[i],
                             selected: _index == i,
+                            // Точка у «Настроек» — тихий постоянный
+                            // признак вышедшей версии.
+                            badge: i == _destinations.length - 1 &&
+                                ref.watch(pendingUpdateProvider) != null,
                             onTap: () => setState(() => _index = i),
                           ),
                           if (_sidebarDividersAfter.contains(i))
@@ -219,11 +225,15 @@ class _SidebarRow extends StatelessWidget {
     required this.destination,
     required this.selected,
     required this.onTap,
+    this.badge = false,
   });
 
   final _Destination destination;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Точка-индикатор справа от названия раздела.
+  final bool badge;
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +267,15 @@ class _SidebarRow extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (badge)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -268,14 +287,14 @@ class _SidebarRow extends StatelessWidget {
 
 
 /// Версия приложения внизу боковой панели.
-class _VersionFooter extends StatefulWidget {
+class _VersionFooter extends ConsumerStatefulWidget {
   const _VersionFooter();
 
   @override
-  State<_VersionFooter> createState() => _VersionFooterState();
+  ConsumerState<_VersionFooter> createState() => _VersionFooterState();
 }
 
-class _VersionFooterState extends State<_VersionFooter> {
+class _VersionFooterState extends ConsumerState<_VersionFooter> {
   String? _version;
 
   @override
@@ -289,13 +308,26 @@ class _VersionFooterState extends State<_VersionFooter> {
   @override
   Widget build(BuildContext context) {
     if (_version == null) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final update = ref.watch(pendingUpdateProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 12, 10),
-      child: Text(
-        'v$_version',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'v$_version',
+            style: theme.textTheme.labelSmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          if (update != null)
+            Text(
+              context.l10n.updateAvailableShort(update.version),
+              style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700),
             ),
+        ],
       ),
     );
   }

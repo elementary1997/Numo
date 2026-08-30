@@ -1097,4 +1097,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedAddManually => 'Enter a name manually';
+
+  @override
+  String updateBannerTitle(String version) {
+    return 'Version $version is available';
+  }
+
+  @override
+  String get updateBannerBody =>
+      'The app updates itself: it downloads the build, closes and starts again';
+
+  @override
+  String get updateLater => 'Later';
+
+  @override
+  String updateInstalledVersion(String version) {
+    return 'Installed $version';
+  }
+
+  @override
+  String updateAvailableShort(String version) {
+    return '$version available';
+  }
 }

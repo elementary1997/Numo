@@ -606,6 +606,17 @@ final updateServiceProvider =
     Provider<UpdateService>((ref) => UpdateService());
 
 /// Фоновая суточная проверка обновлений (ADR-0010).
+/// Версия, о которой пользователь нажал «позже» (значение задаёт main()).
+final dismissedUpdateProvider = StateProvider<String?>((ref) => null);
+
+/// Обновление, о котором стоит сказать прямо сейчас: есть, не отложено
+/// и не идёт установка. Баннер и бейдж читают именно его.
+final pendingUpdateProvider = Provider<UpdateInfo?>((ref) {
+  final info = ref.watch(updateCheckProvider).valueOrNull;
+  if (info == null) return null;
+  return info.version == ref.watch(dismissedUpdateProvider) ? null : info;
+});
+
 final updateCheckProvider = FutureProvider<UpdateInfo?>(
     (ref) => ref.watch(updateServiceProvider).check());
 

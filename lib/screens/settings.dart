@@ -398,9 +398,27 @@ class _UpdatesCardState extends ConsumerState<_UpdatesCard> {
             title: Text(context.l10n.checkUpdates,
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(fontWeight: FontWeight.w500)),
-            subtitle: _version == null
-                ? null
-                : Text(context.l10n.versionLabel(_version!)),
+            subtitle: Builder(builder: (context) {
+              final update = ref.watch(pendingUpdateProvider);
+              final installed = _version == null
+                  ? null
+                  : context.l10n.updateInstalledVersion(_version!);
+              if (update == null) {
+                return installed == null
+                    ? const SizedBox.shrink()
+                    : Text(installed);
+              }
+              // Состояние видно без нажатия: что стоит и что вышло.
+              return Text(
+                [
+                  if (installed != null) installed,
+                  context.l10n.updateAvailableShort(update.version),
+                ].join(' · '),
+                style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600),
+              );
+            }),
             onTap: _checking ? null : _check,
           ),
           SwitchListTile(

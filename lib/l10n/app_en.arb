@@ -336,5 +336,10 @@
   "sharedCodeInvalid": "That does not look like a Numo invite code",
   "sharedCodeIsMine": "That is your own code",
   "sharedMemberAdded": "{name} is now on the members list",
-  "sharedAddManually": "Enter a name manually"
+  "sharedAddManually": "Enter a name manually",
+  "updateBannerTitle": "Version {version} is available",
+  "updateBannerBody": "The app updates itself: it downloads the build, closes and starts again",
+  "updateLater": "Later",
+  "updateInstalledVersion": "Installed {version}",
+  "updateAvailableShort": "{version} available"
 }

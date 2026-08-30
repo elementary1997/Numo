@@ -62,6 +62,7 @@ Future<void> main() async {
   final themeOverride = prefs.getString('numo.theme');
   final accentColor = prefs.getInt('numo.accent');
   final uiScale = prefs.getDouble('numo.uiScale') ?? 1.0;
+  final dismissedUpdate = prefs.getString('numo.updates.dismissedVersion');
   // Наступившие регулярные операции превращаются в реальные при запуске.
   await recurringRepository.materialize(repository);
   // Названия встроенных категорий/счёта следуют текущему языку.
@@ -90,6 +91,7 @@ Future<void> main() async {
         themeOverrideProvider.overrideWith((ref) => themeOverride),
         accentColorProvider.overrideWith((ref) => accentColor),
         uiScaleProvider.overrideWith((ref) => uiScale),
+        dismissedUpdateProvider.overrideWith((ref) => dismissedUpdate),
       ],
       child: const NumoApp(),
     ),

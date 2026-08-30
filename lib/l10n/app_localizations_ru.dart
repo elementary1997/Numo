@@ -1097,4 +1097,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sharedAddManually => 'Ввести имя вручную';
+
+  @override
+  String updateBannerTitle(String version) {
+    return 'Доступна версия $version';
+  }
+
+  @override
+  String get updateBannerBody =>
+      'Приложение обновится само: скачает сборку, закроется и запустится заново';
+
+  @override
+  String get updateLater => 'Позже';
+
+  @override
+  String updateInstalledVersion(String version) {
+    return 'Установлена $version';
+  }
+
+  @override
+  String updateAvailableShort(String version) {
+    return 'Доступна $version';
+  }
 }
