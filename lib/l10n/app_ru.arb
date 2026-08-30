@@ -369,5 +369,17 @@
   "removeAction": "Удалить",
   "updateDidNotApply": "Обновление до {version} не установилось",
   "@updateDidNotApply": {"placeholders": {"version": {"type": "String"}}},
-  "updateNoWriteAccess": "Нет прав на запись в папку, где стоит Numo. Скачайте новую версию со страницы релиза и распакуйте её сами — или перенесите приложение в свою папку пользователя."
+  "updateNoWriteAccess": "Нет прав на запись в папку, где стоит Numo. Скачайте новую версию со страницы релиза и распакуйте её сами — или перенесите приложение в свою папку пользователя.",
+  "sharedMyCode": "Мой код приглашения",
+  "sharedMyCodeHint": "Передайте его близкому — он вставит код у себя, и вы увидите друг друга по именам. Доступ к операциям даёт не код, а общая папка.",
+  "sharedShowCode": "Показать код",
+  "sharedCopyCode": "Скопировать",
+  "sharedCodeCopied": "Код скопирован",
+  "sharedAddByCode": "Добавить по коду",
+  "sharedCodeLabel": "Код приглашения",
+  "sharedCodeInvalid": "Это не похоже на код приглашения Numo",
+  "sharedCodeIsMine": "Это ваш собственный код",
+  "sharedMemberAdded": "{name} теперь в списке участников",
+  "@sharedMemberAdded": {"placeholders": {"name": {"type": "String"}}},
+  "sharedAddManually": "Ввести имя вручную"
 }

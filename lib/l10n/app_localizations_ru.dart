@@ -1061,4 +1061,40 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get updateNoWriteAccess =>
       'Нет прав на запись в папку, где стоит Numo. Скачайте новую версию со страницы релиза и распакуйте её сами — или перенесите приложение в свою папку пользователя.';
+
+  @override
+  String get sharedMyCode => 'Мой код приглашения';
+
+  @override
+  String get sharedMyCodeHint =>
+      'Передайте его близкому — он вставит код у себя, и вы увидите друг друга по именам. Доступ к операциям даёт не код, а общая папка.';
+
+  @override
+  String get sharedShowCode => 'Показать код';
+
+  @override
+  String get sharedCopyCode => 'Скопировать';
+
+  @override
+  String get sharedCodeCopied => 'Код скопирован';
+
+  @override
+  String get sharedAddByCode => 'Добавить по коду';
+
+  @override
+  String get sharedCodeLabel => 'Код приглашения';
+
+  @override
+  String get sharedCodeInvalid => 'Это не похоже на код приглашения Numo';
+
+  @override
+  String get sharedCodeIsMine => 'Это ваш собственный код';
+
+  @override
+  String sharedMemberAdded(String name) {
+    return '$name теперь в списке участников';
+  }
+
+  @override
+  String get sharedAddManually => 'Ввести имя вручную';
 }

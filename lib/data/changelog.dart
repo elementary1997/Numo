@@ -18,6 +18,15 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.10.0',
+    itemsRu: [
+      'Код приглашения: покажите его близкому, он вставит код у себя — и участники сразу видят друг друга по именам',
+    ],
+    itemsEn: [
+      'Invite code: show it to the other person, they paste it on their side — members recognise each other right away',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.9.0',
     itemsRu: [
       'Общие счета: ведите счёт вместе с другим человеком через общую папку в облаке — операции сливаются, а не затирают друг друга',

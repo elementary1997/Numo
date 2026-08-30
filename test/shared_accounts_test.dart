@@ -191,6 +191,38 @@ void main() {
         'Наш общий');
   });
 
+  group('код приглашения', () {
+    const her = Member(id: 'her1', name: 'Аня', color: Color(0xFF3DDC97));
+
+    test('round-trip: код разбирается обратно в того же человека', () {
+      final decoded = Member.fromInviteCode(her.inviteCode)!;
+      expect(decoded.id, her.id);
+      expect(decoded.name, her.name);
+      expect(decoded.color.toARGB32(), her.color.toARGB32());
+      // Чужой код не делает человека мной.
+      expect(decoded.isMe, isFalse);
+    });
+
+    test('код переживает пробелы и перенос строки из мессенджера', () {
+      final decoded = Member.fromInviteCode('  ${her.inviteCode}\n');
+      expect(decoded?.id, her.id);
+    });
+
+    test('имя с кириллицей и эмодзи не ломает код', () {
+      const tricky =
+          Member(id: 'x1', name: 'Аня 🌸 Петрова', color: Color(0xFF7C5CFF));
+      expect(Member.fromInviteCode(tricky.inviteCode)?.name,
+          'Аня 🌸 Петрова');
+    });
+
+    test('мусор и чужие форматы отвергаются', () {
+      expect(Member.fromInviteCode('просто текст'), isNull);
+      expect(Member.fromInviteCode('numo1:не-base64!!'), isNull);
+      expect(Member.fromInviteCode('numo1:'), isNull);
+      expect(Member.fromInviteCode(''), isNull);
+    });
+  });
+
   group('участники', () {
     test('при первом открытии заводится «я»', () async {
       final repo = await MembersRepository.open(db, meName: 'Я');

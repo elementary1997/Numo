@@ -1963,6 +1963,72 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Нет прав на запись в папку, где стоит Numo. Скачайте новую версию со страницы релиза и распакуйте её сами — или перенесите приложение в свою папку пользователя.'**
   String get updateNoWriteAccess;
+
+  /// No description provided for @sharedMyCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мой код приглашения'**
+  String get sharedMyCode;
+
+  /// No description provided for @sharedMyCodeHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Передайте его близкому — он вставит код у себя, и вы увидите друг друга по именам. Доступ к операциям даёт не код, а общая папка.'**
+  String get sharedMyCodeHint;
+
+  /// No description provided for @sharedShowCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать код'**
+  String get sharedShowCode;
+
+  /// No description provided for @sharedCopyCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скопировать'**
+  String get sharedCopyCode;
+
+  /// No description provided for @sharedCodeCopied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код скопирован'**
+  String get sharedCodeCopied;
+
+  /// No description provided for @sharedAddByCode.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить по коду'**
+  String get sharedAddByCode;
+
+  /// No description provided for @sharedCodeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Код приглашения'**
+  String get sharedCodeLabel;
+
+  /// No description provided for @sharedCodeInvalid.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это не похоже на код приглашения Numo'**
+  String get sharedCodeInvalid;
+
+  /// No description provided for @sharedCodeIsMine.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это ваш собственный код'**
+  String get sharedCodeIsMine;
+
+  /// No description provided for @sharedMemberAdded.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name} теперь в списке участников'**
+  String sharedMemberAdded(String name);
+
+  /// No description provided for @sharedAddManually.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ввести имя вручную'**
+  String get sharedAddManually;
 }
 
 class _AppLocalizationsDelegate

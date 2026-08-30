@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -103,12 +104,30 @@ class _SharedAccountScreenState
                 if (me != null)
                   Card(
                     margin: EdgeInsets.zero,
-                    child: ListTile(
-                      leading: _Avatar(member: me),
-                      title: Text(context.l10n.sharedMyName),
-                      subtitle: Text(me.name),
-                      trailing: const Icon(Icons.edit_outlined),
-                      onTap: () => _editMember(me),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: _Avatar(member: me),
+                          title: Text(context.l10n.sharedMyName),
+                          subtitle: Text(me.name),
+                          trailing: const Icon(Icons.edit_outlined),
+                          onTap: () => _editMember(me),
+                        ),
+                        const Divider(height: 1),
+                        ListTile(
+                          leading: const Icon(Icons.qr_code_rounded),
+                          title: Text(context.l10n.sharedMyCode),
+                          subtitle: Text(context.l10n.sharedMyCodeHint,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                  color:
+                                      theme.colorScheme.onSurfaceVariant)),
+                          trailing: TextButton(
+                            onPressed: () => _showMyCode(me),
+                            child: Text(context.l10n.sharedShowCode),
+                          ),
+                          onTap: () => _showMyCode(me),
+                        ),
+                      ],
                     ),
                   ),
 
@@ -121,7 +140,7 @@ class _SharedAccountScreenState
                               ?.copyWith(fontWeight: FontWeight.w800)),
                     ),
                     TextButton.icon(
-                      onPressed: () => _editMember(null),
+                      onPressed: _addByCode,
                       icon: const Icon(Icons.person_add_alt_1_rounded),
                       label: Text(context.l10n.sharedAddMember),
                     ),
@@ -212,6 +231,84 @@ class _SharedAccountScreenState
             : context.l10n.sharedPulled(applied)),
       ));
   }
+
+  /// Свой код приглашения — показываем крупно и даём скопировать.
+  Future<void> _showMyCode(Member me) async {
+    final theme = Theme.of(context);
+    final copied = context.l10n.sharedCodeCopied;
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.sharedMyCode),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SelectableText(
+              me.inviteCode,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                  fontFamily: 'monospace', fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Text(context.l10n.sharedMyCodeHint,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.l10n.close),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              // Буфер обмена заполняем без ожидания: после await
+              // контекст диалога уже закрыт.
+              Clipboard.setData(ClipboardData(text: me.inviteCode));
+              Navigator.of(context).pop();
+              _toast(copied);
+            },
+            icon: const Icon(Icons.copy_rounded),
+            label: Text(context.l10n.sharedCopyCode),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Добавление участника по коду, который прислал близкий: код несёт
+  /// его настоящий идентификатор, поэтому операции из его файла сразу
+  /// подписываются его именем — ждать первой сверки не нужно.
+  Future<void> _addByCode() async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => const _InviteCodeDialog(),
+    );
+    if (result == null) return;
+
+    if (result == _InviteCodeDialog.manualEntry) {
+      await _editMember(null);
+      return;
+    }
+
+    final member = Member.fromInviteCode(result);
+    if (!mounted) return;
+    if (member == null) {
+      _toast(context.l10n.sharedCodeInvalid);
+      return;
+    }
+    if (member.id == ref.read(myMemberIdProvider)) {
+      _toast(context.l10n.sharedCodeIsMine);
+      return;
+    }
+    await ref.read(membersProvider.notifier).upsert(member);
+    if (!mounted) return;
+    _toast(context.l10n.sharedMemberAdded(member.name));
+  }
+
+  void _toast(String message) => ScaffoldMessenger.of(context)
+    ..clearSnackBars()
+    ..showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _removeMember(Member member) async {
     final confirmed = await showDialog<bool>(
@@ -355,6 +452,67 @@ class _MemberDialogState extends State<_MemberDialog> {
             onPressed: () => Navigator.of(context)
                 .pop((name: _name.text.trim(), color: _color)),
             child: Text(context.l10n.save),
+          ),
+        ],
+      );
+}
+
+/// Ввод кода приглашения. Возвращает код, [manualEntry] — если человек
+/// предпочёл завести карточку руками.
+class _InviteCodeDialog extends StatefulWidget {
+  const _InviteCodeDialog();
+
+  static const manualEntry = '__manual__';
+
+  @override
+  State<_InviteCodeDialog> createState() => _InviteCodeDialogState();
+}
+
+class _InviteCodeDialogState extends State<_InviteCodeDialog> {
+  final _code = TextEditingController();
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(context.l10n.sharedAddByCode),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _code,
+              autofocus: true,
+              maxLines: 2,
+              minLines: 1,
+              decoration: InputDecoration(
+                labelText: context.l10n.sharedCodeLabel,
+                hintText: Member.invitePrefix,
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(context)
+                  .pop(_InviteCodeDialog.manualEntry),
+              child: Text(context.l10n.sharedAddManually),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: _code.text.trim().isEmpty
+                ? null
+                : () => Navigator.of(context).pop(_code.text),
+            child: Text(context.l10n.sharedAddMember),
           ),
         ],
       );

@@ -1061,4 +1061,40 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get updateNoWriteAccess =>
       'No write access to the folder where Numo is installed. Download the new version from the release page and unpack it yourself — or move the app into your user folder.';
+
+  @override
+  String get sharedMyCode => 'My invite code';
+
+  @override
+  String get sharedMyCodeHint =>
+      'Send it to the other person — they paste it on their side and you both see each other by name. Access to transactions comes from the shared folder, not from this code.';
+
+  @override
+  String get sharedShowCode => 'Show code';
+
+  @override
+  String get sharedCopyCode => 'Copy';
+
+  @override
+  String get sharedCodeCopied => 'Code copied';
+
+  @override
+  String get sharedAddByCode => 'Add by code';
+
+  @override
+  String get sharedCodeLabel => 'Invite code';
+
+  @override
+  String get sharedCodeInvalid => 'That does not look like a Numo invite code';
+
+  @override
+  String get sharedCodeIsMine => 'That is your own code';
+
+  @override
+  String sharedMemberAdded(String name) {
+    return '$name is now on the members list';
+  }
+
+  @override
+  String get sharedAddManually => 'Enter a name manually';
 }

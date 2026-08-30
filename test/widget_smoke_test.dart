@@ -18,6 +18,7 @@ import 'package:numo/data/members_repository.dart';
 import 'package:numo/data/shared_sync.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/main.dart';
+import 'package:numo/models/member.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:numo/state/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -181,7 +182,10 @@ void main() {
 
     expect(find.text('Пока только вы'), findsOneWidget);
 
+    // Кнопка ведёт в диалог кода приглашения; оттуда — ручной ввод.
     await tester.tap(find.text('Добавить человека'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ввести имя вручную'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Аня');
     await tester.tap(find.text('Сохранить'));
@@ -189,5 +193,49 @@ void main() {
 
     expect(find.text('Аня'), findsOneWidget);
     expect(find.text('Пока только вы'), findsNothing);
+  });
+
+  testWidgets('участник добавляется по коду приглашения', (tester) async {
+    useMobileViewport(tester);
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Меню'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Общий счёт').last);
+    await tester.pumpAndSettle();
+
+    const her = Member(
+        id: 'her-code-1', name: 'Аня', color: Color(0xFF3DDC97));
+    await tester.tap(find.text('Добавить человека'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, her.inviteCode);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Добавить человека'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Аня'), findsOneWidget);
+  });
+
+  testWidgets('негодный код приглашения объясняет ошибку', (tester) async {
+    useMobileViewport(tester);
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Меню'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Общий счёт').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Добавить человека'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'просто текст');
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Добавить человека'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Это не похоже на код приглашения Numo'),
+        findsOneWidget);
+    expect(find.text('Пока только вы'), findsOneWidget);
   });
 }
