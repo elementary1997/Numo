@@ -84,37 +84,36 @@ Future<void> showSecurityDialog(BuildContext context, WidgetRef ref) async {
 }
 
 Future<String?> _askPin(BuildContext context, {required String title}) async {
-  final controller = TextEditingController();
-  final result = await showDialog<String>(
+  return showDialog<String>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: TextField(
-        controller: controller,
-        autofocus: true,
-        obscureText: true,
-        keyboardType: TextInputType.number,
-        maxLength: 6,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        decoration: const InputDecoration(counterText: ''),
+    builder: (context) => DialogTextField(
+      builder: (context, controller) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: const InputDecoration(counterText: ''),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () {
+              final pin = controller.text;
+              if (pin.length >= 4) Navigator.of(context).pop(pin);
+            },
+            child: Text(context.l10n.next),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () {
-            final pin = controller.text;
-            if (pin.length >= 4) Navigator.of(context).pop(pin);
-          },
-          child: Text(context.l10n.next),
-        ),
-      ],
     ),
   );
-  disposeAfterDialog(controller);
-  return result;
 }
 
 /// Диалог выбора языка интерфейса.

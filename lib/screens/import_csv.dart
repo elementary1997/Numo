@@ -17,10 +17,20 @@ import '../core/l10n.dart';
 /// Импорт банковской выписки из CSV: выбор файла → маппинг колонок →
 /// предпросмотр с дедупликацией → импорт.
 class ImportCsvScreen extends ConsumerStatefulWidget {
-  const ImportCsvScreen({super.key, this.initialFilePath});
+  const ImportCsvScreen({
+    super.key,
+    this.initialFilePath,
+    this.initialRows,
+    this.initialFileName,
+  });
 
   /// Файл, который открывается сразу (автоимпорт из папки выписок).
   final String? initialFilePath;
+
+  /// Уже разобранные строки выписки — экран открывается сразу с
+  /// предпросмотром, минуя чтение с диска.
+  final List<List<String>>? initialRows;
+  final String? initialFileName;
 
   @override
   ConsumerState<ImportCsvScreen> createState() => _ImportCsvScreenState();
@@ -37,12 +47,29 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
   @override
   void initState() {
     super.initState();
+    final rows = widget.initialRows;
+    if (rows != null && rows.isNotEmpty) {
+      _applyRows(rows, widget.initialFileName ?? '');
+      return;
+    }
     final path = widget.initialFilePath;
     if (path != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadFile(XFile(path));
       });
     }
+  }
+
+  /// Показывает разобранную выписку и угадывает назначение колонок.
+  void _applyRows(List<List<String>> rows, String fileName) {
+    final guessed = StatementImporter.guessMapping(rows.first);
+    setState(() {
+      _rows = rows;
+      _fileName = fileName;
+      _dateColumn = guessed?.dateColumn;
+      _amountColumn = guessed?.amountColumn;
+      _noteColumn = guessed?.noteColumn;
+    });
   }
 
   int? _dateColumn;
@@ -84,14 +111,7 @@ class _ImportCsvScreenState extends ConsumerState<ImportCsvScreen> {
       }
       return;
     }
-    final guessed = StatementImporter.guessMapping(rows.first);
-    setState(() {
-      _rows = rows;
-      _fileName = file.name;
-      _dateColumn = guessed?.dateColumn;
-      _amountColumn = guessed?.amountColumn;
-      _noteColumn = guessed?.noteColumn;
-    });
+    _applyRows(rows, file.name);
   }
 
   ColumnMapping? get _mapping =>

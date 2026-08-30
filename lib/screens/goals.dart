@@ -186,7 +186,6 @@ class _GoalCard extends ConsumerWidget {
   }
 
   Future<void> _showTopUpDialog(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
     final accounts = ref.read(activeAccountsProvider);
     final goalAccount =
         goal.accountId == null ? null : accounts.byId(goal.accountId!);
@@ -198,7 +197,8 @@ class _GoalCard extends ConsumerWidget {
 
     final amount = await showDialog<double>(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (context) => DialogTextField(
+        builder: (context, controller) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(goal.title),
           content: Column(
@@ -248,9 +248,9 @@ class _GoalCard extends ConsumerWidget {
             ),
           ],
         ),
+        ),
       ),
     );
-    disposeAfterDialog(controller);
     if (amount == null || amount <= 0) return;
 
     await ref.read(goalsProvider.notifier).topUp(goal.id, amount);

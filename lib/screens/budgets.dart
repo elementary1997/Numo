@@ -217,17 +217,17 @@ Future<void> showBudgetDialog(
   TxCategory category, {
   double? currentLimit,
 }) async {
-  final controller = TextEditingController(
-    text: currentLimit == null
-        ? ''
-        : currentLimit == currentLimit.roundToDouble()
-            ? currentLimit.toStringAsFixed(0)
-            : currentLimit.toString(),
-  );
+  final initialText = currentLimit == null
+      ? ''
+      : currentLimit == currentLimit.roundToDouble()
+          ? currentLimit.toStringAsFixed(0)
+          : currentLimit.toString();
 
   await showDialog<void>(
     context: context,
-    builder: (context) => AlertDialog(
+    builder: (context) => DialogTextField(
+      initialText: initialText,
+      builder: (context, controller) => AlertDialog(
       title: Text(category.title),
       content: TextField(
         controller: controller,
@@ -266,7 +266,7 @@ Future<void> showBudgetDialog(
           child: Text(context.l10n.save),
         ),
       ],
+      ),
     ),
   );
-  disposeAfterDialog(controller);
 }

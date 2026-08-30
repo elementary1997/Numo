@@ -94,7 +94,7 @@ class RulesScreen extends ConsumerWidget {
 
   Future<void> _showRuleDialog(BuildContext context, WidgetRef ref,
       {CategoryRule? initial}) async {
-    final controller = TextEditingController(text: initial?.pattern ?? '');
+    final initialPattern = initial?.pattern ?? '';
     final categories = ref
         .read(categoriesProvider)
         .where((c) => !c.archived && !Categories.systemIds.contains(c.id))
@@ -103,7 +103,9 @@ class RulesScreen extends ConsumerWidget {
 
     await showDialog<void>(
       context: context,
-      builder: (context) => StatefulBuilder(
+      builder: (context) => DialogTextField(
+        initialText: initialPattern,
+        builder: (context, controller) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
           title: Text(initial == null ? context.l10n.newRule : context.l10n.editRule),
           content: Column(
@@ -152,8 +154,8 @@ class RulesScreen extends ConsumerWidget {
             ),
           ],
         ),
+        ),
       ),
     );
-    disposeAfterDialog(controller);
   }
 }
