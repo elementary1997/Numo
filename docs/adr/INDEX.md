@@ -14,3 +14,4 @@
 | [0010](0010-updates-and-desktop-builds.md) | Обновления через GitHub Releases, автосборки | accepted |
 | [0011](0011-ai-insights.md) | AI-аналитика: локальные инсайты + Claude | accepted |
 | [0012](0012-bank-statement-formats.md) | Форматы выписок: CSV + OFX + XLSX | accepted |
+| [0013](0013-shared-accounts.md) | Общие счета: участники и слияние файлов | accepted |

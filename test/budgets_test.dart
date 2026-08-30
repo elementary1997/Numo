@@ -1,6 +1,7 @@
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:numo/data/accounts_repository.dart';
 import 'package:numo/data/budgets_repository.dart';
 import 'package:numo/data/categories_repository.dart';
 import 'package:numo/data/database.dart';
@@ -64,11 +65,15 @@ void main() {
     final catRepo = await CategoriesRepository.open(db);
     final budgetRepo = await BudgetsRepository.open(db);
     await budgetRepo.setLimit('groceries', 10400);
+    // Статистика месяца сводит суммы к рублю по валюте счёта,
+    // поэтому ей нужен репозиторий счетов.
+    final accountsRepo = await AccountsRepository.open(db);
 
     final container = ProviderContainer(overrides: [
       repositoryProvider.overrideWithValue(txRepo),
       categoriesRepositoryProvider.overrideWithValue(catRepo),
       budgetsRepositoryProvider.overrideWithValue(budgetRepo),
+      accountsRepositoryProvider.overrideWithValue(accountsRepo),
     ]);
     addTearDown(container.dispose);
 

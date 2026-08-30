@@ -21,6 +21,7 @@ import 'categories.dart';
 import 'import_csv.dart';
 import 'recurring.dart';
 import 'rules.dart';
+import 'shared_account.dart';
 import 'settings_sheets.dart';
 import '../core/l10n.dart';
 
@@ -85,6 +86,9 @@ class DashboardScreen extends ConsumerWidget {
                   'rules' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const RulesScreen())),
+                  'shared' => Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (_) => const SharedAccountScreen())),
                   'import-csv' => Navigator.of(context).push(
                       MaterialPageRoute(
                           builder: (_) => const ImportCsvScreen())),
@@ -142,6 +146,14 @@ class DashboardScreen extends ConsumerWidget {
                     child: ListTile(
                       leading: Icon(Icons.account_balance_wallet_outlined),
                       title: Text(context.l10n.menuAccounts),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'shared',
+                    child: ListTile(
+                      leading: const Icon(Icons.people_alt_outlined),
+                      title: Text(context.l10n.menuShared),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),

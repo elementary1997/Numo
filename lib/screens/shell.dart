@@ -14,6 +14,7 @@ import 'goals.dart';
 import 'import_csv.dart';
 import 'recurring.dart';
 import 'rules.dart';
+import 'shared_account.dart';
 import 'settings.dart';
 import 'transactions.dart';
 
@@ -55,6 +56,8 @@ final _destinations = <_Destination>[
       (_) => const RecurringScreen()),
   _Destination(Icons.auto_fix_high_rounded, (c) => c.l10n.menuRules,
       (_) => const RulesScreen()),
+  _Destination(Icons.people_alt_rounded, (c) => c.l10n.menuShared,
+      (_) => const SharedAccountScreen()),
   _Destination(Icons.table_view_rounded, (c) => c.l10n.menuImportCsv,
       (_) => const ImportCsvScreen()),
   _Destination(Icons.settings_rounded, (c) => c.l10n.menuSettings,
@@ -62,7 +65,7 @@ final _destinations = <_Destination>[
 ];
 
 /// Индексы, после которых в сайдбаре рисуется разделитель.
-const _sidebarDividersAfter = {3, 10};
+const _sidebarDividersAfter = {3, 11};
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});

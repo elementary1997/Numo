@@ -12,11 +12,13 @@ import 'data/budgets_repository.dart';
 import 'data/categories_repository.dart';
 import 'data/database.dart';
 import 'data/goals_repository.dart';
+import 'data/members_repository.dart';
 import 'data/recurring_repository.dart';
 import 'data/repository.dart';
 import 'data/rules_repository.dart';
 import 'data/seed_localization.dart';
 import 'data/security_repository.dart';
+import 'data/shared_sync.dart';
 import 'data/sync_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -48,7 +50,10 @@ Future<void> main() async {
   final rulesRepository = await RulesRepository.open(database);
   final goalsRepository = await GoalsRepository.open(database);
   final securityRepository = await SecurityRepository.open();
+  final membersRepository = await MembersRepository.open(database,
+      meName: seedLocale == 'ru' ? 'Я' : 'Me');
   final syncService = await SyncService.open();
+  final sharedSync = await SharedSyncService.open();
   final prefs = await SharedPreferences.getInstance();
   final onboarded = prefs.getBool(onboardedKey) ?? false;
   final localeOverride = prefs.getString('numo.locale');
@@ -74,7 +79,9 @@ Future<void> main() async {
         rulesRepositoryProvider.overrideWithValue(rulesRepository),
         goalsRepositoryProvider.overrideWithValue(goalsRepository),
         securityRepositoryProvider.overrideWithValue(securityRepository),
+        membersRepositoryProvider.overrideWithValue(membersRepository),
         syncServiceProvider.overrideWithValue(syncService),
+        sharedSyncProvider.overrideWithValue(sharedSync),
         onboardedProvider.overrideWith((ref) => onboarded),
         localeOverrideProvider.overrideWith((ref) => localeOverride),
         themeOverrideProvider.overrideWith((ref) => themeOverride),

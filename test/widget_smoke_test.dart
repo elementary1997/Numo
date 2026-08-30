@@ -13,6 +13,8 @@ import 'package:numo/data/security_repository.dart';
 import 'package:numo/data/sync_service.dart';
 import 'package:numo/data/database.dart';
 import 'package:numo/data/goals_repository.dart';
+import 'package:numo/data/members_repository.dart';
+import 'package:numo/data/shared_sync.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/main.dart';
 import 'package:numo/models/transaction.dart';
@@ -40,13 +42,17 @@ Future<Widget> buildApp({List<Tx> transactions = const []}) async {
   final rulesRepo = await RulesRepository.open(db);
   final goalsRepo = await GoalsRepository.open(db);
   final securityRepo = await SecurityRepository.open();
+  final membersRepo = await MembersRepository.open(db);
   final syncService = await SyncService.open();
+  final sharedSync = await SharedSyncService.open();
   return ProviderScope(
     overrides: [
       // Тесты закреплены за русской локалью — проверяемые строки русские.
       localeOverrideProvider.overrideWith((ref) => 'ru'),
       securityRepositoryProvider.overrideWithValue(securityRepo),
       syncServiceProvider.overrideWithValue(syncService),
+      membersRepositoryProvider.overrideWithValue(membersRepo),
+      sharedSyncProvider.overrideWithValue(sharedSync),
       repositoryProvider.overrideWithValue(repo),
       categoriesRepositoryProvider.overrideWithValue(categoriesRepo),
       budgetsRepositoryProvider.overrideWithValue(budgetsRepo),
@@ -157,5 +163,28 @@ void main() {
 
     expect(find.text('Сохранить изменения'), findsOneWidget);
     expect(find.textContaining('1200', findRichText: true), findsWidgets);
+  });
+
+  testWidgets('экран общего счёта: участник добавляется и виден в списке',
+      (tester) async {
+    useMobileViewport(tester);
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Меню'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Общий счёт').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Пока только вы'), findsOneWidget);
+
+    await tester.tap(find.text('Добавить человека'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Аня');
+    await tester.tap(find.text('Сохранить'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Аня'), findsOneWidget);
+    expect(find.text('Пока только вы'), findsNothing);
   });
 }

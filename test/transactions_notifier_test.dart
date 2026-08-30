@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numo/data/database.dart';
+import 'package:numo/data/members_repository.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/models/transaction.dart';
 import 'package:numo/state/providers.dart';
@@ -28,8 +29,13 @@ void main() {
     });
     db = NumoDatabase(NativeDatabase.memory());
     final repo = await TransactionsRepository.open(db);
+    // Автор операции берётся из справочника участников (ADR-0013).
+    final members = await MembersRepository.open(db);
     container = ProviderContainer(
-      overrides: [repositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        repositoryProvider.overrideWithValue(repo),
+        membersRepositoryProvider.overrideWithValue(members),
+      ],
     );
   });
 
@@ -75,5 +81,27 @@ void main() {
     await notifier.add(tx('a', 100));
     await notifier.remove('a');
     expect(container.read(transactionsProvider), isEmpty);
+  });
+
+  test('точечные вставка, правка и удаление доходят до базы', () async {
+    final notifier = container.read(transactionsProvider.notifier);
+    await notifier.add(tx('a', 100, day: 5));
+    await notifier.add(tx('b', 200, day: 10));
+    await notifier.update(tx('a', 999, day: 5));
+    await notifier.remove('b');
+
+    // Перечитываем базу заново: кэш в памяти тут не поможет.
+    final reopened = await TransactionsRepository.open(db);
+    final stored = reopened.loadAll();
+    expect(stored.map((t) => t.id), ['a']);
+    expect(stored.single.amount, 999);
+  });
+
+  test('addAll вставляет пачку операций', () async {
+    final notifier = container.read(transactionsProvider.notifier);
+    await notifier.addAll([tx('a', 10, day: 1), tx('b', 20, day: 2)]);
+
+    final reopened = await TransactionsRepository.open(db);
+    expect(reopened.loadAll().map((t) => t.id), ['b', 'a']);
   });
 }

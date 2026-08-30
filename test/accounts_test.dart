@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:numo/data/accounts_repository.dart';
 import 'package:numo/data/categories_repository.dart';
 import 'package:numo/data/database.dart';
+import 'package:numo/data/members_repository.dart';
+import 'package:numo/data/rates_repository.dart';
 import 'package:numo/data/repository.dart';
 import 'package:numo/models/account.dart';
 import 'package:numo/models/category.dart';
@@ -18,6 +20,9 @@ void main() {
 
   late NumoDatabase db;
   late ProviderContainer container;
+  late TransactionsRepository txRepo;
+  late AccountsRepository accountsRepo;
+  late MembersRepository membersRepo;
 
   const cash = Account(
     id: 'cash',
@@ -38,12 +43,15 @@ void main() {
       'numo.transactions.migrated-to-drift.v1': true,
     });
     db = NumoDatabase(NativeDatabase.memory());
-    final txRepo = await TransactionsRepository.open(db);
-    final accountsRepo = await AccountsRepository.open(db);
+    txRepo = await TransactionsRepository.open(db);
+    accountsRepo = await AccountsRepository.open(db);
     await accountsRepo.saveAll([Accounts.main, cash, usd]);
+    // Автор операции берётся из справочника участников (ADR-0013).
+    membersRepo = await MembersRepository.open(db);
     container = ProviderContainer(overrides: [
       repositoryProvider.overrideWithValue(txRepo),
       accountsRepositoryProvider.overrideWithValue(accountsRepo),
+      membersRepositoryProvider.overrideWithValue(membersRepo),
     ]);
   });
 
@@ -101,6 +109,52 @@ void main() {
     expect(stats.expense, 0);
     expect(stats.income, 0);
     expect(stats.byCategory, isEmpty);
+  });
+
+  test('статистика месяца сводит валютные суммы в рубли по курсу ЦБ',
+      () async {
+    final notifier = container.read(transactionsProvider.notifier);
+    await notifier.add(Tx(
+      id: 'rub',
+      type: TxType.expense,
+      amount: 1000,
+      categoryId: 'cafe',
+      date: DateTime(2026, 8, 3),
+      accountId: 'main',
+    ));
+    await notifier.add(Tx(
+      id: 'usd',
+      type: TxType.expense,
+      amount: 100,
+      categoryId: 'cafe',
+      date: DateTime(2026, 8, 4),
+      accountId: 'usd',
+    ));
+
+    // Без курсов суммы остаются по номиналу, но валюта названа честно.
+    final offline = container.read(monthStatsProvider(DateTime(2026, 8)));
+    expect(offline.expense, 1100);
+    expect(offline.unconverted, ['USD']);
+    expect(offline.approximate, isFalse);
+
+    final withRates = ProviderContainer(overrides: [
+      repositoryProvider.overrideWithValue(txRepo),
+      accountsRepositoryProvider.overrideWithValue(accountsRepo),
+      membersRepositoryProvider.overrideWithValue(membersRepo),
+      ratesProvider.overrideWith((ref) async => RatesSnapshot(
+            rates: const {'USD': 90},
+            fetchedAt: DateTime.now(),
+          )),
+    ]);
+    addTearDown(withRates.dispose);
+    await withRates.read(ratesProvider.future);
+
+    final stats = withRates.read(monthStatsProvider(DateTime(2026, 8)));
+    expect(stats.expense, 1000 + 100 * 90);
+    expect(stats.byCategory['cafe'], 1000 + 100 * 90);
+    expect(stats.dailyExpense[3], 9000); // 4 августа — 100 $
+    expect(stats.approximate, isTrue);
+    expect(stats.unconverted, isEmpty);
   });
 
   test('кросс-валютный перевод сохраняет обе суммы', () async {

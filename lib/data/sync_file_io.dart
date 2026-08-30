@@ -15,3 +15,20 @@ Future<String?> readSyncFile(String path) async {
   if (!await file.exists()) return null;
   return file.readAsString();
 }
+
+/// Файлы папки, чьи имена начинаются с [prefix] и кончаются на `.json`
+/// — файлы участников общего счёта (ADR-0013).
+Future<List<String>> listSyncFiles(String dir, String prefix) async {
+  final directory = Directory(dir);
+  if (!await directory.exists()) return const [];
+  final result = <String>[];
+  await for (final entity in directory.list(followLinks: false)) {
+    if (entity is! File) continue;
+    final name = entity.uri.pathSegments.last;
+    if (name.startsWith(prefix) && name.endsWith('.json')) {
+      result.add(entity.path);
+    }
+  }
+  result.sort();
+  return result;
+}

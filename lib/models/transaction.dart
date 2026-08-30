@@ -11,6 +11,9 @@ class Tx {
     required this.date,
     this.accountId = 'main',
     this.note = '',
+    this.updatedAt,
+    this.deletedAt,
+    this.authorId,
   });
 
   final String id;
@@ -20,6 +23,24 @@ class Tx {
   final DateTime date;
   final String accountId;
   final String note;
+
+  /// Когда запись последний раз менялась — по часам изменившего
+  /// устройства. Решает конфликты слияния общих счетов (ADR-0013).
+  final DateTime? updatedAt;
+
+  /// «Надгробие»: операция удалена и не показывается, но переживает
+  /// слияние — иначе файл второго участника воскресил бы её.
+  final DateTime? deletedAt;
+
+  /// Участник, внёсший операцию; null — операция заведена до появления
+  /// общих счетов или на этом же устройстве без участников.
+  final String? authorId;
+
+  /// Время последнего изменения для слияния: у старых записей его нет,
+  /// тогда за отметку сходит дата операции.
+  DateTime get changedAt => updatedAt ?? date;
+
+  bool get isDeleted => deletedAt != null;
 
   bool get isExpense => type == TxType.expense;
 
@@ -44,6 +65,9 @@ class Tx {
     DateTime? date,
     String? accountId,
     String? note,
+    DateTime? updatedAt,
+    DateTime? deletedAt,
+    String? authorId,
   }) =>
       Tx(
         id: id,
@@ -53,6 +77,9 @@ class Tx {
         date: date ?? this.date,
         accountId: accountId ?? this.accountId,
         note: note ?? this.note,
+        updatedAt: updatedAt ?? this.updatedAt,
+        deletedAt: deletedAt ?? this.deletedAt,
+        authorId: authorId ?? this.authorId,
       );
 
   Map<String, dynamic> toJson() => {
@@ -63,6 +90,9 @@ class Tx {
         'date': date.toIso8601String(),
         'accountId': accountId,
         'note': note,
+        if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+        if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
+        if (authorId != null) 'authorId': authorId,
       };
 
   factory Tx.fromJson(Map<String, dynamic> json) => Tx(
@@ -73,5 +103,8 @@ class Tx {
         date: DateTime.parse(json['date'] as String),
         accountId: (json['accountId'] as String?) ?? 'main',
         note: (json['note'] as String?) ?? '',
+        updatedAt: DateTime.tryParse((json['updatedAt'] as String?) ?? ''),
+        deletedAt: DateTime.tryParse((json['deletedAt'] as String?) ?? ''),
+        authorId: json['authorId'] as String?,
       );
 }

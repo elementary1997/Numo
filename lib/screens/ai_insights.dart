@@ -179,12 +179,14 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final toRub = ref.watch(rubAmountProvider);
     final insights = buildInsights(
       l10n: context.l10n,
       transactions: ref.watch(transactionsProvider),
       categories: ref.watch(categoriesProvider),
       budgets: ref.watch(budgetsProvider),
       now: DateTime.now(),
+      amountOf: (t) => toRub(t).amount,
     );
 
     Color toneColor(InsightTone tone) => switch (tone) {

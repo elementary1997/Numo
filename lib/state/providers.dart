@@ -8,12 +8,15 @@ import '../data/rates_repository.dart';
 import '../data/recurring_repository.dart';
 import '../data/repository.dart';
 import '../data/backup.dart';
+import '../data/members_repository.dart';
 import '../data/rules_repository.dart';
 import '../data/security_repository.dart';
+import '../data/shared_sync.dart';
 import '../data/sync_service.dart';
 import '../data/update_service.dart';
 import '../models/category_rule.dart';
 import '../models/goal.dart';
+import '../models/member.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/recurring.dart';
@@ -51,6 +54,20 @@ class CategoriesNotifier extends Notifier<List<TxCategory>> {
     await ref.read(categoriesRepositoryProvider).saveAll(state);
   }
 
+  /// Категории из файлов участников: добавляются только отсутствующие,
+  /// чужой файл не перекрашивает и не переименовывает мои категории.
+  Future<int> mergeMissing(List<TxCategory> incoming) async {
+    final known = state.map((c) => c.id).toSet();
+    final missing = [
+      for (final category in incoming)
+        if (!known.contains(category.id)) category,
+    ];
+    if (missing.isEmpty) return 0;
+    state = [...state, ...missing];
+    await ref.read(categoriesRepositoryProvider).saveAll(state);
+    return missing.length;
+  }
+
   /// Полная замена данных — используется восстановлением из бэкапа.
   Future<void> replaceAll(List<TxCategory> categories) async {
     state = [...categories];
@@ -78,20 +95,39 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
   List<Tx> build() => ref.read(repositoryProvider).loadAll();
 
   Future<void> add(Tx tx) async {
-    state = [tx, ...state]..sort((a, b) => b.date.compareTo(a.date));
-    await ref.read(repositoryProvider).saveAll(state);
+    final repo = ref.read(repositoryProvider);
+    await repo.insert(tx, authorId: ref.read(myMemberIdProvider));
+    state = repo.loadAll();
   }
 
   Future<void> update(Tx tx) async {
-    state = [
-      for (final t in state) t.id == tx.id ? tx : t,
-    ]..sort((a, b) => b.date.compareTo(a.date));
-    await ref.read(repositoryProvider).saveAll(state);
+    final repo = ref.read(repositoryProvider);
+    await repo.updateOne(tx);
+    state = repo.loadAll();
   }
 
   Future<void> remove(String id) async {
-    state = state.where((t) => t.id != id).toList();
-    await ref.read(repositoryProvider).saveAll(state);
+    final repo = ref.read(repositoryProvider);
+    await repo.deleteOne(id);
+    state = repo.loadAll();
+  }
+
+  /// Пачка операций одной вставкой — импорт выписки.
+  Future<void> addAll(List<Tx> transactions) async {
+    if (transactions.isEmpty) return;
+    final repo = ref.read(repositoryProvider);
+    await repo.insertAll(transactions,
+        authorId: ref.read(myMemberIdProvider));
+    state = repo.loadAll();
+  }
+
+  /// Слияние операций общих счетов из файлов других участников.
+  /// Возвращает число применённых изменений.
+  Future<int> mergeAll(List<Tx> incoming) async {
+    final repo = ref.read(repositoryProvider);
+    final changed = await repo.mergeAll(incoming);
+    if (changed > 0) state = repo.loadAll();
+    return changed;
   }
 
   /// Полная замена данных — используется восстановлением из бэкапа.
@@ -112,24 +148,28 @@ class TransactionsNotifier extends Notifier<List<Tx>> {
     final ts = DateTime.now().microsecondsSinceEpoch;
     final when = date ?? DateTime.now();
     final note = '${from.title} → ${to.title}';
-    await add(Tx(
-      id: 'trf-$ts-out',
-      type: TxType.expense,
-      amount: amountFrom,
-      categoryId: Categories.transfer.id,
-      date: when,
-      accountId: from.id,
-      note: note,
-    ));
-    await add(Tx(
-      id: 'trf-$ts-in',
-      type: TxType.income,
-      amount: amountTo,
-      categoryId: Categories.transfer.id,
-      date: when,
-      accountId: to.id,
-      note: note,
-    ));
+    final repo = ref.read(repositoryProvider);
+    await repo.insertAll(authorId: ref.read(myMemberIdProvider), [
+      Tx(
+        id: 'trf-$ts-out',
+        type: TxType.expense,
+        amount: amountFrom,
+        categoryId: Categories.transfer.id,
+        date: when,
+        accountId: from.id,
+        note: note,
+      ),
+      Tx(
+        id: 'trf-$ts-in',
+        type: TxType.income,
+        amount: amountTo,
+        categoryId: Categories.transfer.id,
+        date: when,
+        accountId: to.id,
+        note: note,
+      ),
+    ]);
+    state = repo.loadAll();
   }
 }
 
@@ -146,6 +186,8 @@ class MonthStats {
     required this.byCategory,
     required this.byCategoryIncome,
     required this.dailyExpense,
+    this.approximate = false,
+    this.unconverted = const [],
   });
 
   final DateTime month;
@@ -161,8 +203,54 @@ class MonthStats {
   /// Расходы по дням месяца, индекс 0 — первое число.
   final List<double> dailyExpense;
 
+  /// В суммах есть пересчёт по курсу ЦБ — цифры приблизительные.
+  final bool approximate;
+
+  /// Валюты, для которых курса не нашлось: их операции посчитаны
+  /// по номиналу, как если бы это были рубли.
+  final List<String> unconverted;
+
   double get net => income - expense;
 }
+
+/// Сумма операции, пересчитанная в рубли: [rateApplied] — в пересчёте
+/// участвовал курс ЦБ (цифра приблизительная), [currency] заполнена,
+/// если курса для валюты счёта не нашлось и сумма взята по номиналу.
+class RubAmount {
+  const RubAmount(this.amount, {this.rateApplied = false, this.currency});
+
+  final double amount;
+  final bool rateApplied;
+  final String? currency;
+}
+
+/// Пересчёт суммы операции в рубли по валюте её счёта (ADR-0007).
+/// Без курсов (офлайн на первом запуске) суммы остаются как есть —
+/// это ровно то поведение, что было до появления мультивалютности.
+final rubAmountProvider = Provider<RubAmount Function(Tx)>((ref) {
+  final accounts = ref.watch(accountsProvider);
+  final rates = ref.watch(ratesProvider).valueOrNull;
+  return (tx) {
+    final currency = accounts.byId(tx.accountId).currency;
+    if (currency == Currencies.rub) return RubAmount(tx.amount);
+    final rate = rates?.rubFor(currency);
+    if (rate == null) return RubAmount(tx.amount, currency: currency);
+    return RubAmount(tx.amount * rate, rateApplied: true);
+  };
+});
+
+/// Пересчёт суммы между валютами по курсам ЦБ; null — курса не хватает.
+final currencyConvertProvider =
+    Provider<double? Function(double, String, String)>((ref) {
+  final rates = ref.watch(ratesProvider).valueOrNull;
+  return (amount, from, to) {
+    if (from == to) return amount;
+    final fromRate = from == Currencies.rub ? 1.0 : rates?.rubFor(from);
+    final toRate = to == Currencies.rub ? 1.0 : rates?.rubFor(to);
+    if (fromRate == null || toRate == null || toRate == 0) return null;
+    return amount * fromRate / toRate;
+  };
+});
 
 /// Выбранный месяц аналитики (первое число месяца).
 final selectedMonthProvider = StateProvider<DateTime>((ref) {
@@ -174,6 +262,7 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
   final txs = ref.watch(transactionsProvider).where(
         (t) => t.date.year == month.year && t.date.month == month.month,
       );
+  final toRub = ref.watch(rubAmountProvider);
 
   var income = 0.0;
   var expense = 0.0;
@@ -181,18 +270,24 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
   final byCategoryIncome = <String, double>{};
   final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
   final daily = List<double>.filled(daysInMonth, 0);
+  var approximate = false;
+  final unconverted = <String>{};
 
   for (final t in txs) {
     if (t.isSystem) continue; // переводы/корректировки — вне статистики
+    final converted = toRub(t);
+    if (converted.rateApplied) approximate = true;
+    if (converted.currency != null) unconverted.add(converted.currency!);
+    final amount = converted.amount;
     if (t.isExpense) {
-      expense += t.amount;
-      byCategory.update(t.categoryId, (v) => v + t.amount,
-          ifAbsent: () => t.amount);
-      daily[t.date.day - 1] += t.amount;
+      expense += amount;
+      byCategory.update(t.categoryId, (v) => v + amount,
+          ifAbsent: () => amount);
+      daily[t.date.day - 1] += amount;
     } else {
-      income += t.amount;
-      byCategoryIncome.update(t.categoryId, (v) => v + t.amount,
-          ifAbsent: () => t.amount);
+      income += amount;
+      byCategoryIncome.update(t.categoryId, (v) => v + amount,
+          ifAbsent: () => amount);
     }
   }
 
@@ -206,14 +301,9 @@ final monthStatsProvider = Provider.family<MonthStats, DateTime>((ref, month) {
     byCategory: sortDesc(byCategory),
     byCategoryIncome: sortDesc(byCategoryIncome),
     dailyExpense: daily,
+    approximate: approximate,
+    unconverted: unconverted.toList()..sort(),
   );
-});
-
-/// Общий баланс по всем операциям.
-final balanceProvider = Provider<double>((ref) {
-  return ref
-      .watch(transactionsProvider)
-      .fold(0.0, (sum, t) => sum + t.signedAmount);
 });
 
 final accountsRepositoryProvider = Provider<AccountsRepository>(
@@ -225,19 +315,31 @@ class AccountsNotifier extends Notifier<List<Account>> {
   List<Account> build() => ref.read(accountsRepositoryProvider).loadAll();
 
   Future<void> upsert(Account account) async {
-    final exists = state.any((a) => a.id == account.id);
+    final stamped = account.copyWith(updatedAt: DateTime.now());
+    final exists = state.any((a) => a.id == stamped.id);
     state = exists
-        ? [for (final a in state) a.id == account.id ? account : a]
-        : [...state, account];
+        ? [for (final a in state) a.id == stamped.id ? stamped : a]
+        : [...state, stamped];
     await ref.read(accountsRepositoryProvider).saveAll(state);
   }
 
   Future<void> setArchived(String id, bool archived) async {
+    final now = DateTime.now();
     state = [
       for (final a in state)
-        a.id == id ? a.copyWith(archived: archived) : a,
+        a.id == id
+            ? a.copyWith(archived: archived, updatedAt: now)
+            : a,
     ];
     await ref.read(accountsRepositoryProvider).saveAll(state);
+  }
+
+  /// Слияние общих счетов из файлов других участников.
+  Future<int> mergeAll(List<Account> incoming) async {
+    final repo = ref.read(accountsRepositoryProvider);
+    final changed = await repo.mergeAll(incoming);
+    if (changed > 0) state = repo.loadAll();
+    return changed;
   }
 
   /// Полная замена данных — используется восстановлением из бэкапа.
@@ -294,20 +396,18 @@ class RulesNotifier extends Notifier<List<CategoryRule>> {
   Future<int> applyToExisting() async {
     final txs = ref.read(transactionsProvider);
     var changed = 0;
-    final updated = [
-      for (final t in txs)
-        if (!t.isTransfer &&
-            t.note.isNotEmpty &&
-            categorizeByRules(t.note, state) != null &&
-            categorizeByRules(t.note, state) != t.categoryId)
-          () {
-            changed++;
-            return t.copyWith(
-                categoryId: categorizeByRules(t.note, state));
-          }()
-        else
-          t,
-    ];
+    final updated = <Tx>[];
+    for (final t in txs) {
+      final match = t.isTransfer || t.note.isEmpty
+          ? null
+          : categorizeByRules(t.note, state);
+      if (match != null && match != t.categoryId) {
+        changed++;
+        updated.add(t.copyWith(categoryId: match));
+      } else {
+        updated.add(t);
+      }
+    }
     if (changed > 0) {
       await ref.read(transactionsProvider.notifier).replaceAll(updated);
     }
@@ -341,9 +441,81 @@ final accentColorProvider = StateProvider<int?>((ref) => null);
 /// Масштаб интерфейса (1.0 — стандартный), начальное значение из main().
 final uiScaleProvider = StateProvider<double>((ref) => 1.0);
 
+final membersRepositoryProvider = Provider<MembersRepository>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
+class MembersNotifier extends Notifier<List<Member>> {
+  @override
+  List<Member> build() => ref.read(membersRepositoryProvider).loadAll();
+
+  /// Добавляет или переименовывает участника общего счёта.
+  Future<void> upsert(Member member) async {
+    final repo = ref.read(membersRepositoryProvider);
+    await repo.upsert(member);
+    state = repo.loadAll();
+  }
+
+  Future<void> remove(String id) async {
+    final repo = ref.read(membersRepositoryProvider);
+    await repo.remove(id);
+    state = repo.loadAll();
+  }
+
+  /// Участники из чужих файлов обмена.
+  Future<int> mergeAll(Iterable<Member> incoming) async {
+    final repo = ref.read(membersRepositoryProvider);
+    final changed = await repo.mergeAll(incoming);
+    if (changed > 0) state = repo.loadAll();
+    return changed;
+  }
+}
+
+final membersProvider =
+    NotifierProvider<MembersNotifier, List<Member>>(MembersNotifier.new);
+
+/// Владелец этого устройства — автор создаваемых здесь операций.
+final myMemberProvider =
+    Provider<Member?>((ref) => ref.watch(membersProvider).me);
+
+final myMemberIdProvider =
+    Provider<String?>((ref) => ref.watch(myMemberProvider)?.id);
+
+/// Участники, кроме меня, — люди, с которыми ведутся общие счета.
+final otherMembersProvider = Provider<List<Member>>((ref) =>
+    ref.watch(membersProvider).where((m) => !m.isMe).toList());
+
+/// Есть ли хотя бы один общий счёт.
+final hasSharedAccountsProvider = Provider<bool>(
+    (ref) => ref.watch(accountsProvider).any((a) => a.shared));
+
+final sharedSyncProvider = Provider<SharedSyncService>(
+  (ref) => throw UnimplementedError('overridden in main()'),
+);
+
 final syncServiceProvider = Provider<SyncService>(
   (ref) => throw UnimplementedError('overridden in main()'),
 );
+
+/// Снимок общих счетов для публикации в общую папку (ADR-0013):
+/// я, счета с флагом «общий» и все операции по ним, включая надгробия
+/// удалённых — иначе удаление не доедет до второго участника.
+({
+  Member me,
+  List<Account> accounts,
+  List<Tx> transactions,
+  List<TxCategory> categories
+})? collectSharedData(T Function<T>(ProviderListenable<T>) read,
+    TransactionsRepository repository) {
+  final me = read(myMemberProvider);
+  if (me == null) return null;
+  return (
+    me: me,
+    accounts: read(accountsProvider),
+    transactions: repository.allRows(),
+    categories: read(categoriesProvider),
+  );
+}
 
 /// Снимок всех данных для бэкапа/синхронизации.
 /// Принимает `ref.read` — работает и с [Ref], и с WidgetRef.

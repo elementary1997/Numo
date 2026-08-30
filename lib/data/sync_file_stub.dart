@@ -7,3 +7,6 @@ Future<void> writeSyncFile(String path, String content) async {
 }
 
 Future<String?> readSyncFile(String path) async => null;
+
+Future<List<String>> listSyncFiles(String dir, String prefix) async =>
+    const [];

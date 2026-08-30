@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/l10n.dart';
+import '../core/dialogs.dart';
 import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/account.dart';
@@ -249,17 +250,25 @@ class _GoalCard extends ConsumerWidget {
         ),
       ),
     );
-    controller.dispose();
+    disposeAfterDialog(controller);
     if (amount == null || amount <= 0) return;
 
     await ref.read(goalsProvider.notifier).topUp(goal.id, amount);
-    // Деньги реально переезжают между счетами.
+    // Деньги реально переезжают между счетами. Суммы цели ведутся в
+    // рублях, поэтому валютный счёт получает эквивалент по курсу ЦБ,
+    // а не то же число единиц своей валюты.
     if (goalAccount != null && sourceId != null) {
+      final source = accounts.byId(sourceId!);
+      final convert = ref.read(currencyConvertProvider);
+      final amountFrom =
+          convert(amount, Currencies.rub, source.currency) ?? amount;
+      final amountTo =
+          convert(amount, Currencies.rub, goalAccount.currency) ?? amount;
       await ref.read(transactionsProvider.notifier).createTransfer(
-            from: accounts.byId(sourceId!),
+            from: source,
             to: goalAccount,
-            amountFrom: amount,
-            amountTo: amount,
+            amountFrom: amountFrom,
+            amountTo: amountTo,
           );
     }
   }

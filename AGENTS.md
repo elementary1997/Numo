@@ -34,6 +34,7 @@ YOU MUST: прогнать `make check` перед каждым коммитом
 - `lib/models/` — доменные типы (`Tx`, `TxCategory`). Сумма `Tx.amount` всегда положительная, знак определяет `TxType`; в баланс идёт `signedAmount`.
 - `lib/data/database.dart` — схема drift (`NumoDatabase`); после её изменения запускать `dart run build_runner build --delete-conflicting-outputs` и поднимать `schemaVersion` с миграцией.
 - `lib/data/repository.dart`, `lib/data/categories_repository.dart` — ЕДИНСТВЕННЫЕ точки чтения/записи хранилища.
+- Общие счета (ADR-0013): `lib/data/shared_sync.dart` (файлы участников в общей папке), `lib/data/members_repository.dart` (справочник людей), слияние — в `mergeAll` соответствующих репозиториев.
 - `lib/widgets/charts.dart` — все графики рисуются собственными `CustomPainter`.
 - `lib/core/` — тема (`NumoColors`, `NumoTheme`) и форматирование денег.
 
@@ -60,6 +61,10 @@ YOU MUST: прогнать `make check` перед каждым коммитом
 
 ## Gotchas
 
+- **Удаление операции мягкое**: `deleteOne` ставит `deletedAt`, строка остаётся «надгробием» (иначе файл второго участника общего счёта воскресил бы её). `loadAll()` отдаёт живые, `allRows()` — всё, включая надгробия; они вычищаются через 180 дней при открытии репозитория.
+- **Точечные записи вместо полной перезаписи**: добавление/правка/удаление операции идут через `insert`/`updateOne`/`deleteOne`, импорт и регулярные — через `insertAll`. `saveAll` перезаписывает таблицу целиком и остаётся только для восстановления из бэкапа.
+- **Суммы разных валют не складывать**: в статистике пересчёт в рубли делает `rubAmountProvider` (курсы ЦБ, ADR-0007). Без курсов суммы берутся по номиналу, а `MonthStats.unconverted` называет валюты, для которых курса не нашлось.
+- **Контроллеры полей в диалогах** освобождать через `disposeAfterDialog` (`lib/core/dialogs.dart`): `showDialog` возвращает результат до конца анимации закрытия, и обычный `dispose()` в тот же кадр роняет TextField.
 - **Схема БД версионируется** `schemaVersion` в `database.dart`; изменение схемы — только вместе с drift-миграцией, иначе у пользователя молча пропадут данные. Легаси-JSON в shared_preferences (`numo.transactions.v1`, `numo.categories.v1`) переносится однократно, флаги `numo.*.migrated-to-drift.v1`.
 - **Web-ассеты drift**: `web/sqlite3.wasm` и `web/drift_worker.js` закоммичены и должны соответствовать версиям `sqlite3`/`drift` из pubspec.lock — при апгрейде drift скачать новые (см. ADR-0006).
 - **Демо-данные**: на чистой установке сидируются демо-операции (`TransactionsRepository.demoData()`). В тестах ставь флаг миграции, чтобы они не мешали.

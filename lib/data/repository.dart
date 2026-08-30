@@ -23,8 +23,13 @@ class TransactionsRepository {
   final NumoDatabase _db;
   List<Tx> _cache;
 
+  /// Сколько живут «надгробия» удалённых операций: за это время
+  /// участник общего счёта успевает получить их через облако.
+  static const tombstoneLifetime = Duration(days: 180);
+
   static Future<TransactionsRepository> open(NumoDatabase db,
       {String seedLocale = 'ru', bool seedDemo = true}) async {
+    await _purgeOldTombstones(db);
     final rows = await db.select(db.transactionRows).get();
     if (rows.isNotEmpty) {
       final cache = rows.map(_fromRow).toList()
@@ -49,7 +54,13 @@ class TransactionsRepository {
     return repo;
   }
 
-  List<Tx> loadAll() => List.unmodifiable(_cache);
+  /// Живые операции; удалённые остаются в базе надгробиями и наружу
+  /// не показываются.
+  List<Tx> loadAll() =>
+      List.unmodifiable(_cache.where((t) => !t.isDeleted));
+
+  /// Всё, включая надгробия — для публикации в общую папку.
+  List<Tx> allRows() => List.unmodifiable(_cache);
 
   Future<void> saveAll(List<Tx> transactions) async {
     _cache = [...transactions]..sort((a, b) => b.date.compareTo(a.date));
@@ -61,6 +72,95 @@ class TransactionsRepository {
     });
   }
 
+  /// Добавляет операции, не переписывая таблицу целиком: одна вставка
+  /// вместо «удалить всё и записать заново». На тысячах операций
+  /// разница между постоянным и линейным временем добавления.
+  Future<void> insertAll(Iterable<Tx> transactions,
+      {String? authorId}) async {
+    final now = DateTime.now();
+    final added = [
+      for (final tx in transactions)
+        tx.copyWith(
+          updatedAt: tx.updatedAt ?? now,
+          authorId: tx.authorId ?? authorId,
+        ),
+    ];
+    if (added.isEmpty) return;
+    _cache = [..._cache, ...added]
+      ..sort((a, b) => b.date.compareTo(a.date));
+    await _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+          _db.transactionRows, added.map(_toRow).toList());
+    });
+  }
+
+  Future<void> insert(Tx tx, {String? authorId}) =>
+      insertAll([tx], authorId: authorId);
+
+  /// Обновляет одну операцию по id, переставляя отметку изменения:
+  /// по ней разрешается конфликт при слиянии общих счетов.
+  Future<void> updateOne(Tx tx) async {
+    final updated = tx.copyWith(updatedAt: DateTime.now());
+    _cache = [
+      for (final t in _cache) t.id == tx.id ? updated : t,
+    ]..sort((a, b) => b.date.compareTo(a.date));
+    await _db.update(_db.transactionRows).replace(_toRow(updated));
+  }
+
+  /// Мягкое удаление: строка остаётся надгробием, иначе файл второго
+  /// участника воскресил бы операцию при следующем слиянии.
+  Future<void> deleteOne(String id) async {
+    final now = DateTime.now();
+    Tx? removed;
+    _cache = [
+      for (final t in _cache)
+        if (t.id == id)
+          removed = t.copyWith(deletedAt: now, updatedAt: now)
+        else
+          t,
+    ];
+    final tombstone = removed;
+    if (tombstone == null) return;
+    await _db.update(_db.transactionRows).replace(_toRow(tombstone));
+  }
+
+  /// Слияние операций из файлов других участников (ADR-0013):
+  /// побеждает более поздняя отметка изменения, при равенстве —
+  /// запись с большим `authorId`, чтобы результат не зависел от
+  /// порядка чтения файлов. Возвращает число применённых изменений.
+  Future<int> mergeAll(Iterable<Tx> incoming) async {
+    final byId = {for (final t in _cache) t.id: t};
+    final changed = <Tx>[];
+    for (final remote in incoming) {
+      final local = byId[remote.id];
+      if (local == null || _remoteWins(local, remote)) {
+        byId[remote.id] = remote;
+        changed.add(remote);
+      }
+    }
+    if (changed.isEmpty) return 0;
+    _cache = byId.values.toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
+    await _db.batch((batch) {
+      batch.insertAllOnConflictUpdate(
+          _db.transactionRows, changed.map(_toRow).toList());
+    });
+    return changed.length;
+  }
+
+  static bool _remoteWins(Tx local, Tx remote) {
+    final diff = remote.changedAt.compareTo(local.changedAt);
+    if (diff != 0) return diff > 0;
+    return (remote.authorId ?? '').compareTo(local.authorId ?? '') > 0;
+  }
+
+  static Future<void> _purgeOldTombstones(NumoDatabase db) async {
+    final cutoff = DateTime.now().subtract(tombstoneLifetime);
+    await (db.delete(db.transactionRows)
+          ..where((row) => row.deletedAt.isSmallerThanValue(cutoff)))
+        .go();
+  }
+
   static Tx _fromRow(TransactionRow row) => Tx(
         id: row.id,
         type: TxType.values.byName(row.type),
@@ -69,6 +169,9 @@ class TransactionsRepository {
         date: row.date,
         accountId: row.accountId,
         note: row.note,
+        updatedAt: row.updatedAt,
+        deletedAt: row.deletedAt,
+        authorId: row.authorId,
       );
 
   static TransactionRowsCompanion _toRow(Tx tx) => TransactionRowsCompanion(
@@ -79,6 +182,9 @@ class TransactionsRepository {
         date: Value(tx.date),
         accountId: Value(tx.accountId),
         note: Value(tx.note),
+        updatedAt: Value(tx.updatedAt),
+        deletedAt: Value(tx.deletedAt),
+        authorId: Value(tx.authorId),
       );
 
   /// Демо-данные первого запуска: пример живого месяца, чтобы дашборд

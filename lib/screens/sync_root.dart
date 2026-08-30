@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,7 @@ import '../core/l10n.dart';
 import '../data/changelog.dart';
 import '../data/statements_watcher.dart';
 import '../state/providers.dart';
+import '../state/shared_sync_actions.dart';
 import 'import_csv.dart';
 import 'update_flow.dart';
 
@@ -26,14 +28,78 @@ class SyncRoot extends ConsumerStatefulWidget {
 }
 
 class _SyncRootState extends ConsumerState<SyncRoot> {
+  AppLifecycleListener? _lifecycle;
+
+  /// Когда общие счета сверялись в последний раз — окно на desktop
+  /// получает фокус часто, дёргать облако на каждый щелчок незачем.
+  DateTime? _lastResumeSync;
+
   @override
   void initState() {
     super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _syncOnResume);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _showWhatsNew();
+      await _reportFailedUpdate();
       await _checkForNewer();
+      await _pullShared();
       await _checkStatements();
     });
+  }
+
+  @override
+  void dispose() {
+    _lifecycle?.dispose();
+    super.dispose();
+  }
+
+  /// Возврат в приложение — тихая сверка общих счетов: пока Numo был
+  /// свёрнут, второй участник мог что-то добавить.
+  Future<void> _syncOnResume() async {
+    if (!ref.read(sharedSyncProvider).enabled) return;
+    final last = _lastResumeSync;
+    if (last != null &&
+        DateTime.now().difference(last) < const Duration(minutes: 1)) {
+      return;
+    }
+    _lastResumeSync = DateTime.now();
+    final applied = await syncSharedAccounts(ref);
+    if (applied == 0 || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.sharedPulled(applied))),
+    );
+  }
+
+  /// Если прошлое обновление не встало (частый случай на Windows —
+  /// нет прав на папку установки), говорим об этом прямо и предлагаем
+  /// скачать сборку руками.
+  Future<void> _reportFailedUpdate() async {
+    if (kIsWeb) return;
+    final failed =
+        await ref.read(updateServiceProvider).takeFailedUpdate();
+    if (failed == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      duration: const Duration(seconds: 12),
+      content: Text(context.l10n.updateDidNotApply(failed)),
+      action: SnackBarAction(
+        label: context.l10n.openPage,
+        onPressed: () => launchUrl(
+          Uri.parse('https://github.com/elementary1997/Numo/releases/latest'),
+          mode: LaunchMode.externalApplication,
+        ),
+      ),
+    ));
+  }
+
+  /// Общие счета (ADR-0013): при запуске забираем файлы участников,
+  /// сливаем изменения и выкладываем свой файл.
+  Future<void> _pullShared() async {
+    if (!ref.read(sharedSyncProvider).enabled) return;
+    final applied = await syncSharedAccounts(ref);
+    if (applied == 0 || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.sharedPulled(applied))),
+    );
   }
 
   /// Новые файлы в папке выписок: предлагаем импорт первого из них.
@@ -148,9 +214,18 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     void schedule() => ref
         .read(syncServiceProvider)
         .scheduleWrite(() => collectBackupData(ref.read));
-    ref.listen(transactionsProvider, (_, __) => schedule());
+    // Изменения общих счетов дополнительно уезжают в папку обмена.
+    void schedulePublish() => ref.read(sharedSyncProvider).schedulePublish(
+        () => collectSharedData(ref.read, ref.read(repositoryProvider)));
+    ref.listen(transactionsProvider, (_, __) {
+      schedule();
+      schedulePublish();
+    });
     ref.listen(categoriesProvider, (_, __) => schedule());
-    ref.listen(accountsProvider, (_, __) => schedule());
+    ref.listen(accountsProvider, (_, __) {
+      schedule();
+      schedulePublish();
+    });
     ref.listen(budgetsProvider, (_, __) => schedule());
     ref.listen(recurringProvider, (_, __) => schedule());
     ref.listen(goalsProvider, (_, __) => schedule());

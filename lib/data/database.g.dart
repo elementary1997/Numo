@@ -78,6 +78,39 @@ class $TransactionRowsTable extends TransactionRows
     requiredDuringInsert: false,
     defaultValue: const Constant('main'),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _authorIdMeta = const VerificationMeta(
+    'authorId',
+  );
+  @override
+  late final GeneratedColumn<String> authorId = GeneratedColumn<String>(
+    'author_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -87,6 +120,9 @@ class $TransactionRowsTable extends TransactionRows
     date,
     note,
     accountId,
+    updatedAt,
+    deletedAt,
+    authorId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -149,6 +185,24 @@ class $TransactionRowsTable extends TransactionRows
         accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('author_id')) {
+      context.handle(
+        _authorIdMeta,
+        authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta),
+      );
+    }
     return context;
   }
 
@@ -186,6 +240,18 @@ class $TransactionRowsTable extends TransactionRows
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      authorId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}author_id'],
+      ),
     );
   }
 
@@ -203,6 +269,14 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
   final DateTime date;
   final String note;
   final String accountId;
+
+  /// Время последнего изменения и «надгробие» удаления — по ним
+  /// сливаются данные участников общего счёта (ADR-0013).
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
+
+  /// Участник, внёсший операцию.
+  final String? authorId;
   const TransactionRow({
     required this.id,
     required this.type,
@@ -211,6 +285,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     required this.date,
     required this.note,
     required this.accountId,
+    this.updatedAt,
+    this.deletedAt,
+    this.authorId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -222,6 +299,15 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     map['date'] = Variable<DateTime>(date);
     map['note'] = Variable<String>(note);
     map['account_id'] = Variable<String>(accountId);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    if (!nullToAbsent || authorId != null) {
+      map['author_id'] = Variable<String>(authorId);
+    }
     return map;
   }
 
@@ -234,6 +320,15 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       date: Value(date),
       note: Value(note),
       accountId: Value(accountId),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      authorId: authorId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authorId),
     );
   }
 
@@ -250,6 +345,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       date: serializer.fromJson<DateTime>(json['date']),
       note: serializer.fromJson<String>(json['note']),
       accountId: serializer.fromJson<String>(json['accountId']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      authorId: serializer.fromJson<String?>(json['authorId']),
     );
   }
   @override
@@ -263,6 +361,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       'date': serializer.toJson<DateTime>(date),
       'note': serializer.toJson<String>(note),
       'accountId': serializer.toJson<String>(accountId),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'authorId': serializer.toJson<String?>(authorId),
     };
   }
 
@@ -274,6 +375,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     DateTime? date,
     String? note,
     String? accountId,
+    Value<DateTime?> updatedAt = const Value.absent(),
+    Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> authorId = const Value.absent(),
   }) => TransactionRow(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -282,6 +386,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     date: date ?? this.date,
     note: note ?? this.note,
     accountId: accountId ?? this.accountId,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    authorId: authorId.present ? authorId.value : this.authorId,
   );
   TransactionRow copyWithCompanion(TransactionRowsCompanion data) {
     return TransactionRow(
@@ -294,6 +401,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       date: data.date.present ? data.date.value : this.date,
       note: data.note.present ? data.note.value : this.note,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      authorId: data.authorId.present ? data.authorId.value : this.authorId,
     );
   }
 
@@ -306,14 +416,27 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           ..write('categoryId: $categoryId, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
-          ..write('accountId: $accountId')
+          ..write('accountId: $accountId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('authorId: $authorId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, type, amount, categoryId, date, note, accountId);
+  int get hashCode => Object.hash(
+    id,
+    type,
+    amount,
+    categoryId,
+    date,
+    note,
+    accountId,
+    updatedAt,
+    deletedAt,
+    authorId,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -324,7 +447,10 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           other.categoryId == this.categoryId &&
           other.date == this.date &&
           other.note == this.note &&
-          other.accountId == this.accountId);
+          other.accountId == this.accountId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.authorId == this.authorId);
 }
 
 class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
@@ -335,6 +461,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
   final Value<DateTime> date;
   final Value<String> note;
   final Value<String> accountId;
+  final Value<DateTime?> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<String?> authorId;
   final Value<int> rowid;
   const TransactionRowsCompanion({
     this.id = const Value.absent(),
@@ -344,6 +473,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     this.date = const Value.absent(),
     this.note = const Value.absent(),
     this.accountId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.authorId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionRowsCompanion.insert({
@@ -354,6 +486,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     required DateTime date,
     this.note = const Value.absent(),
     this.accountId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.authorId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type),
@@ -368,6 +503,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Expression<DateTime>? date,
     Expression<String>? note,
     Expression<String>? accountId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<String>? authorId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -378,6 +516,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       if (date != null) 'date': date,
       if (note != null) 'note': note,
       if (accountId != null) 'account_id': accountId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (authorId != null) 'author_id': authorId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -390,6 +531,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Value<DateTime>? date,
     Value<String>? note,
     Value<String>? accountId,
+    Value<DateTime?>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<String?>? authorId,
     Value<int>? rowid,
   }) {
     return TransactionRowsCompanion(
@@ -400,6 +544,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       date: date ?? this.date,
       note: note ?? this.note,
       accountId: accountId ?? this.accountId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      authorId: authorId ?? this.authorId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -428,6 +575,15 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (authorId.present) {
+      map['author_id'] = Variable<String>(authorId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -444,6 +600,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
           ..write('date: $date, ')
           ..write('note: $note, ')
           ..write('accountId: $accountId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('authorId: $authorId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1718,6 +1877,30 @@ class $AccountRowsTable extends AccountRows
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sharedMeta = const VerificationMeta('shared');
+  @override
+  late final GeneratedColumn<bool> shared = GeneratedColumn<bool>(
+    'shared',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("shared" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1730,6 +1913,8 @@ class $AccountRowsTable extends AccountRows
     rate,
     openedAt,
     closesAt,
+    shared,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1808,6 +1993,18 @@ class $AccountRowsTable extends AccountRows
         closesAt.isAcceptableOrUnknown(data['closes_at']!, _closesAtMeta),
       );
     }
+    if (data.containsKey('shared')) {
+      context.handle(
+        _sharedMeta,
+        shared.isAcceptableOrUnknown(data['shared']!, _sharedMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1857,6 +2054,14 @@ class $AccountRowsTable extends AccountRows
         DriftSqlType.dateTime,
         data['${effectivePrefix}closes_at'],
       ),
+      shared: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}shared'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -1877,6 +2082,11 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
   final double? rate;
   final DateTime? openedAt;
   final DateTime? closesAt;
+
+  /// Общий счёт: уезжает в общую папку и сливается с данными
+  /// других участников (ADR-0013).
+  final bool shared;
+  final DateTime? updatedAt;
   const AccountRow({
     required this.id,
     required this.title,
@@ -1888,6 +2098,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     this.rate,
     this.openedAt,
     this.closesAt,
+    required this.shared,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1908,6 +2120,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     if (!nullToAbsent || closesAt != null) {
       map['closes_at'] = Variable<DateTime>(closesAt);
     }
+    map['shared'] = Variable<bool>(shared);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
     return map;
   }
 
@@ -1927,6 +2143,10 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       closesAt: closesAt == null && nullToAbsent
           ? const Value.absent()
           : Value(closesAt),
+      shared: Value(shared),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -1946,6 +2166,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       rate: serializer.fromJson<double?>(json['rate']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
       closesAt: serializer.fromJson<DateTime?>(json['closesAt']),
+      shared: serializer.fromJson<bool>(json['shared']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -1962,6 +2184,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       'rate': serializer.toJson<double?>(rate),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
       'closesAt': serializer.toJson<DateTime?>(closesAt),
+      'shared': serializer.toJson<bool>(shared),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -1976,6 +2200,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     Value<double?> rate = const Value.absent(),
     Value<DateTime?> openedAt = const Value.absent(),
     Value<DateTime?> closesAt = const Value.absent(),
+    bool? shared,
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => AccountRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -1987,6 +2213,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     rate: rate.present ? rate.value : this.rate,
     openedAt: openedAt.present ? openedAt.value : this.openedAt,
     closesAt: closesAt.present ? closesAt.value : this.closesAt,
+    shared: shared ?? this.shared,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   AccountRow copyWithCompanion(AccountRowsCompanion data) {
     return AccountRow(
@@ -2000,6 +2228,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
       rate: data.rate.present ? data.rate.value : this.rate,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
       closesAt: data.closesAt.present ? data.closesAt.value : this.closesAt,
+      shared: data.shared.present ? data.shared.value : this.shared,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -2015,7 +2245,9 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           ..write('kind: $kind, ')
           ..write('rate: $rate, ')
           ..write('openedAt: $openedAt, ')
-          ..write('closesAt: $closesAt')
+          ..write('closesAt: $closesAt, ')
+          ..write('shared: $shared, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2032,6 +2264,8 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
     rate,
     openedAt,
     closesAt,
+    shared,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -2046,7 +2280,9 @@ class AccountRow extends DataClass implements Insertable<AccountRow> {
           other.kind == this.kind &&
           other.rate == this.rate &&
           other.openedAt == this.openedAt &&
-          other.closesAt == this.closesAt);
+          other.closesAt == this.closesAt &&
+          other.shared == this.shared &&
+          other.updatedAt == this.updatedAt);
 }
 
 class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
@@ -2060,6 +2296,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
   final Value<double?> rate;
   final Value<DateTime?> openedAt;
   final Value<DateTime?> closesAt;
+  final Value<bool> shared;
+  final Value<DateTime?> updatedAt;
   final Value<int> rowid;
   const AccountRowsCompanion({
     this.id = const Value.absent(),
@@ -2072,6 +2310,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     this.rate = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.closesAt = const Value.absent(),
+    this.shared = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AccountRowsCompanion.insert({
@@ -2085,6 +2325,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     this.rate = const Value.absent(),
     this.openedAt = const Value.absent(),
     this.closesAt = const Value.absent(),
+    this.shared = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -2101,6 +2343,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     Expression<double>? rate,
     Expression<DateTime>? openedAt,
     Expression<DateTime>? closesAt,
+    Expression<bool>? shared,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2114,6 +2358,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
       if (rate != null) 'rate': rate,
       if (openedAt != null) 'opened_at': openedAt,
       if (closesAt != null) 'closes_at': closesAt,
+      if (shared != null) 'shared': shared,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2129,6 +2375,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     Value<double?>? rate,
     Value<DateTime?>? openedAt,
     Value<DateTime?>? closesAt,
+    Value<bool>? shared,
+    Value<DateTime?>? updatedAt,
     Value<int>? rowid,
   }) {
     return AccountRowsCompanion(
@@ -2142,6 +2390,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
       rate: rate ?? this.rate,
       openedAt: openedAt ?? this.openedAt,
       closesAt: closesAt ?? this.closesAt,
+      shared: shared ?? this.shared,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2179,6 +2429,12 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
     if (closesAt.present) {
       map['closes_at'] = Variable<DateTime>(closesAt.value);
     }
+    if (shared.present) {
+      map['shared'] = Variable<bool>(shared.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2198,6 +2454,8 @@ class AccountRowsCompanion extends UpdateCompanion<AccountRow> {
           ..write('rate: $rate, ')
           ..write('openedAt: $openedAt, ')
           ..write('closesAt: $closesAt, ')
+          ..write('shared: $shared, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2987,6 +3245,307 @@ class GoalRowsCompanion extends UpdateCompanion<GoalRow> {
   }
 }
 
+class $MemberRowsTable extends MemberRows
+    with TableInfo<$MemberRowsTable, MemberRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MemberRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _isMeMeta = const VerificationMeta('isMe');
+  @override
+  late final GeneratedColumn<bool> isMe = GeneratedColumn<bool>(
+    'is_me',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_me" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, color, isMe];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'member_rows';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MemberRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorMeta);
+    }
+    if (data.containsKey('is_me')) {
+      context.handle(
+        _isMeMeta,
+        isMe.isAcceptableOrUnknown(data['is_me']!, _isMeMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MemberRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MemberRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      )!,
+      isMe: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_me'],
+      )!,
+    );
+  }
+
+  @override
+  $MemberRowsTable createAlias(String alias) {
+    return $MemberRowsTable(attachedDatabase, alias);
+  }
+}
+
+class MemberRow extends DataClass implements Insertable<MemberRow> {
+  final String id;
+  final String name;
+  final int color;
+  final bool isMe;
+  const MemberRow({
+    required this.id,
+    required this.name,
+    required this.color,
+    required this.isMe,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['name'] = Variable<String>(name);
+    map['color'] = Variable<int>(color);
+    map['is_me'] = Variable<bool>(isMe);
+    return map;
+  }
+
+  MemberRowsCompanion toCompanion(bool nullToAbsent) {
+    return MemberRowsCompanion(
+      id: Value(id),
+      name: Value(name),
+      color: Value(color),
+      isMe: Value(isMe),
+    );
+  }
+
+  factory MemberRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MemberRow(
+      id: serializer.fromJson<String>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      color: serializer.fromJson<int>(json['color']),
+      isMe: serializer.fromJson<bool>(json['isMe']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'name': serializer.toJson<String>(name),
+      'color': serializer.toJson<int>(color),
+      'isMe': serializer.toJson<bool>(isMe),
+    };
+  }
+
+  MemberRow copyWith({String? id, String? name, int? color, bool? isMe}) =>
+      MemberRow(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        color: color ?? this.color,
+        isMe: isMe ?? this.isMe,
+      );
+  MemberRow copyWithCompanion(MemberRowsCompanion data) {
+    return MemberRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      color: data.color.present ? data.color.value : this.color,
+      isMe: data.isMe.present ? data.isMe.value : this.isMe,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MemberRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('color: $color, ')
+          ..write('isMe: $isMe')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, color, isMe);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MemberRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.color == this.color &&
+          other.isMe == this.isMe);
+}
+
+class MemberRowsCompanion extends UpdateCompanion<MemberRow> {
+  final Value<String> id;
+  final Value<String> name;
+  final Value<int> color;
+  final Value<bool> isMe;
+  final Value<int> rowid;
+  const MemberRowsCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.color = const Value.absent(),
+    this.isMe = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MemberRowsCompanion.insert({
+    required String id,
+    required String name,
+    required int color,
+    this.isMe = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       color = Value(color);
+  static Insertable<MemberRow> custom({
+    Expression<String>? id,
+    Expression<String>? name,
+    Expression<int>? color,
+    Expression<bool>? isMe,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (color != null) 'color': color,
+      if (isMe != null) 'is_me': isMe,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MemberRowsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? name,
+    Value<int>? color,
+    Value<bool>? isMe,
+    Value<int>? rowid,
+  }) {
+    return MemberRowsCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      color: color ?? this.color,
+      isMe: isMe ?? this.isMe,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (isMe.present) {
+      map['is_me'] = Variable<bool>(isMe.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MemberRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('color: $color, ')
+          ..write('isMe: $isMe, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$NumoDatabase extends GeneratedDatabase {
   _$NumoDatabase(QueryExecutor e) : super(e);
   $NumoDatabaseManager get managers => $NumoDatabaseManager(this);
@@ -3001,6 +3560,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     this,
   );
   late final $GoalRowsTable goalRows = $GoalRowsTable(this);
+  late final $MemberRowsTable memberRows = $MemberRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3013,6 +3573,7 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     accountRows,
     categoryRuleRows,
     goalRows,
+    memberRows,
   ];
 }
 
@@ -3025,6 +3586,9 @@ typedef $$TransactionRowsTableCreateCompanionBuilder =
       required DateTime date,
       Value<String> note,
       Value<String> accountId,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> authorId,
       Value<int> rowid,
     });
 typedef $$TransactionRowsTableUpdateCompanionBuilder =
@@ -3036,6 +3600,9 @@ typedef $$TransactionRowsTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<String> note,
       Value<String> accountId,
+      Value<DateTime?> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<String?> authorId,
       Value<int> rowid,
     });
 
@@ -3080,6 +3647,21 @@ class $$TransactionRowsTableFilterComposer
 
   ColumnFilters<String> get accountId => $composableBuilder(
     column: $table.accountId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get authorId => $composableBuilder(
+    column: $table.authorId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3127,6 +3709,21 @@ class $$TransactionRowsTableOrderingComposer
     column: $table.accountId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get authorId => $composableBuilder(
+    column: $table.authorId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionRowsTableAnnotationComposer
@@ -3160,6 +3757,15 @@ class $$TransactionRowsTableAnnotationComposer
 
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get authorId =>
+      $composableBuilder(column: $table.authorId, builder: (column) => column);
 }
 
 class $$TransactionRowsTableTableManager
@@ -3206,6 +3812,9 @@ class $$TransactionRowsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<String> note = const Value.absent(),
                 Value<String> accountId = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> authorId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionRowsCompanion(
                 id: id,
@@ -3215,6 +3824,9 @@ class $$TransactionRowsTableTableManager
                 date: date,
                 note: note,
                 accountId: accountId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                authorId: authorId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3226,6 +3838,9 @@ class $$TransactionRowsTableTableManager
                 required DateTime date,
                 Value<String> note = const Value.absent(),
                 Value<String> accountId = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> authorId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionRowsCompanion.insert(
                 id: id,
@@ -3235,6 +3850,9 @@ class $$TransactionRowsTableTableManager
                 date: date,
                 note: note,
                 accountId: accountId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                authorId: authorId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3900,6 +4518,8 @@ typedef $$AccountRowsTableCreateCompanionBuilder =
       Value<double?> rate,
       Value<DateTime?> openedAt,
       Value<DateTime?> closesAt,
+      Value<bool> shared,
+      Value<DateTime?> updatedAt,
       Value<int> rowid,
     });
 typedef $$AccountRowsTableUpdateCompanionBuilder =
@@ -3914,6 +4534,8 @@ typedef $$AccountRowsTableUpdateCompanionBuilder =
       Value<double?> rate,
       Value<DateTime?> openedAt,
       Value<DateTime?> closesAt,
+      Value<bool> shared,
+      Value<DateTime?> updatedAt,
       Value<int> rowid,
     });
 
@@ -3973,6 +4595,16 @@ class $$AccountRowsTableFilterComposer
 
   ColumnFilters<DateTime> get closesAt => $composableBuilder(
     column: $table.closesAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get shared => $composableBuilder(
+    column: $table.shared,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4035,6 +4667,16 @@ class $$AccountRowsTableOrderingComposer
     column: $table.closesAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get shared => $composableBuilder(
+    column: $table.shared,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$AccountRowsTableAnnotationComposer
@@ -4075,6 +4717,12 @@ class $$AccountRowsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get closesAt =>
       $composableBuilder(column: $table.closesAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get shared =>
+      $composableBuilder(column: $table.shared, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$AccountRowsTableTableManager
@@ -4118,6 +4766,8 @@ class $$AccountRowsTableTableManager
                 Value<double?> rate = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> closesAt = const Value.absent(),
+                Value<bool> shared = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountRowsCompanion(
                 id: id,
@@ -4130,6 +4780,8 @@ class $$AccountRowsTableTableManager
                 rate: rate,
                 openedAt: openedAt,
                 closesAt: closesAt,
+                shared: shared,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4144,6 +4796,8 @@ class $$AccountRowsTableTableManager
                 Value<double?> rate = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
                 Value<DateTime?> closesAt = const Value.absent(),
+                Value<bool> shared = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AccountRowsCompanion.insert(
                 id: id,
@@ -4156,6 +4810,8 @@ class $$AccountRowsTableTableManager
                 rate: rate,
                 openedAt: openedAt,
                 closesAt: closesAt,
+                shared: shared,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4608,6 +5264,184 @@ typedef $$GoalRowsTableProcessedTableManager =
       GoalRow,
       PrefetchHooks Function()
     >;
+typedef $$MemberRowsTableCreateCompanionBuilder =
+    MemberRowsCompanion Function({
+      required String id,
+      required String name,
+      required int color,
+      Value<bool> isMe,
+      Value<int> rowid,
+    });
+typedef $$MemberRowsTableUpdateCompanionBuilder =
+    MemberRowsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<int> color,
+      Value<bool> isMe,
+      Value<int> rowid,
+    });
+
+class $$MemberRowsTableFilterComposer
+    extends Composer<_$NumoDatabase, $MemberRowsTable> {
+  $$MemberRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isMe => $composableBuilder(
+    column: $table.isMe,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MemberRowsTableOrderingComposer
+    extends Composer<_$NumoDatabase, $MemberRowsTable> {
+  $$MemberRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isMe => $composableBuilder(
+    column: $table.isMe,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MemberRowsTableAnnotationComposer
+    extends Composer<_$NumoDatabase, $MemberRowsTable> {
+  $$MemberRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<bool> get isMe =>
+      $composableBuilder(column: $table.isMe, builder: (column) => column);
+}
+
+class $$MemberRowsTableTableManager
+    extends
+        RootTableManager<
+          _$NumoDatabase,
+          $MemberRowsTable,
+          MemberRow,
+          $$MemberRowsTableFilterComposer,
+          $$MemberRowsTableOrderingComposer,
+          $$MemberRowsTableAnnotationComposer,
+          $$MemberRowsTableCreateCompanionBuilder,
+          $$MemberRowsTableUpdateCompanionBuilder,
+          (
+            MemberRow,
+            BaseReferences<_$NumoDatabase, $MemberRowsTable, MemberRow>,
+          ),
+          MemberRow,
+          PrefetchHooks Function()
+        > {
+  $$MemberRowsTableTableManager(_$NumoDatabase db, $MemberRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MemberRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MemberRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MemberRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<int> color = const Value.absent(),
+                Value<bool> isMe = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MemberRowsCompanion(
+                id: id,
+                name: name,
+                color: color,
+                isMe: isMe,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String name,
+                required int color,
+                Value<bool> isMe = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MemberRowsCompanion.insert(
+                id: id,
+                name: name,
+                color: color,
+                isMe: isMe,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MemberRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$NumoDatabase,
+      $MemberRowsTable,
+      MemberRow,
+      $$MemberRowsTableFilterComposer,
+      $$MemberRowsTableOrderingComposer,
+      $$MemberRowsTableAnnotationComposer,
+      $$MemberRowsTableCreateCompanionBuilder,
+      $$MemberRowsTableUpdateCompanionBuilder,
+      (MemberRow, BaseReferences<_$NumoDatabase, $MemberRowsTable, MemberRow>),
+      MemberRow,
+      PrefetchHooks Function()
+    >;
 
 class $NumoDatabaseManager {
   final _$NumoDatabase _db;
@@ -4626,4 +5460,6 @@ class $NumoDatabaseManager {
       $$CategoryRuleRowsTableTableManager(_db, _db.categoryRuleRows);
   $$GoalRowsTableTableManager get goalRows =>
       $$GoalRowsTableTableManager(_db, _db.goalRows);
+  $$MemberRowsTableTableManager get memberRows =>
+      $$MemberRowsTableTableManager(_db, _db.memberRows);
 }

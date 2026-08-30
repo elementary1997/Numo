@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/l10n.dart';
 import '../core/money.dart';
 import '../core/theme.dart';
 import '../models/category.dart';
+import '../models/member.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 
@@ -24,12 +26,17 @@ class TransactionTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final category = ref.watch(categoriesProvider).byId(tx.categoryId);
     final theme = Theme.of(context);
+    final locale = context.localeCode;
+    // Автора показываем только у операций, внесённых другим участником
+    // общего счёта, — свои и так свои.
+    final author = ref.watch(membersProvider).tryById(tx.authorId);
+    final otherAuthor = author != null && !author.isMe ? author : null;
     final subtitle = [
       if (tx.note.isNotEmpty) tx.note,
       if (showTime)
-        DateFormat.Hm('ru').format(tx.date)
+        DateFormat.Hm(locale).format(tx.date)
       else
-        DateFormat('d MMM', 'ru').format(tx.date),
+        DateFormat('d MMM', locale).format(tx.date),
     ].join(' · ');
 
     return ListTile(
@@ -51,12 +58,35 @@ class TransactionTile extends ConsumerWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      subtitle: Text(
-        subtitle,
-        style: theme.textTheme.bodySmall
-            ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+      subtitle: Row(
+        children: [
+          if (otherAuthor != null) ...[
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: otherAuthor.color,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              otherAuthor.name,
+              style: theme.textTheme.bodySmall?.copyWith(
+                  color: otherAuthor.color, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Expanded(
+            child: Text(
+              subtitle,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
       trailing: Text(
         formatSigned(tx.amount, isExpense: tx.isExpense),

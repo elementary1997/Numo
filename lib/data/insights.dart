@@ -21,7 +21,11 @@ List<Insight> buildInsights({
   required List<TxCategory> categories,
   required Map<String, double> budgets,
   required DateTime now,
+  double Function(Tx)? amountOf,
 }) {
+  /// Сумма операции в валюте отчёта: по умолчанию — как есть,
+  /// экран передаёт пересчёт в рубли по курсам ЦБ.
+  final amount = amountOf ?? (Tx t) => t.amount;
   final insights = <Insight>[];
   final thisMonth = DateTime(now.year, now.month);
   final prevMonth = DateTime(now.year, now.month - 1);
@@ -31,8 +35,8 @@ List<Insight> buildInsights({
     for (final t in transactions) {
       if (t.isSystem || !t.isExpense) continue;
       if (t.date.year != month.year || t.date.month != month.month) continue;
-      result.update(t.categoryId, (v) => v + t.amount,
-          ifAbsent: () => t.amount);
+      final value = amount(t);
+      result.update(t.categoryId, (v) => v + value, ifAbsent: () => value);
     }
     return result;
   }
@@ -43,7 +47,7 @@ List<Insight> buildInsights({
           !t.isExpense &&
           t.date.year == month.year &&
           t.date.month == month.month)
-      .fold(0.0, (sum, t) => sum + t.amount);
+      .fold(0.0, (sum, t) => sum + amount(t));
 
   final current = spentBy(thisMonth);
   final previous = spentBy(prevMonth);
@@ -133,18 +137,23 @@ List<Insight> buildInsights({
 
   // Крупнейшая разовая трата.
   Tx? biggest;
+  var biggestAmount = 0.0;
   for (final t in transactions) {
     if (t.isSystem || !t.isExpense) continue;
     if (t.date.year != thisMonth.year || t.date.month != thisMonth.month) {
       continue;
     }
-    if (biggest == null || t.amount > biggest.amount) biggest = t;
+    final value = amount(t);
+    if (biggest == null || value > biggestAmount) {
+      biggest = t;
+      biggestAmount = value;
+    }
   }
-  if (biggest != null && biggest.amount >= 1000) {
+  if (biggest != null && biggestAmount >= 1000) {
     insights.add(Insight(
       text: l10n.insBiggestTx(
         biggest.note.isNotEmpty ? biggest.note : titleOf(biggest.categoryId),
-        formatMoney(biggest.amount),
+        formatMoney(biggestAmount),
       ),
       tone: InsightTone.neutral,
     ));

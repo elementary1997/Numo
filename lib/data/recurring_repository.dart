@@ -78,7 +78,7 @@ class RecurringRepository {
     }
 
     if (created.isNotEmpty) {
-      await transactions.saveAll([...transactions.loadAll(), ...created]);
+      await transactions.insertAll(created);
     }
     if (updatedRules.isNotEmpty) {
       await saveAll(updatedRules);

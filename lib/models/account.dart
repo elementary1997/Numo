@@ -47,6 +47,8 @@ class Account {
     this.rate,
     this.openedAt,
     this.closesAt,
+    this.shared = false,
+    this.updatedAt,
   });
 
   final String id;
@@ -61,6 +63,13 @@ class Account {
   final double? rate;
   final DateTime? openedAt;
   final DateTime? closesAt;
+
+  /// Общий счёт: он и операции по нему уезжают в общую папку
+  /// и сливаются с данными других участников (ADR-0013).
+  final bool shared;
+
+  /// Когда счёт последний раз менялся — для слияния общих счетов.
+  final DateTime? updatedAt;
 
   IconData get icon => CategoryIcons.resolve(iconKey);
   bool get isRub => currency == Currencies.rub;
@@ -92,6 +101,8 @@ class Account {
     double? rate,
     DateTime? openedAt,
     DateTime? closesAt,
+    bool? shared,
+    DateTime? updatedAt,
   }) =>
       Account(
         id: id,
@@ -104,6 +115,8 @@ class Account {
         rate: rate ?? this.rate,
         openedAt: openedAt ?? this.openedAt,
         closesAt: closesAt ?? this.closesAt,
+        shared: shared ?? this.shared,
+        updatedAt: updatedAt ?? this.updatedAt,
       );
 
   Map<String, dynamic> toJson() => {
@@ -117,6 +130,8 @@ class Account {
         'rate': rate,
         'openedAt': openedAt?.toIso8601String(),
         'closesAt': closesAt?.toIso8601String(),
+        'shared': shared,
+        if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
       };
 
   factory Account.fromJson(Map<String, dynamic> json) => Account(
@@ -134,6 +149,8 @@ class Account {
         closesAt: json['closesAt'] == null
             ? null
             : DateTime.parse(json['closesAt'] as String),
+        shared: (json['shared'] as bool?) ?? false,
+        updatedAt: DateTime.tryParse((json['updatedAt'] as String?) ?? ''),
       );
 }
 

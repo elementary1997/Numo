@@ -27,6 +27,29 @@ class AccountsRepository {
 
   List<Account> loadAll() => List.unmodifiable(_cache);
 
+  /// Слияние счетов от других участников (ADR-0013): чужой счёт
+  /// принимается, если его отметка изменения новее локальной.
+  /// Возвращает число применённых изменений.
+  Future<int> mergeAll(Iterable<Account> incoming) async {
+    final byId = {for (final a in _cache) a.id: a};
+    var changed = 0;
+    for (final remote in incoming) {
+      final local = byId[remote.id];
+      final localAt = local?.updatedAt;
+      final remoteAt = remote.updatedAt;
+      final wins = local == null ||
+          localAt == null ||
+          (remoteAt != null && remoteAt.isAfter(localAt));
+      if (wins) {
+        byId[remote.id] = remote;
+        changed++;
+      }
+    }
+    if (changed == 0) return 0;
+    await saveAll(byId.values.toList());
+    return changed;
+  }
+
   Future<void> saveAll(List<Account> accounts) async {
     _cache = [...accounts];
     await _db.transaction(() async {
@@ -48,6 +71,8 @@ class AccountsRepository {
         rate: row.rate,
         openedAt: row.openedAt,
         closesAt: row.closesAt,
+        shared: row.shared,
+        updatedAt: row.updatedAt,
       );
 
   static AccountRowsCompanion _toRow(Account a) => AccountRowsCompanion(
@@ -61,5 +86,7 @@ class AccountsRepository {
         rate: Value(a.rate),
         openedAt: Value(a.openedAt),
         closesAt: Value(a.closesAt),
+        shared: Value(a.shared),
+        updatedAt: Value(a.updatedAt),
       );
 }

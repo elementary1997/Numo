@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../core/money.dart';
 import '../core/theme.dart';
+import '../data/shared_sync.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../models/transaction.dart';
@@ -251,6 +252,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     _kind = a?.kind ?? AccountKind.card;
     _openedAt = a?.openedAt;
     _closesAt = a?.closesAt;
+    _shared = a?.shared ?? false;
   }
 
   @override
@@ -260,6 +262,9 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
     _rate.dispose();
     super.dispose();
   }
+
+  /// Счёт виден участникам и уезжает в папку обмена (ADR-0013).
+  bool _shared = false;
 
   Future<void> _pickDate({required bool opened}) async {
     final now = DateTime.now();
@@ -294,6 +299,7 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
           : null,
       openedAt: isDeposit ? (_openedAt ?? DateTime.now()) : null,
       closesAt: isDeposit ? _closesAt : null,
+      shared: _shared,
     );
     await ref.read(accountsProvider.notifier).upsert(account);
 
@@ -486,6 +492,18 @@ class _AccountEditorState extends ConsumerState<_AccountEditor> {
                 ],
               ),
               ],
+            ],
+            if (SharedSyncService.supported) ...[
+              const SizedBox(height: 6),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _shared,
+                onChanged: (v) => setState(() => _shared = v),
+                title: Text(context.l10n.sharedAccountToggle),
+                subtitle: Text(context.l10n.sharedAccountHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant)),
+              ),
             ],
             const SizedBox(height: 18),
             Text(context.l10n.iconLabel,

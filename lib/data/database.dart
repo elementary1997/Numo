@@ -14,6 +14,26 @@ class TransactionRows extends Table {
   TextColumn get note => text().withDefault(const Constant(''))();
   TextColumn get accountId => text().withDefault(const Constant('main'))();
 
+  /// Время последнего изменения и «надгробие» удаления — по ним
+  /// сливаются данные участников общего счёта (ADR-0013).
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  /// Участник, внёсший операцию.
+  TextColumn get authorId => text().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Участники общих счетов: люди, с которыми ведётся общий бюджет.
+/// Ровно один помечен `isMe` — владелец этого устройства.
+class MemberRows extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  IntColumn get color => integer()();
+  BoolColumn get isMe => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -31,6 +51,11 @@ class AccountRows extends Table {
   RealColumn get rate => real().nullable()();
   DateTimeColumn get openedAt => dateTime().nullable()();
   DateTimeColumn get closesAt => dateTime().nullable()();
+
+  /// Общий счёт: уезжает в общую папку и сливается с данными
+  /// других участников (ADR-0013).
+  BoolColumn get shared => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -115,6 +140,7 @@ class CategoryRuleRows extends Table {
   AccountRows,
   CategoryRuleRows,
   GoalRows,
+  MemberRows,
 ])
 class NumoDatabase extends _$NumoDatabase {
   /// Продакшн-конструктор открывает файл `numo` через drift_flutter;
@@ -122,7 +148,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -151,6 +177,16 @@ class NumoDatabase extends _$NumoDatabase {
           }
           if (from < 8) {
             await m.addColumn(goalRows, goalRows.accountId);
+          }
+          if (from < 9) {
+            // Общие счета (ADR-0013): отметки изменения, надгробия
+            // удалений, автор операции и справочник участников.
+            await m.addColumn(transactionRows, transactionRows.updatedAt);
+            await m.addColumn(transactionRows, transactionRows.deletedAt);
+            await m.addColumn(transactionRows, transactionRows.authorId);
+            await m.addColumn(accountRows, accountRows.shared);
+            await m.addColumn(accountRows, accountRows.updatedAt);
+            await m.createTable(memberRows);
           }
         },
       );

@@ -84,6 +84,17 @@ class AnalyticsScreen extends ConsumerWidget {
             value: stats.net.abs(),
             color: stats.net >= 0 ? NumoColors.sky : NumoColors.amber,
           ),
+          if (stats.approximate || stats.unconverted.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              stats.unconverted.isNotEmpty
+                  ? context.l10n
+                      .statsNoRateFor(stats.unconverted.join(', '))
+                  : context.l10n.statsConvertedByCbr,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
           const SizedBox(height: 20),
           _DailyExpensesCard(stats: stats),
           const SizedBox(height: 20),
