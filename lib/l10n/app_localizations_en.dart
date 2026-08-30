@@ -1221,4 +1221,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settleDone => 'Debt marked as settled';
+
+  @override
+  String get updateShowLog => 'Show log';
+
+  @override
+  String get updateDidNotApplyBody =>
+      'The app files stayed as they were. Download the build from the release page and unpack it over the old one — or open the log to see why.';
 }

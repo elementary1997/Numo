@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/l10n.dart';
 import '../data/changelog.dart';
 import '../data/notifications.dart';
+import '../data/self_updater.dart';
 import '../data/reminders.dart';
 import '../core/money.dart';
 import '../data/statements_watcher.dart';
@@ -192,17 +193,36 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     final failed =
         await ref.read(updateServiceProvider).takeFailedUpdate();
     if (failed == null || !mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      duration: const Duration(seconds: 12),
-      content: Text(context.l10n.updateDidNotApply(failed)),
-      action: SnackBarAction(
-        label: context.l10n.openPage,
-        onPressed: () => launchUrl(
-          Uri.parse('https://github.com/elementary1997/Numo/releases/latest'),
-          mode: LaunchMode.externalApplication,
-        ),
+    // Диалог, а не снекбар: у неудачи есть причина, и её надо показать.
+    final action = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.updateDidNotApply(failed)),
+        content: Text(context.l10n.updateDidNotApplyBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop('log'),
+            child: Text(context.l10n.updateShowLog),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.l10n.close),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop('page'),
+            child: Text(context.l10n.openPage),
+          ),
+        ],
       ),
-    ));
+    );
+    if (action == 'page') {
+      await launchUrl(
+        Uri.parse('https://github.com/elementary1997/Numo/releases/latest'),
+        mode: LaunchMode.externalApplication,
+      );
+    } else if (action == 'log') {
+      await launchUrl(Uri.file(SelfUpdater.updateLogPath));
+    }
   }
 
   /// Общие счета (ADR-0014): при запуске забираем файлы участников,

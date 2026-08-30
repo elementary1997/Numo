@@ -2214,6 +2214,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Долг отмечен погашенным'**
   String get settleDone;
+
+  /// No description provided for @updateShowLog.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать лог'**
+  String get updateShowLog;
+
+  /// No description provided for @updateDidNotApplyBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Файлы приложения остались прежними. Скачайте сборку со страницы релиза и распакуйте её поверх — или посмотрите лог, чтобы понять причину.'**
+  String get updateDidNotApplyBody;
 }
 
 class _AppLocalizationsDelegate

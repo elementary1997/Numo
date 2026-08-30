@@ -37,14 +37,17 @@ void main() {
       );
 
       expect(ps, contains('Wait-Process -Id 4242'));
-      expect(ps, contains('Copy-Item'));
+      // robocopy: устойчивее Copy-Item на деревьях и повторяет попытки.
+      expect(ps, contains('robocopy.exe'));
+      // Код 8 и выше у robocopy — это ошибка копирования.
+      expect(ps, contains(r'if ($robo.ExitCode -ge 8)'));
+      expect(ps, contains('numo-update.log'));
       // Приложение поднимается даже при неудачной подмене.
       expect(ps, contains('finally'));
       expect(ps, contains('Start-Process'));
       // Кириллица в пути должна дожить до скрипта как есть.
       expect(ps, contains('Павел'));
       // Старый .bat падал на этих командах при кириллице в %TEMP%.
-      expect(ps, isNot(contains('robocopy')));
       expect(ps, isNot(contains('tasklist')));
       expect(ps, isNot(contains('timeout /T')));
     });

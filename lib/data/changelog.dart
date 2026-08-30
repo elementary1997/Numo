@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.12.1',
+    itemsRu: [
+      'Windows: подмена файлов при обновлении надёжнее, а причину неудачи видно в логе',
+      '«Обновление не установилось» больше не появляется после сорванного скачивания',
+    ],
+    itemsEn: [
+      'Windows: file replacement during update is sturdier, and failures are visible in the log',
+      'No more false "update did not install" after a download that never finished',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.12.0',
     itemsRu: [
       'Общие траты делятся по долям: видно, кто кому должен, и долг можно отметить погашенным',

@@ -86,6 +86,10 @@ Future<void> runUpdateFlow(BuildContext context, UpdateInfo info) async {
     );
   } catch (e) {
     failure = '$e';
+    // Скачивание не дошло до подмены файлов — отметку о начатой
+    // установке снимаем, иначе при следующем запуске приложение
+    // соврёт, будто обновление не встало.
+    await UpdateService().clearPending();
   }
 
   if (failure == null) return; // при успехе приложение уже вышло

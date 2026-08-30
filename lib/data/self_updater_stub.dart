@@ -11,4 +11,6 @@ class SelfUpdater {
   }
 
   static bool canWriteToInstallDir() => false;
+
+  static String get updateLogPath => '';
 }

@@ -100,6 +100,10 @@ class UpdateService {
       (await SharedPreferences.getInstance())
           .setString(_pendingKey, version);
 
+  /// Снимает отметку о начатой установке (скачивание сорвалось).
+  Future<void> clearPending() async =>
+      (await SharedPreferences.getInstance()).remove(_pendingKey);
+
   /// Версия, обновление до которой не встало; null — всё в порядке.
   /// Отметку снимает в любом случае — сообщение показывается один раз.
   Future<String?> takeFailedUpdate() async {

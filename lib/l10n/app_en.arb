@@ -366,5 +366,7 @@
   "debtLine": "{from} → {to}",
   "settleAction": "Settle",
   "settleNote": "Settlement: {from} → {to}",
-  "settleDone": "Debt marked as settled"
+  "settleDone": "Debt marked as settled",
+  "updateShowLog": "Show log",
+  "updateDidNotApplyBody": "The app files stayed as they were. Download the build from the release page and unpack it over the old one — or open the log to see why."
 }

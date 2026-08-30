@@ -35,6 +35,12 @@ class SelfUpdater {
     return appPath;
   }
 
+  /// Куда пишется ход подмены файлов — этот путь показывается
+  /// пользователю, если обновление не встало.
+  static String get updateLogPath => Platform.isWindows
+      ? '${Platform.environment['TEMP'] ?? r'C:\Windows\Temp'}\\numo-update.log'
+      : '/tmp/numo-update.log';
+
   /// Есть ли право писать в папку установки. На Windows приложение,
   /// распакованное в Program Files, обновиться на месте не может —
   /// лучше сказать об этом до скачивания архива, чем после.
@@ -200,11 +206,26 @@ chmod +x "$target/numo"
     String quote(String path) => "'${path.replaceAll("'", "''")}'";
     return '''
 \$ErrorActionPreference = 'Stop'
-Start-Transcript -Path (Join-Path \$env:TEMP 'numo-update.log') -Force | Out-Null
+\$log = Join-Path \$env:TEMP 'numo-update.log'
+Start-Transcript -Path \$log -Force | Out-Null
 try {
   # Ждём, пока закроется само приложение: файлы заняты, пока оно живо.
   Wait-Process -Id $pid -Timeout 120 -ErrorAction SilentlyContinue
-  Copy-Item -Path (Join-Path ${quote(source)} '*') -Destination ${quote(target)} -Recurse -Force
+  # Даём Windows отпустить дескрипторы после выхода процесса.
+  Start-Sleep -Milliseconds 700
+  \$source = ${quote(source)}
+  \$target = ${quote(target)}
+  Write-Output "source: \$source"
+  Write-Output "target: \$target"
+  # robocopy надёжнее Copy-Item на деревьях каталогов и умеет
+  # повторять попытки, если файл ещё занят.
+  \$robo = Start-Process -FilePath 'robocopy.exe' -ArgumentList @(
+      \$source, \$target, '/E', '/IS', '/IT', '/R:3', '/W:1', '/NFL', '/NDL', '/NP'
+    ) -Wait -PassThru -WindowStyle Hidden
+  Write-Output "robocopy exit code: \$(\$robo.ExitCode)"
+  # У robocopy успех — это 0..7; 8 и выше означают, что часть файлов
+  # скопировать не удалось.
+  if (\$robo.ExitCode -ge 8) { throw "robocopy failed: \$(\$robo.ExitCode)" }
   Write-Output 'update: files copied'
 } catch {
   Write-Output "update failed: \$_"

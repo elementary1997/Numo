@@ -424,5 +424,7 @@
   "settleAction": "Погасить",
   "settleNote": "Расчёт: {from} → {to}",
   "@settleNote": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
-  "settleDone": "Долг отмечен погашенным"
+  "settleDone": "Долг отмечен погашенным",
+  "updateShowLog": "Показать лог",
+  "updateDidNotApplyBody": "Файлы приложения остались прежними. Скачайте сборку со страницы релиза и распакуйте её поверх — или посмотрите лог, чтобы понять причину."
 }

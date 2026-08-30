@@ -1220,4 +1220,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settleDone => 'Долг отмечен погашенным';
+
+  @override
+  String get updateShowLog => 'Показать лог';
+
+  @override
+  String get updateDidNotApplyBody =>
+      'Файлы приложения остались прежними. Скачайте сборку со страницы релиза и распакуйте её поверх — или посмотрите лог, чтобы понять причину.';
 }
