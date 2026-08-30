@@ -85,7 +85,9 @@ abstract final class StatementImporter {
     bool skipFirstRow = false,
   }) {
     final result = <ParsedRow>[];
-    final seenInFile = <String>{};
+    // Сколько раз строка с таким же содержимым уже встретилась в файле:
+    // две одинаковые покупки в один день — разные операции, а не дубль.
+    final occurrences = <String, int>{};
     for (var i = skipFirstRow ? 1 : 0; i < rows.length; i++) {
       final row = rows[i];
       String cell(int? column) =>
@@ -103,7 +105,13 @@ abstract final class StatementImporter {
           rawAmount < 0 || (mapping.unsignedIsExpense && rawAmount > 0);
       final amount = rawAmount.abs();
       final categoryId = categorizeByRules(note, rules) ?? 'other';
-      final id = 'imp-${_fnv1a('$accountId|$date|$rawAmount|$note')}';
+      final key = '$accountId|$date|$rawAmount|$note';
+      final occurrence =
+          occurrences.update(key, (v) => v + 1, ifAbsent: () => 1);
+      // Первое вхождение сохраняет прежний id — операции, импортированные
+      // старыми версиями, не задваиваются при повторном импорте.
+      final id =
+          'imp-${_fnv1a(occurrence == 1 ? key : '$key#$occurrence')}';
 
       final tx = Tx(
         id: id,
@@ -114,8 +122,7 @@ abstract final class StatementImporter {
         accountId: accountId,
         note: note,
       );
-      final duplicate =
-          existingIds.contains(id) || !seenInFile.add(id);
+      final duplicate = existingIds.contains(id);
       result.add(ParsedRow(source: row, tx: tx, duplicate: duplicate));
     }
     return result;

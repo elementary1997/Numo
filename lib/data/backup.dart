@@ -25,6 +25,20 @@ class BackupData {
   final List<Goal> goals;
 }
 
+/// Почему файл бэкапа не удалось прочитать. Текст для пользователя
+/// выбирает UI — сообщение должно быть на языке интерфейса.
+enum BackupError { notJson, notNumo, tooNew, corrupted }
+
+/// Ошибка разбора бэкапа с машинным кодом причины.
+class BackupException extends FormatException {
+  BackupException(this.error, {this.version}) : super(error.name);
+
+  final BackupError error;
+
+  /// Версия формата из файла — заполнена для [BackupError.tooNew].
+  final int? version;
+}
+
 /// Формат бэкапа Numo: версионированный JSON со всеми данными.
 /// v1 — операции и категории; v2 добавила счета, бюджеты и
 /// регулярные правила; v3 — цели. Старые файлы читаются с пустыми
@@ -46,22 +60,21 @@ abstract final class Backup {
     });
   }
 
-  /// Разбирает бэкап; бросает [FormatException] с человекочитаемым
-  /// сообщением, если файл не похож на бэкап Numo.
+  /// Разбирает бэкап; бросает [BackupException] с кодом причины,
+  /// если файл не похож на бэкап Numo.
   static BackupData decode(String raw) {
     final Object? data;
     try {
       data = jsonDecode(raw);
     } catch (_) {
-      throw const FormatException('Файл не является корректным JSON');
+      throw BackupException(BackupError.notJson);
     }
     if (data is! Map<String, dynamic> || data['app'] != 'numo') {
-      throw const FormatException('Это не файл бэкапа Numo');
+      throw BackupException(BackupError.notNumo);
     }
     final fileVersion = data['version'] as int? ?? 0;
     if (fileVersion > version) {
-      throw FormatException(
-          'Бэкап создан более новой версией приложения (v$fileVersion)');
+      throw BackupException(BackupError.tooNew, version: fileVersion);
     }
     try {
       return BackupData(
@@ -85,7 +98,7 @@ abstract final class Backup {
             .toList(),
       );
     } catch (_) {
-      throw const FormatException('Файл бэкапа повреждён');
+      throw BackupException(BackupError.corrupted);
     }
   }
 }

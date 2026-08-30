@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/dialogs.dart';
 import '../core/theme.dart';
 import '../data/seed_localization.dart';
 import '../data/sync_service.dart';
@@ -112,7 +113,7 @@ Future<String?> _askPin(BuildContext context, {required String title}) async {
       ],
     ),
   );
-  controller.dispose();
+  disposeAfterDialog(controller);
   return result;
 }
 

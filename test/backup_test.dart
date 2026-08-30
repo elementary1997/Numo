@@ -74,7 +74,7 @@ void main() {
     expect(
       () => Backup.decode('{"foo": 1}'),
       throwsA(predicate(
-          (e) => e is FormatException && e.message.contains('Numo'))),
+          (e) => e is BackupException && e.error == BackupError.notNumo)),
     );
   });
 
@@ -83,7 +83,7 @@ void main() {
       () => Backup.decode(
           '{"app": "numo", "version": 99, "categories": [], "transactions": []}'),
       throwsA(predicate((e) =>
-          e is FormatException && e.message.contains('новой версией'))),
+          e is BackupException && e.error == BackupError.tooNew)),
     );
   });
 }

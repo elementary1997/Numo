@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/dialogs.dart';
 import '../models/category.dart';
 import '../models/category_rule.dart';
 import '../state/providers.dart';
@@ -152,6 +153,6 @@ class RulesScreen extends ConsumerWidget {
         ),
       ),
     );
-    controller.dispose();
+    disposeAfterDialog(controller);
   }
 }

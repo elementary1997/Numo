@@ -98,6 +98,39 @@ void main() {
       expect(parsed.last.tx, isNull);
     });
 
+    test('две одинаковые операции за день импортируются обе', () {
+      const twiceText = 'Дата;Сумма;Описание\n'
+          '01.08.2026;-120;МЕТРО\n'
+          '01.08.2026;-120;МЕТРО\n';
+      const mapping = ColumnMapping(
+          dateColumn: 0, amountColumn: 1, noteColumn: 2);
+      final rows = Csv.parse(twiceText);
+      final parsed = StatementImporter.parseRows(
+        rows: rows,
+        mapping: mapping,
+        accountId: 'main',
+        rules: const [],
+        existingIds: const {},
+        skipFirstRow: true,
+      );
+
+      final importable = parsed.where((r) => r.importable).toList();
+      expect(importable, hasLength(2));
+      expect(importable[0].tx!.id, isNot(importable[1].tx!.id));
+
+      // Повторный импорт того же файла — уже целиком дубликат.
+      final again = StatementImporter.parseRows(
+        rows: rows,
+        mapping: mapping,
+        accountId: 'main',
+        rules: const [],
+        existingIds: importable.map((r) => r.tx!.id).toSet(),
+        skipFirstRow: true,
+      );
+      expect(again.where((r) => r.importable), isEmpty);
+      expect(again.where((r) => r.duplicate), hasLength(2));
+    });
+
     test('повторный импорт того же файла — все строки дубликаты', () {
       final rows = Csv.parse(csvText);
       const mapping = ColumnMapping(

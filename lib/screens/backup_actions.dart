@@ -103,6 +103,15 @@ Future<void> exportCsv(BuildContext context, WidgetRef ref) async {
   }
 }
 
+/// Текст ошибки разбора бэкапа на языке интерфейса.
+String backupErrorText(BuildContext context, BackupException e) =>
+    switch (e.error) {
+      BackupError.notJson => context.l10n.backupNotJson,
+      BackupError.notNumo => context.l10n.backupNotNumo,
+      BackupError.tooNew => context.l10n.backupTooNew(e.version ?? 0),
+      BackupError.corrupted => context.l10n.backupCorrupted,
+    };
+
 /// Импорт бэкапа: выбор файла, валидация и — после явного
 /// подтверждения — полная замена данных.
 Future<void> importBackup(BuildContext context, WidgetRef ref) async {
@@ -114,8 +123,11 @@ Future<void> importBackup(BuildContext context, WidgetRef ref) async {
   final BackupData parsed;
   try {
     parsed = Backup.decode(await file.readAsString());
-  } on FormatException catch (e) {
-    if (context.mounted) _toast(context, e.message);
+  } on BackupException catch (e) {
+    if (context.mounted) _toast(context, backupErrorText(context, e));
+    return;
+  } on FormatException {
+    if (context.mounted) _toast(context, context.l10n.backupCorrupted);
     return;
   }
 
