@@ -138,4 +138,35 @@ void main() {
     final members = await MembersRepository.open(db, meName: 'Я');
     expect(members.me!.name, 'Я');
   });
+
+  test('миграция создаёт индексы ленты и поисковую колонку', () async {
+    SharedPreferences.setMockInitialValues({
+      'numo.transactions.migrated-to-drift.v1': true,
+    });
+    final db = NumoDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = await TransactionsRepository.open(db, seedDemo: false);
+    await repo.upsertAll([
+      Tx(
+        id: 'idx-1',
+        type: TxType.expense,
+        amount: 100,
+        categoryId: 'groceries',
+        date: DateTime(2026, 8, 1),
+        note: 'Пятёрочка',
+      ),
+    ]);
+
+    final indexes = await db
+        .customSelect("SELECT name FROM sqlite_master WHERE type = 'index'")
+        .get();
+    final names = indexes.map((r) => r.data['name'] as String).toSet();
+    expect(names, containsAll(['tx_date', 'tx_account', 'tx_deleted']));
+
+    // Поисковая колонка заполняется при записи.
+    final rows = await db
+        .customSelect('SELECT note_lower FROM transaction_rows')
+        .get();
+    expect(rows.single.data['note_lower'], 'пятёрочка');
+  });
 }

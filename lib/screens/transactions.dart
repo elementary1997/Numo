@@ -3,47 +3,47 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../core/money.dart';
-import '../models/category.dart';
 import '../models/transaction.dart';
 import '../state/providers.dart';
 import '../widgets/transaction_tile.dart';
 import 'add_transaction.dart';
 import '../core/l10n.dart';
 
-enum _Filter { all, expense, income }
-
-final _filterProvider = StateProvider<_Filter>((ref) => _Filter.all);
-final _searchProvider = StateProvider<String>((ref) => '');
-final _rangeProvider = StateProvider<DateTimeRange?>((ref) => null);
-
-class TransactionsScreen extends ConsumerWidget {
+class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
 
-  bool _matches(Tx tx, String query, List<TxCategory> categories) {
-    if (query.isEmpty) return true;
-    final q = query.toLowerCase();
-    return tx.note.toLowerCase().contains(q) ||
-        categories.byId(tx.categoryId).title.toLowerCase().contains(q);
+  @override
+  ConsumerState<TransactionsScreen> createState() =>
+      _TransactionsScreenState();
+}
+
+class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
+  final _scroll = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Дозагрузка страницы, когда список подходит к концу.
+    _scroll.addListener(() {
+      if (_scroll.position.pixels >=
+          _scroll.position.maxScrollExtent - 400) {
+        ref.read(transactionsFeedProvider.notifier).loadMore();
+      }
+    });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filter = ref.watch(_filterProvider);
-    final query = ref.watch(_searchProvider);
-    final range = ref.watch(_rangeProvider);
-    final all = ref.watch(transactionsProvider);
-    final categories = ref.watch(categoriesProvider);
-    final txs = all.where((t) {
-      final byType = switch (filter) {
-        _Filter.all => true,
-        _Filter.expense => t.isExpense,
-        _Filter.income => !t.isExpense,
-      };
-      final byRange = range == null ||
-          (!t.date.isBefore(range.start) &&
-              t.date.isBefore(range.end.add(const Duration(days: 1))));
-      return byType && byRange && _matches(t, query, categories);
-    }).toList();
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = ref.watch(feedQueryProvider);
+    final feed = ref.watch(transactionsFeedProvider);
+    final txs = feed.valueOrNull ?? const <Tx>[];
+    final range = query.range;
     final theme = Theme.of(context);
 
     // Группировка по дням: список пар (дата, операции дня).
@@ -70,7 +70,8 @@ class TransactionsScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: TextField(
-              onChanged: (v) => ref.read(_searchProvider.notifier).state = v,
+              onChanged: (v) => ref.read(feedQueryProvider.notifier).state =
+                  query.copyWith(search: v),
               decoration: InputDecoration(
                 hintText: context.l10n.searchHint,
                 prefixIcon: const Icon(Icons.search_rounded),
@@ -90,21 +91,22 @@ class TransactionsScreen extends ConsumerWidget {
             child: Row(
               children: [
                 Expanded(
-                  child: SegmentedButton<_Filter>(
+                  child: SegmentedButton<TxType?>(
                     segments: [
                       ButtonSegment(
-                          value: _Filter.all,
-                          label: Text(context.l10n.filterAll)),
+                          value: null, label: Text(context.l10n.filterAll)),
                       ButtonSegment(
-                          value: _Filter.expense,
+                          value: TxType.expense,
                           label: Text(context.l10n.expenses)),
                       ButtonSegment(
-                          value: _Filter.income,
+                          value: TxType.income,
                           label: Text(context.l10n.income)),
                     ],
-                    selected: {filter},
-                    onSelectionChanged: (s) =>
-                        ref.read(_filterProvider.notifier).state = s.first,
+                    selected: {query.type},
+                    onSelectionChanged: (s) => ref
+                        .read(feedQueryProvider.notifier)
+                        .state = query.copyWith(
+                        type: s.first, clearType: s.first == null),
                     showSelectedIcon: false,
                   ),
                 ),
@@ -117,15 +119,18 @@ class TransactionsScreen extends ConsumerWidget {
           Expanded(
             child: txs.isEmpty
                 ? Center(
-                    child: Text(
-                      query.isNotEmpty || range != null
-                          ? context.l10n.nothingFound
-                          : context.l10n.noTransactions,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
-                    ),
+                    child: feed.isLoading
+                        ? const CircularProgressIndicator()
+                        : Text(
+                            query.isFiltered
+                                ? context.l10n.nothingFound
+                                : context.l10n.noTransactions,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant),
+                          ),
                   )
                 : ListView.builder(
+                    controller: _scroll,
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 96),
                     itemCount: groups.length,
                     itemBuilder: (context, i) {
@@ -172,11 +177,18 @@ class _RangeChip extends ConsumerWidget {
           initialDateRange: range,
         );
         if (picked != null) {
-          ref.read(_rangeProvider.notifier).state = picked;
+          final query = ref.read(feedQueryProvider);
+          ref.read(feedQueryProvider.notifier).state =
+              query.copyWith(range: picked);
         }
       },
-      onDeleted:
-          active ? () => ref.read(_rangeProvider.notifier).state = null : null,
+      onDeleted: active
+          ? () {
+              final query = ref.read(feedQueryProvider);
+              ref.read(feedQueryProvider.notifier).state =
+                  query.copyWith(clearRange: true);
+            }
+          : null,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }

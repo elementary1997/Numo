@@ -30,6 +30,7 @@ class TransactionsRepository {
   static Future<TransactionsRepository> open(NumoDatabase db,
       {String seedLocale = 'ru', bool seedDemo = true}) async {
     await _purgeOldTombstones(db);
+    await _fillMissingNoteLower(db);
     final rows = await db.select(db.transactionRows).get();
     if (rows.isNotEmpty) {
       final cache = rows.map(_fromRow).toList()
@@ -58,6 +59,55 @@ class TransactionsRepository {
   /// не показываются.
   List<Tx> loadAll() =>
       List.unmodifiable(_cache.where((t) => !t.isDeleted));
+
+  /// Выборка ленты операций средствами SQLite: фильтры, поиск и
+  /// постраничность считает база по индексам, а не приложение полным
+  /// проходом по списку на каждый кадр.
+  ///
+  /// [query] ищет по заметке без учёта регистра; [categoryIds] сужает
+  /// до набора категорий (поиск по названию категории экран собирает
+  /// сам, ему видны локализованные имена).
+  Future<List<Tx>> page({
+    String query = '',
+    DateTime? from,
+    DateTime? to,
+    TxType? type,
+    String? accountId,
+    Set<String>? categoryIds,
+    int limit = 50,
+    int offset = 0,
+  }) async {
+    final select = _db.select(_db.transactionRows)
+      ..where((row) => row.deletedAt.isNull());
+    if (from != null) {
+      select.where((row) => row.date.isBiggerOrEqualValue(from));
+    }
+    if (to != null) {
+      select.where((row) => row.date.isSmallerOrEqualValue(to));
+    }
+    if (type != null) {
+      select.where((row) => row.type.equals(type.name));
+    }
+    if (accountId != null) {
+      select.where((row) => row.accountId.equals(accountId));
+    }
+    final trimmed = query.trim();
+    if (trimmed.isNotEmpty) {
+      final pattern = '%${trimmed.toLowerCase()}%';
+      if (categoryIds == null || categoryIds.isEmpty) {
+        select.where((row) => row.noteLower.like(pattern));
+      } else {
+        // Совпало описание — или категория, чьё название подошло.
+        select.where((row) =>
+            row.noteLower.like(pattern) |
+            row.categoryId.isIn(categoryIds.toList()));
+      }
+    }
+    select
+      ..orderBy([(row) => OrderingTerm.desc(row.date)])
+      ..limit(limit, offset: offset);
+    return (await select.get()).map(_fromRow).toList();
+  }
 
   /// Всё, включая надгробия — для публикации в общую папку (ADR-0014).
   List<Tx> allRows() => List.unmodifiable(_cache);
@@ -157,6 +207,25 @@ class TransactionsRepository {
     return (remote.authorId ?? '').compareTo(local.authorId ?? '') > 0;
   }
 
+  /// Заполняет поисковую колонку у строк, записанных до её появления.
+  /// Нижний регистр для кириллицы умеет только Dart, поэтому обновление
+  /// идёт через приложение, а не одним UPDATE.
+  static Future<void> _fillMissingNoteLower(NumoDatabase db) async {
+    final stale = await (db.select(db.transactionRows)
+          ..where((row) => row.noteLower.equals('') & row.note.equals('').not()))
+        .get();
+    if (stale.isEmpty) return;
+    await db.batch((batch) {
+      for (final row in stale) {
+        batch.update(
+          db.transactionRows,
+          TransactionRowsCompanion(noteLower: Value(row.note.toLowerCase())),
+          where: (t) => t.id.equals(row.id),
+        );
+      }
+    });
+  }
+
   static Future<void> _purgeOldTombstones(NumoDatabase db) async {
     final cutoff = DateTime.now().subtract(tombstoneLifetime);
     await (db.delete(db.transactionRows)
@@ -185,6 +254,7 @@ class TransactionsRepository {
         date: Value(tx.date),
         accountId: Value(tx.accountId),
         note: Value(tx.note),
+        noteLower: Value(tx.note.toLowerCase()),
         updatedAt: Value(tx.updatedAt),
         deletedAt: Value(tx.deletedAt),
         authorId: Value(tx.authorId),

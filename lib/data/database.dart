@@ -5,6 +5,13 @@ part 'database.g.dart';
 
 /// Строки операций. Доменная модель (`Tx`) остаётся отдельной —
 /// таблица только про хранение.
+///
+/// Индексы — под то, как лента и статистика читают данные: по дате
+/// (лента, период, месяц), по счёту (баланс счёта) и по надгробиям
+/// (живые операции против удалённых).
+@TableIndex(name: 'tx_date', columns: {#date})
+@TableIndex(name: 'tx_account', columns: {#accountId})
+@TableIndex(name: 'tx_deleted', columns: {#deletedAt})
 class TransactionRows extends Table {
   TextColumn get id => text()();
   TextColumn get type => text()();
@@ -12,6 +19,12 @@ class TransactionRows extends Table {
   TextColumn get categoryId => text()();
   DateTimeColumn get date => dateTime()();
   TextColumn get note => text().withDefault(const Constant(''))();
+
+  /// Заметка в нижнем регистре — по ней ищет лента. Отдельная колонка
+  /// нужна потому, что SQLite-функция lower() понижает только ASCII:
+  /// «Пятёрочка» она бы оставила как есть, и поиск стал бы
+  /// регистрозависимым для кириллицы.
+  TextColumn get noteLower => text().withDefault(const Constant(''))();
   TextColumn get accountId => text().withDefault(const Constant('main'))();
 
   /// Время последнего изменения и «надгробие» удаления — по ним
@@ -160,7 +173,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -202,6 +215,22 @@ class NumoDatabase extends _$NumoDatabase {
             await m.addColumn(accountRows, accountRows.shared);
             await m.addColumn(accountRows, accountRows.updatedAt);
             await m.createTable(memberRows);
+          }
+          if (from < 11) {
+            // Индексы под выборки ленты и балансов. Создаются после
+            // миграции 10: tx_deleted ссылается на deleted_at, которой
+            // до неё в таблице нет.
+            await m.create(Index('tx_date',
+                'CREATE INDEX IF NOT EXISTS tx_date ON transaction_rows (date)'));
+            await m.create(Index('tx_account',
+                'CREATE INDEX IF NOT EXISTS tx_account ON transaction_rows (account_id)'));
+            await m.create(Index('tx_deleted',
+                'CREATE INDEX IF NOT EXISTS tx_deleted ON transaction_rows (deleted_at)'));
+          }
+          if (from < 12) {
+            // Поисковая колонка; существующие строки нормализует
+            // репозиторий при открытии — SQL этого не умеет.
+            await m.addColumn(transactionRows, transactionRows.noteLower);
           }
         },
       );

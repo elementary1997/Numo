@@ -66,6 +66,18 @@ class $TransactionRowsTable extends TransactionRows
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _noteLowerMeta = const VerificationMeta(
+    'noteLower',
+  );
+  @override
+  late final GeneratedColumn<String> noteLower = GeneratedColumn<String>(
+    'note_lower',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _accountIdMeta = const VerificationMeta(
     'accountId',
   );
@@ -119,6 +131,7 @@ class $TransactionRowsTable extends TransactionRows
     categoryId,
     date,
     note,
+    noteLower,
     accountId,
     updatedAt,
     deletedAt,
@@ -179,6 +192,12 @@ class $TransactionRowsTable extends TransactionRows
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('note_lower')) {
+      context.handle(
+        _noteLowerMeta,
+        noteLower.isAcceptableOrUnknown(data['note_lower']!, _noteLowerMeta),
+      );
+    }
     if (data.containsKey('account_id')) {
       context.handle(
         _accountIdMeta,
@@ -236,6 +255,10 @@ class $TransactionRowsTable extends TransactionRows
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       )!,
+      noteLower: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note_lower'],
+      )!,
       accountId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}account_id'],
@@ -268,6 +291,12 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
   final String categoryId;
   final DateTime date;
   final String note;
+
+  /// Заметка в нижнем регистре — по ней ищет лента. Отдельная колонка
+  /// нужна потому, что SQLite-функция lower() понижает только ASCII:
+  /// «Пятёрочка» она бы оставила как есть, и поиск стал бы
+  /// регистрозависимым для кириллицы.
+  final String noteLower;
   final String accountId;
 
   /// Время последнего изменения и «надгробие» удаления — по ним
@@ -284,6 +313,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     required this.categoryId,
     required this.date,
     required this.note,
+    required this.noteLower,
     required this.accountId,
     this.updatedAt,
     this.deletedAt,
@@ -298,6 +328,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     map['category_id'] = Variable<String>(categoryId);
     map['date'] = Variable<DateTime>(date);
     map['note'] = Variable<String>(note);
+    map['note_lower'] = Variable<String>(noteLower);
     map['account_id'] = Variable<String>(accountId);
     if (!nullToAbsent || updatedAt != null) {
       map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -319,6 +350,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       categoryId: Value(categoryId),
       date: Value(date),
       note: Value(note),
+      noteLower: Value(noteLower),
       accountId: Value(accountId),
       updatedAt: updatedAt == null && nullToAbsent
           ? const Value.absent()
@@ -344,6 +376,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       categoryId: serializer.fromJson<String>(json['categoryId']),
       date: serializer.fromJson<DateTime>(json['date']),
       note: serializer.fromJson<String>(json['note']),
+      noteLower: serializer.fromJson<String>(json['noteLower']),
       accountId: serializer.fromJson<String>(json['accountId']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -360,6 +393,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       'categoryId': serializer.toJson<String>(categoryId),
       'date': serializer.toJson<DateTime>(date),
       'note': serializer.toJson<String>(note),
+      'noteLower': serializer.toJson<String>(noteLower),
       'accountId': serializer.toJson<String>(accountId),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -374,6 +408,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     String? categoryId,
     DateTime? date,
     String? note,
+    String? noteLower,
     String? accountId,
     Value<DateTime?> updatedAt = const Value.absent(),
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -385,6 +420,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     categoryId: categoryId ?? this.categoryId,
     date: date ?? this.date,
     note: note ?? this.note,
+    noteLower: noteLower ?? this.noteLower,
     accountId: accountId ?? this.accountId,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -400,6 +436,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           : this.categoryId,
       date: data.date.present ? data.date.value : this.date,
       note: data.note.present ? data.note.value : this.note,
+      noteLower: data.noteLower.present ? data.noteLower.value : this.noteLower,
       accountId: data.accountId.present ? data.accountId.value : this.accountId,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -416,6 +453,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           ..write('categoryId: $categoryId, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
+          ..write('noteLower: $noteLower, ')
           ..write('accountId: $accountId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -432,6 +470,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     categoryId,
     date,
     note,
+    noteLower,
     accountId,
     updatedAt,
     deletedAt,
@@ -447,6 +486,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           other.categoryId == this.categoryId &&
           other.date == this.date &&
           other.note == this.note &&
+          other.noteLower == this.noteLower &&
           other.accountId == this.accountId &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
@@ -460,6 +500,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
   final Value<String> categoryId;
   final Value<DateTime> date;
   final Value<String> note;
+  final Value<String> noteLower;
   final Value<String> accountId;
   final Value<DateTime?> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -472,6 +513,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     this.categoryId = const Value.absent(),
     this.date = const Value.absent(),
     this.note = const Value.absent(),
+    this.noteLower = const Value.absent(),
     this.accountId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -485,6 +527,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     required String categoryId,
     required DateTime date,
     this.note = const Value.absent(),
+    this.noteLower = const Value.absent(),
     this.accountId = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -502,6 +545,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Expression<String>? categoryId,
     Expression<DateTime>? date,
     Expression<String>? note,
+    Expression<String>? noteLower,
     Expression<String>? accountId,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -515,6 +559,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       if (categoryId != null) 'category_id': categoryId,
       if (date != null) 'date': date,
       if (note != null) 'note': note,
+      if (noteLower != null) 'note_lower': noteLower,
       if (accountId != null) 'account_id': accountId,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -530,6 +575,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Value<String>? categoryId,
     Value<DateTime>? date,
     Value<String>? note,
+    Value<String>? noteLower,
     Value<String>? accountId,
     Value<DateTime?>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -543,6 +589,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       categoryId: categoryId ?? this.categoryId,
       date: date ?? this.date,
       note: note ?? this.note,
+      noteLower: noteLower ?? this.noteLower,
       accountId: accountId ?? this.accountId,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -572,6 +619,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (noteLower.present) {
+      map['note_lower'] = Variable<String>(noteLower.value);
+    }
     if (accountId.present) {
       map['account_id'] = Variable<String>(accountId.value);
     }
@@ -599,6 +649,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
           ..write('categoryId: $categoryId, ')
           ..write('date: $date, ')
           ..write('note: $note, ')
+          ..write('noteLower: $noteLower, ')
           ..write('accountId: $accountId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -3874,6 +3925,18 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
   late final $GoalRowsTable goalRows = $GoalRowsTable(this);
   late final $ImportRowsTable importRows = $ImportRowsTable(this);
   late final $MemberRowsTable memberRows = $MemberRowsTable(this);
+  late final Index txDate = Index(
+    'tx_date',
+    'CREATE INDEX tx_date ON transaction_rows (date)',
+  );
+  late final Index txAccount = Index(
+    'tx_account',
+    'CREATE INDEX tx_account ON transaction_rows (account_id)',
+  );
+  late final Index txDeleted = Index(
+    'tx_deleted',
+    'CREATE INDEX tx_deleted ON transaction_rows (deleted_at)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3888,6 +3951,9 @@ abstract class _$NumoDatabase extends GeneratedDatabase {
     goalRows,
     importRows,
     memberRows,
+    txDate,
+    txAccount,
+    txDeleted,
   ];
 }
 
@@ -3899,6 +3965,7 @@ typedef $$TransactionRowsTableCreateCompanionBuilder =
       required String categoryId,
       required DateTime date,
       Value<String> note,
+      Value<String> noteLower,
       Value<String> accountId,
       Value<DateTime?> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3913,6 +3980,7 @@ typedef $$TransactionRowsTableUpdateCompanionBuilder =
       Value<String> categoryId,
       Value<DateTime> date,
       Value<String> note,
+      Value<String> noteLower,
       Value<String> accountId,
       Value<DateTime?> updatedAt,
       Value<DateTime?> deletedAt,
@@ -3956,6 +4024,11 @@ class $$TransactionRowsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get noteLower => $composableBuilder(
+    column: $table.noteLower,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4019,6 +4092,11 @@ class $$TransactionRowsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get noteLower => $composableBuilder(
+    column: $table.noteLower,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get accountId => $composableBuilder(
     column: $table.accountId,
     builder: (column) => ColumnOrderings(column),
@@ -4068,6 +4146,9 @@ class $$TransactionRowsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get noteLower =>
+      $composableBuilder(column: $table.noteLower, builder: (column) => column);
 
   GeneratedColumn<String> get accountId =>
       $composableBuilder(column: $table.accountId, builder: (column) => column);
@@ -4125,6 +4206,7 @@ class $$TransactionRowsTableTableManager
                 Value<String> categoryId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<String> note = const Value.absent(),
+                Value<String> noteLower = const Value.absent(),
                 Value<String> accountId = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4137,6 +4219,7 @@ class $$TransactionRowsTableTableManager
                 categoryId: categoryId,
                 date: date,
                 note: note,
+                noteLower: noteLower,
                 accountId: accountId,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -4151,6 +4234,7 @@ class $$TransactionRowsTableTableManager
                 required String categoryId,
                 required DateTime date,
                 Value<String> note = const Value.absent(),
+                Value<String> noteLower = const Value.absent(),
                 Value<String> accountId = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -4163,6 +4247,7 @@ class $$TransactionRowsTableTableManager
                 categoryId: categoryId,
                 date: date,
                 note: note,
+                noteLower: noteLower,
                 accountId: accountId,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

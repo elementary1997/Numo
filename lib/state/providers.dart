@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/accounts_repository.dart';
@@ -212,6 +213,103 @@ class MonthStats {
 
   double get net => income - expense;
 }
+
+/// Что показывает лента операций: поиск, период и тип.
+class FeedQuery {
+  const FeedQuery({this.search = '', this.range, this.type});
+
+  final String search;
+  final DateTimeRange? range;
+  final TxType? type;
+
+  FeedQuery copyWith({
+    String? search,
+    DateTimeRange? range,
+    TxType? type,
+    bool clearRange = false,
+    bool clearType = false,
+  }) =>
+      FeedQuery(
+        search: search ?? this.search,
+        range: clearRange ? null : (range ?? this.range),
+        type: clearType ? null : (type ?? this.type),
+      );
+
+  bool get isFiltered => search.trim().isNotEmpty || range != null;
+}
+
+final feedQueryProvider = StateProvider<FeedQuery>((ref) => const FeedQuery());
+
+/// Лента операций страницами из базы: фильтры, поиск и сортировку
+/// делает SQLite по индексам, а не приложение полным проходом по
+/// списку на каждый кадр.
+class TransactionsFeedNotifier extends AsyncNotifier<List<Tx>> {
+  static const pageSize = 50;
+
+  bool _hasMore = true;
+
+  /// Есть ли ещё страницы — экран показывает индикатор дозагрузки.
+  bool get hasMore => _hasMore;
+
+  @override
+  Future<List<Tx>> build() async {
+    // Любое изменение данных или фильтра перечитывает первую страницу.
+    ref.watch(transactionsProvider);
+    final query = ref.watch(feedQueryProvider);
+    // Поиск идёт по названиям категорий тоже — они локализованы.
+    ref.watch(categoriesProvider);
+
+    // Набор текста не должен бить в базу на каждую букву: пока человек
+    // печатает, следующий build отменяет предыдущий.
+    if (query.search.trim().isNotEmpty) {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+    }
+
+    final page = await _fetch(offset: 0);
+    _hasMore = page.length == pageSize;
+    return page;
+  }
+
+  /// Дозагружает следующую страницу к уже показанным.
+  Future<void> loadMore() async {
+    if (!_hasMore || state.isLoading) return;
+    final current = state.valueOrNull ?? const <Tx>[];
+    final next = await _fetch(offset: current.length);
+    _hasMore = next.length == pageSize;
+    state = AsyncData([...current, ...next]);
+  }
+
+  Future<List<Tx>> _fetch({required int offset}) {
+    final query = ref.read(feedQueryProvider);
+    final search = query.search.trim().toLowerCase();
+    // Названия категорий локализованы и живут в приложении, поэтому
+    // подходящие id вычисляются здесь, а фильтрует по ним база.
+    final categoryIds = search.isEmpty
+        ? null
+        : ref
+            .read(categoriesProvider)
+            .where((c) => c.title.toLowerCase().contains(search))
+            .map((c) => c.id)
+            .toSet();
+    final range = query.range;
+    return ref.read(repositoryProvider).page(
+          query: query.search,
+          from: range?.start,
+          to: range == null
+              ? null
+              : DateTime(range.end.year, range.end.month, range.end.day,
+                  23, 59, 59),
+          type: query.type,
+          categoryIds: categoryIds,
+          limit: pageSize,
+          offset: offset,
+        );
+  }
+}
+
+final transactionsFeedProvider =
+    AsyncNotifierProvider<TransactionsFeedNotifier, List<Tx>>(
+        TransactionsFeedNotifier.new);
 
 /// Сумма операции, пересчитанная в рубли: [rateApplied] — в пересчёте
 /// участвовал курс ЦБ (цифра приблизительная), [currency] заполнена,
