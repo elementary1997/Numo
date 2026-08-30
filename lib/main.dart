@@ -1,27 +1,12 @@
-import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/l10n.dart';
+import 'data/startup.dart';
 import 'core/theme.dart';
 import 'core/ui_scale.dart';
-import 'data/accounts_repository.dart';
-import 'data/budgets_repository.dart';
-import 'data/categories_repository.dart';
-import 'data/database.dart';
-import 'data/goals_repository.dart';
-import 'data/members_repository.dart';
-import 'data/imports_repository.dart';
-import 'data/recurring_repository.dart';
-import 'data/repository.dart';
-import 'data/rules_repository.dart';
-import 'data/seed_localization.dart';
-import 'data/security_repository.dart';
-import 'data/shared_sync.dart';
-import 'data/sync_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'screens/lock.dart';
 import 'screens/onboarding.dart';
@@ -32,74 +17,153 @@ import 'screens/shell.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ru');
-  final database = NumoDatabase();
-  // Язык сидирования данных первого запуска — по языку системы.
-  final seedLocale =
-      WidgetsBinding.instance.platformDispatcher.locale.languageCode == 'ru'
-          ? 'ru'
-          : 'en';
-  // Демо-данные — только в dev-сборках; релизы начинаются с чистого
-  // состояния.
-  final repository = await TransactionsRepository.open(database,
-      seedLocale: seedLocale, seedDemo: !kReleaseMode);
-  final categoriesRepository =
-      await CategoriesRepository.open(database, seedLocale: seedLocale);
-  final budgetsRepository = await BudgetsRepository.open(database);
-  final recurringRepository = await RecurringRepository.open(database);
-  final accountsRepository =
-      await AccountsRepository.open(database, seedLocale: seedLocale);
-  final rulesRepository = await RulesRepository.open(database);
-  final goalsRepository = await GoalsRepository.open(database);
-  final importsRepository = await ImportsRepository.open(database);
-  final securityRepository = await SecurityRepository.open();
-  final membersRepository = await MembersRepository.open(database,
-      meName: seedLocale == 'ru' ? 'Я' : 'Me');
-  final syncService = await SyncService.open();
-  final sharedSync = await SharedSyncService.open();
-  final prefs = await SharedPreferences.getInstance();
-  final onboarded = prefs.getBool(onboardedKey) ?? false;
-  final localeOverride = prefs.getString('numo.locale');
-  final themeOverride = prefs.getString('numo.theme');
-  final accentColor = prefs.getInt('numo.accent');
-  final uiScale = prefs.getDouble('numo.uiScale') ?? 1.0;
-  final dismissedUpdate = prefs.getString('numo.updates.dismissedVersion');
-  final notificationsEnabled =
-      prefs.getBool('numo.notifications.enabled') ?? false;
-  // Наступившие регулярные операции превращаются в реальные при запуске.
-  await recurringRepository.materialize(repository);
-  // Названия встроенных категорий/счёта следуют текущему языку.
-  await relocalizeSeedData(
-    categories: categoriesRepository,
-    accounts: accountsRepository,
-    languageCode: localeOverride ?? seedLocale,
-  );
-  runApp(
-    ProviderScope(
-      overrides: [
-        repositoryProvider.overrideWithValue(repository),
-        categoriesRepositoryProvider.overrideWithValue(categoriesRepository),
-        budgetsRepositoryProvider.overrideWithValue(budgetsRepository),
-        recurringRepositoryProvider.overrideWithValue(recurringRepository),
-        accountsRepositoryProvider.overrideWithValue(accountsRepository),
-        rulesRepositoryProvider.overrideWithValue(rulesRepository),
-        goalsRepositoryProvider.overrideWithValue(goalsRepository),
-        importsRepositoryProvider.overrideWithValue(importsRepository),
-        securityRepositoryProvider.overrideWithValue(securityRepository),
-        membersRepositoryProvider.overrideWithValue(membersRepository),
-        syncServiceProvider.overrideWithValue(syncService),
-        sharedSyncProvider.overrideWithValue(sharedSync),
-        onboardedProvider.overrideWith((ref) => onboarded),
-        localeOverrideProvider.overrideWith((ref) => localeOverride),
-        themeOverrideProvider.overrideWith((ref) => themeOverride),
-        accentColorProvider.overrideWith((ref) => accentColor),
-        uiScaleProvider.overrideWith((ref) => uiScale),
-        dismissedUpdateProvider.overrideWith((ref) => dismissedUpdate),
-        notificationsEnabledProvider
-            .overrideWith((ref) => notificationsEnabled),
-      ],
-      child: const NumoApp(),
-    ),
-  );
+  // Окно открывается сразу: подготовка хранилищ идёт уже под ним.
+  // Раньше она шла до runApp, и любая заминка оставляла пользователя
+  // с висящим процессом без единого окна.
+  runApp(const NumoBootstrap());
+}
+
+/// Экран запуска: показывает приложение, когда хранилища готовы, и
+/// объясняет, что случилось, если подготовка не удалась.
+class NumoBootstrap extends StatefulWidget {
+  const NumoBootstrap({super.key, this.startup});
+
+  /// Подготовка приложения; тесты подставляют свою, чтобы проверить
+  /// поведение при заминке и при ошибке, не трогая настоящую базу.
+  final Startup? startup;
+
+  @override
+  State<NumoBootstrap> createState() => _NumoBootstrapState();
+}
+
+class _NumoBootstrapState extends State<NumoBootstrap> {
+  late final Startup _startup = widget.startup ?? Startup();
+  List<Override>? _overrides;
+  StartupFailure? _failure;
+
+  @override
+  void initState() {
+    super.initState();
+    _prepare();
+  }
+
+  Future<void> _prepare() async {
+    setState(() => _failure = null);
+    try {
+      final overrides = await _startup.run().timeout(Startup.timeout);
+      _startup.writeLog();
+      if (mounted) setState(() => _overrides = overrides);
+    } catch (error) {
+      _startup.writeLog(error: error);
+      if (mounted) {
+        setState(() => _failure =
+            StartupFailure(step: _startup.currentStep, error: error));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final overrides = _overrides;
+    if (overrides != null) {
+      return ProviderScope(overrides: overrides, child: const NumoApp());
+    }
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: NumoTheme.light(NumoColors.violet),
+      darkTheme: NumoTheme.dark(NumoColors.violet),
+      home: _failure == null
+          ? const _StartupProgress()
+          : _StartupFailureScreen(
+              failure: _failure!,
+              steps: _startup.steps,
+              onRetry: _prepare,
+            ),
+    );
+  }
+}
+
+class _StartupProgress extends StatelessWidget {
+  const _StartupProgress();
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(
+        body: Center(
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
+        ),
+      );
+}
+
+/// Подготовка не удалась: показываем, на каком шаге и почему —
+/// вместо молчаливого окна или его отсутствия.
+class _StartupFailureScreen extends StatelessWidget {
+  const _StartupFailureScreen({
+    required this.failure,
+    required this.steps,
+    required this.onRetry,
+  });
+
+  final StartupFailure failure;
+  final List<String> steps;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.error_outline_rounded,
+                    size: 36, color: theme.colorScheme.error),
+                const SizedBox(height: 14),
+                Text('Numo не смог открыть данные',
+                    style: theme.textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 8),
+                Text(
+                  'Шаг: ${failure.step}. Данные никуда не делись — они '
+                  'лежат отдельно от приложения. Попробуйте ещё раз, а '
+                  'если не поможет, распакуйте свежую сборку заново.',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    'пройдено: ${steps.join(' → ')}\n${failure.error}',
+                    style:
+                        const TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Повторить'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// На desktop горизонтальные списки должны таскаться и мышью.

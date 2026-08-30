@@ -18,6 +18,15 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.13.1',
+    itemsRu: [
+      'Приложение больше не запускается «в никуда»: окно открывается сразу, а при сбое подготовки видно, что случилось',
+    ],
+    itemsEn: [
+      'The app no longer starts into nothing: the window opens right away, and a failed startup explains itself',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.13.0',
     itemsRu: [
       'QR-код приглашения: покажите его близкому — снимет телефоном',
