@@ -18,6 +18,15 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.13.2',
+    itemsRu: [
+      'Исправлен отказ запуска «duplicate column name»: миграции больше не повторяют уже сделанные шаги',
+    ],
+    itemsEn: [
+      'Fixed the "duplicate column name" startup failure: migrations no longer repeat steps already applied',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.13.1',
     itemsRu: [
       'Приложение больше не запускается «в никуда»: окно открывается сразу, а при сбое подготовки видно, что случилось',

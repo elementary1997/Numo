@@ -180,46 +180,76 @@ class NumoDatabase extends _$NumoDatabase {
   @override
   int get schemaVersion => 13;
 
+  /// Есть ли колонка в таблице. Миграция может оказаться применённой
+  /// наполовину: приложение убили (или оно зависло) между `ALTER TABLE`
+  /// и записью новой версии схемы — тогда при следующем запуске drift
+  /// повторяет тот же шаг и падает на «duplicate column name».
+  Future<bool> _hasColumn(String table, String column) async {
+    final rows = await customSelect('PRAGMA table_info($table)').get();
+    return rows.any((row) => row.data['name'] == column);
+  }
+
+  Future<bool> _hasTable(String table) async {
+    final rows = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+      variables: [Variable<String>(table)],
+    ).get();
+    return rows.isNotEmpty;
+  }
+
+  /// Добавляет колонку, если её ещё нет.
+  Future<void> _addColumn(
+      Migrator m, TableInfo table, GeneratedColumn column) async {
+    if (await _hasColumn(table.actualTableName, column.name)) return;
+    await m.addColumn(table, column);
+  }
+
+  /// Создаёт таблицу, если её ещё нет.
+  Future<void> _createTable(Migrator m, TableInfo table) async {
+    if (await _hasTable(table.actualTableName)) return;
+    await m.createTable(table);
+  }
+
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (m, from, to) async {
           if (from < 2) {
-            await m.createTable(budgetRows);
+            await _createTable(m, budgetRows);
           }
           if (from < 3) {
-            await m.createTable(recurringRows);
+            await _createTable(m, recurringRows);
           }
           if (from < 4) {
-            await m.createTable(accountRows);
-            await m.addColumn(transactionRows, transactionRows.accountId);
+            await _createTable(m, accountRows);
+            await _addColumn(m, transactionRows, transactionRows.accountId);
           }
           if (from < 5) {
-            await m.createTable(categoryRuleRows);
+            await _createTable(m, categoryRuleRows);
           }
           if (from < 6) {
-            await m.addColumn(accountRows, accountRows.kind);
-            await m.addColumn(accountRows, accountRows.rate);
-            await m.addColumn(accountRows, accountRows.openedAt);
-            await m.addColumn(accountRows, accountRows.closesAt);
+            await _addColumn(m, accountRows, accountRows.kind);
+            await _addColumn(m, accountRows, accountRows.rate);
+            await _addColumn(m, accountRows, accountRows.openedAt);
+            await _addColumn(m, accountRows, accountRows.closesAt);
           }
           if (from < 7) {
-            await m.createTable(goalRows);
+            await _createTable(m, goalRows);
           }
           if (from < 8) {
-            await m.addColumn(goalRows, goalRows.accountId);
+            await _addColumn(m, goalRows, goalRows.accountId);
           }
           if (from < 9) {
-            await m.createTable(importRows);
+            await _createTable(m, importRows);
           }
           if (from < 10) {
             // Общие счета (ADR-0014): отметки изменения, надгробия
             // удалений, автор операции и справочник участников.
-            await m.addColumn(transactionRows, transactionRows.updatedAt);
-            await m.addColumn(transactionRows, transactionRows.deletedAt);
-            await m.addColumn(transactionRows, transactionRows.authorId);
-            await m.addColumn(accountRows, accountRows.shared);
-            await m.addColumn(accountRows, accountRows.updatedAt);
-            await m.createTable(memberRows);
+            await _addColumn(m, transactionRows, transactionRows.updatedAt);
+            await _addColumn(m, transactionRows, transactionRows.deletedAt);
+            await _addColumn(m, transactionRows, transactionRows.authorId);
+            await _addColumn(m, accountRows, accountRows.shared);
+            await _addColumn(m, accountRows, accountRows.updatedAt);
+            await _createTable(m, memberRows);
           }
           if (from < 11) {
             // Индексы под выборки ленты и балансов. Создаются после
@@ -235,11 +265,11 @@ class NumoDatabase extends _$NumoDatabase {
           if (from < 12) {
             // Поисковая колонка; существующие строки нормализует
             // репозиторий при открытии — SQL этого не умеет.
-            await m.addColumn(transactionRows, transactionRows.noteLower);
+            await _addColumn(m, transactionRows, transactionRows.noteLower);
           }
           if (from < 13) {
             // Разделение трат по долям (v1.13).
-            await m.addColumn(transactionRows, transactionRows.split);
+            await _addColumn(m, transactionRows, transactionRows.split);
           }
         },
       );

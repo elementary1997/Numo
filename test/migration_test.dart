@@ -169,4 +169,51 @@ void main() {
         .get();
     expect(rows.single.data['note_lower'], 'пятёрочка');
   });
+
+  test('наполовину применённая миграция не роняет запуск', () async {
+    SharedPreferences.setMockInitialValues({
+      'numo.transactions.migrated-to-drift.v1': true,
+    });
+
+    // База в состоянии «ALTER TABLE прошёл, версию записать не успели»:
+    // приложение убили посреди миграции, и при следующем запуске drift
+    // повторял тот же шаг, падая на «duplicate column name».
+    final executor = NativeDatabase.memory(setup: (raw) {
+      raw.execute('''
+        CREATE TABLE transaction_rows (
+          id TEXT NOT NULL PRIMARY KEY,
+          type TEXT NOT NULL,
+          amount REAL NOT NULL,
+          category_id TEXT NOT NULL,
+          date INTEGER NOT NULL,
+          note TEXT NOT NULL DEFAULT '',
+          note_lower TEXT NOT NULL DEFAULT '',
+          account_id TEXT NOT NULL DEFAULT 'main',
+          updated_at INTEGER,
+          deleted_at INTEGER,
+          author_id TEXT
+        );
+      ''');
+      raw.execute(
+          "INSERT INTO transaction_rows (id, type, amount, category_id, "
+          "date, note, note_lower, account_id) VALUES ('half', 'expense', "
+          "500, 'groceries', 1786000000, 'Кофе', 'кофе', 'main');");
+      // Остальные таблицы схемы 11 — их миграция тоже не должна
+      // пересоздавать.
+      raw.execute(
+          'CREATE TABLE member_rows (id TEXT NOT NULL PRIMARY KEY, '
+          'name TEXT NOT NULL, color INTEGER NOT NULL, '
+          'is_me INTEGER NOT NULL DEFAULT 0);');
+      // Версия осталась прежней, хотя колонка note_lower уже есть.
+      raw.execute('PRAGMA user_version = 11;');
+    });
+
+    final db = NumoDatabase(executor);
+    addTearDown(db.close);
+
+    final repo = await TransactionsRepository.open(db, seedDemo: false);
+    expect(repo.loadAll().single.note, 'Кофе');
+    // Поиск по нормализованной колонке работает.
+    expect((await repo.page(query: 'кофе')).single.id, 'half');
+  });
 }
