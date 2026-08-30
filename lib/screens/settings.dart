@@ -10,6 +10,9 @@ import '../core/l10n.dart';
 import '../models/account.dart';
 import '../models/category.dart';
 import '../data/update_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/notifications.dart';
 import '../state/providers.dart';
 import 'backup_actions.dart';
 import 'update_flow.dart';
@@ -111,6 +114,7 @@ class SettingsScreen extends ConsumerWidget {
           ]),
           if (!kIsWeb) ...[
             const SizedBox(height: 14),
+            const _NotificationsCard(),
             const _UpdatesCard(),
           ],
           const SizedBox(height: 14),
@@ -311,6 +315,50 @@ Future<void> _wipeData(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(context.l10n.wipeDataDone)));
+  }
+}
+
+/// Локальные напоминания (ADR-0015): на платформах без поддержки
+/// карточка не показывается вовсе — обещать нечего.
+class _NotificationsCard extends ConsumerWidget {
+  const _NotificationsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!notificationsSupported) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final enabled = ref.watch(notificationsEnabledProvider);
+
+    return Card(
+      child: SwitchListTile(
+        dense: true,
+        secondary: Icon(Icons.notifications_active_outlined,
+            size: 20, color: theme.colorScheme.primary),
+        title: Text(context.l10n.notificationsTitle,
+            style: theme.textTheme.bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w500)),
+        subtitle: Text(context.l10n.notificationsSubtitle,
+            style: theme.textTheme.bodySmall
+                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        value: enabled,
+        onChanged: (value) async {
+          // Разрешение спрашиваем по делу — при включении.
+          final granted = !value || await requestNotificationPermission();
+          if (!context.mounted) return;
+          if (!granted) {
+            ScaffoldMessenger.of(context)
+              ..clearSnackBars()
+              ..showSnackBar(SnackBar(
+                  content: Text(context.l10n.notificationsDenied)));
+            return;
+          }
+          ref.read(notificationsEnabledProvider.notifier).state = value;
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('numo.notifications.enabled', value);
+          if (!value) await cancelAllReminders();
+        },
+      ),
+    );
   }
 }
 

@@ -2130,6 +2130,42 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{title}: накоплено {saved} из {target}'**
   String a11yGoalProgress(String title, String saved, String target);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Напоминания'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Накануне регулярных платежей и при перерасходе бюджета'**
+  String get notificationsSubtitle;
+
+  /// No description provided for @notificationsDenied.
+  ///
+  /// In ru, this message translates to:
+  /// **'Система не дала разрешение на уведомления'**
+  String get notificationsDenied;
+
+  /// No description provided for @reminderPaymentTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Завтра списание: {title}'**
+  String reminderPaymentTitle(String title);
+
+  /// No description provided for @reminderOverspentTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бюджет превышен'**
+  String get reminderOverspentTitle;
+
+  /// No description provided for @reminderOverspentBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'{category}: потрачено {spent} при лимите {limit}'**
+  String reminderOverspentBody(String category, String spent, String limit);
 }
 
 class _AppLocalizationsDelegate

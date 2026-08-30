@@ -1169,4 +1169,27 @@ class AppLocalizationsRu extends AppLocalizations {
   String a11yGoalProgress(String title, String saved, String target) {
     return '$title: накоплено $saved из $target';
   }
+
+  @override
+  String get notificationsTitle => 'Напоминания';
+
+  @override
+  String get notificationsSubtitle =>
+      'Накануне регулярных платежей и при перерасходе бюджета';
+
+  @override
+  String get notificationsDenied => 'Система не дала разрешение на уведомления';
+
+  @override
+  String reminderPaymentTitle(String title) {
+    return 'Завтра списание: $title';
+  }
+
+  @override
+  String get reminderOverspentTitle => 'Бюджет превышен';
+
+  @override
+  String reminderOverspentBody(String category, String spent, String limit) {
+    return '$category: потрачено $spent при лимите $limit';
+  }
 }

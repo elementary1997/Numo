@@ -16,3 +16,4 @@
 | [0012](0012-bank-statement-formats.md) | Форматы выписок: CSV + OFX + XLSX | accepted |
 | [0013](0013-secret-store.md) | Секреты — в системном хранилище, не в prefs | accepted |
 | [0014](0014-shared-accounts.md) | Общие счета: участники и слияние файлов | accepted |
+| [0015](0015-local-notifications.md) | Локальные уведомления о платежах и перерасходе | accepted |

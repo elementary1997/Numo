@@ -11,6 +11,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/l10n.dart';
 import '../data/changelog.dart';
+import '../data/notifications.dart';
+import '../data/reminders.dart';
+import '../core/money.dart';
 import '../data/statements_watcher.dart';
 import '../state/providers.dart';
 import '../state/shared_sync_actions.dart';
@@ -51,6 +54,7 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _showWhatsNew();
       await _reportFailedUpdate();
+      await _refreshReminders();
       await _checkForNewer();
       await _pullShared();
       await _checkStatements();
@@ -140,6 +144,42 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
             child: Text(context.l10n.ok),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Перепланирует напоминания о регулярных платежах и сообщает о
+  /// перерасходе бюджета (ADR-0015). Всё локально: планирует и
+  /// показывает уведомления само устройство.
+  Future<void> _refreshReminders() async {
+    if (!notificationsSupported) return;
+    if (!ref.read(notificationsEnabledProvider)) {
+      await cancelAllReminders();
+      return;
+    }
+    if (!mounted) return;
+    final l10n = context.l10n;
+
+    await scheduleReminders(upcomingRecurringReminders(
+      rules: ref.read(recurringProvider),
+      now: DateTime.now(),
+      format: (rule, date) => l10n.reminderPaymentTitle(
+          rule.note.isEmpty ? formatMoney(rule.amount) : rule.note),
+    ));
+
+    // Перерасход виден только по фактическим тратам, поэтому не
+    // планируется заранее, а показывается при открытии приложения.
+    final overspent =
+        ref.read(budgetProgressProvider).where((b) => b.overspent).toList();
+    if (overspent.isEmpty) return;
+    final worst = overspent.first;
+    await showNow(
+      id: 1,
+      title: l10n.reminderOverspentTitle,
+      body: l10n.reminderOverspentBody(
+        worst.category.title,
+        formatMoney(worst.spent),
+        formatMoney(worst.limit),
       ),
     );
   }
@@ -251,7 +291,10 @@ class _SyncRootState extends ConsumerState<SyncRoot> {
       schedulePublish();
     });
     ref.listen(budgetsProvider, (_, __) => schedule());
-    ref.listen(recurringProvider, (_, __) => schedule());
+    ref.listen(recurringProvider, (_, __) {
+      schedule();
+      _refreshReminders();
+    });
     ref.listen(goalsProvider, (_, __) => schedule());
 
     // Ненавязчивое уведомление о вышедшей версии — один раз на

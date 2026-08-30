@@ -1169,4 +1169,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String a11yGoalProgress(String title, String saved, String target) {
     return '$title: $saved of $target saved';
   }
+
+  @override
+  String get notificationsTitle => 'Reminders';
+
+  @override
+  String get notificationsSubtitle =>
+      'The day before recurring payments and when a budget is exceeded';
+
+  @override
+  String get notificationsDenied =>
+      'The system did not grant notification permission';
+
+  @override
+  String reminderPaymentTitle(String title) {
+    return 'Tomorrow: $title';
+  }
+
+  @override
+  String get reminderOverspentTitle => 'Budget exceeded';
+
+  @override
+  String reminderOverspentBody(String category, String spent, String limit) {
+    return '$category: $spent spent against a $limit limit';
+  }
 }

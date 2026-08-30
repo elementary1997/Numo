@@ -352,5 +352,11 @@
   "a11yDailyChart": "Bar chart of daily spending, peak {amount}",
   "a11yCapitalChart": "Net worth chart, currently {amount}",
   "a11yBudgetProgress": "{category}: {spent} of {limit} spent, {percent} percent",
-  "a11yGoalProgress": "{title}: {saved} of {target} saved"
+  "a11yGoalProgress": "{title}: {saved} of {target} saved",
+  "notificationsTitle": "Reminders",
+  "notificationsSubtitle": "The day before recurring payments and when a budget is exceeded",
+  "notificationsDenied": "The system did not grant notification permission",
+  "reminderPaymentTitle": "Tomorrow: {title}",
+  "reminderOverspentTitle": "Budget exceeded",
+  "reminderOverspentBody": "{category}: {spent} spent against a {limit} limit"
 }

@@ -700,6 +700,9 @@ class GoalsNotifier extends Notifier<List<Goal>> {
 final goalsProvider =
     NotifierProvider<GoalsNotifier, List<Goal>>(GoalsNotifier.new);
 
+/// Включены ли локальные напоминания (ADR-0015); значение задаёт main().
+final notificationsEnabledProvider = StateProvider<bool>((ref) => false);
+
 final updateServiceProvider =
     Provider<UpdateService>((ref) => UpdateService());
 

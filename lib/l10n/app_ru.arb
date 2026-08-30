@@ -406,5 +406,13 @@
   "a11yBudgetProgress": "{category}: потрачено {spent} из {limit}, {percent} процентов",
   "@a11yBudgetProgress": {"placeholders": {"category": {"type": "String"}, "spent": {"type": "String"}, "limit": {"type": "String"}, "percent": {"type": "String"}}},
   "a11yGoalProgress": "{title}: накоплено {saved} из {target}",
-  "@a11yGoalProgress": {"placeholders": {"title": {"type": "String"}, "saved": {"type": "String"}, "target": {"type": "String"}}}
+  "@a11yGoalProgress": {"placeholders": {"title": {"type": "String"}, "saved": {"type": "String"}, "target": {"type": "String"}}},
+  "notificationsTitle": "Напоминания",
+  "notificationsSubtitle": "Накануне регулярных платежей и при перерасходе бюджета",
+  "notificationsDenied": "Система не дала разрешение на уведомления",
+  "reminderPaymentTitle": "Завтра списание: {title}",
+  "@reminderPaymentTitle": {"placeholders": {"title": {"type": "String"}}},
+  "reminderOverspentTitle": "Бюджет превышен",
+  "reminderOverspentBody": "{category}: потрачено {spent} при лимите {limit}",
+  "@reminderOverspentBody": {"placeholders": {"category": {"type": "String"}, "spent": {"type": "String"}, "limit": {"type": "String"}}}
 }
