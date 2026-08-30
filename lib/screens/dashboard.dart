@@ -582,6 +582,7 @@ class _SpendingBreakdown extends StatelessWidget {
               width: 132,
               height: 132,
               child: DonutChart(
+                semanticsLabel: context.l10n.a11yDonutChart,
                 values: values,
                 colors: colors,
                 child: Column(

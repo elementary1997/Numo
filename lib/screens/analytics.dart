@@ -33,6 +33,7 @@ class AnalyticsScreen extends ConsumerWidget {
           Row(
             children: [
               IconButton.filledTonal(
+                tooltip: context.l10n.a11yPrevMonth,
                 onPressed: () => ref
                     .read(selectedMonthProvider.notifier)
                     .state = DateTime(month.year, month.month - 1),
@@ -49,6 +50,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 ),
               ),
               IconButton.filledTonal(
+                tooltip: context.l10n.a11yNextMonth,
                 onPressed: isCurrentMonth
                     ? null
                     : () => ref
@@ -181,6 +183,8 @@ class _DailyExpensesCardState extends State<_DailyExpensesCard> {
             SizedBox(
               height: 132,
               child: DailyBars(
+                semanticsLabel: context.l10n.a11yDailyChart(formatMoney(
+                    stats.dailyExpense.fold<double>(0, (a, b) => a > b ? a : b))),
                 values: daily,
                 color: Theme.of(context).colorScheme.primary,
                 selectedIndex: shown,
@@ -246,6 +250,8 @@ class _CapitalDynamicsCard extends ConsumerWidget {
             SizedBox(
               height: 90,
               child: Sparkline(
+                semanticsLabel: context.l10n.a11yCapitalChart(
+                    formatMoney(series.isEmpty ? 0 : series.last)),
                 values: normalized,
                 labels: series,
                 color: trendUp ? NumoColors.mint : NumoColors.coral,

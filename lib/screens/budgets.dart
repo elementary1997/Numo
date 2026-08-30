@@ -185,7 +185,15 @@ class _BudgetRow extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  ClipRRect(
+                  Semantics(
+                    label: context.l10n.a11yBudgetProgress(
+                      b.category.title,
+                      formatMoney(b.spent),
+                      formatMoney(b.limit),
+                      (b.share * 100).round().toString(),
+                    ),
+                    excludeSemantics: true,
+                    child: ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: b.share.clamp(0, 1)),
@@ -199,6 +207,7 @@ class _BudgetRow extends ConsumerWidget {
                         valueColor: AlwaysStoppedAnimation(barColor),
                       ),
                     ),
+                  ),
                   ),
                 ],
               ),

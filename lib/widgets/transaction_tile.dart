@@ -88,11 +88,19 @@ class TransactionTile extends ConsumerWidget {
           ),
         ],
       ),
-      trailing: Text(
-        formatSigned(tx.amount, isExpense: tx.isExpense),
-        style: theme.textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: tx.isExpense ? theme.colorScheme.onSurface : NumoColors.mint,
+      // Скринридер иначе прочитал бы «−350,50 ₽» как набор символов.
+      trailing: Semantics(
+        label: tx.isExpense
+            ? context.l10n.a11yExpenseAmount(formatMoneyExact(tx.amount))
+            : context.l10n.a11yIncomeAmount(formatMoneyExact(tx.amount)),
+        excludeSemantics: true,
+        child: Text(
+          formatSigned(tx.amount, isExpense: tx.isExpense),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            color:
+                tx.isExpense ? theme.colorScheme.onSurface : NumoColors.mint,
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/money.dart';
+import '../core/l10n.dart';
 import 'charts.dart';
 
 /// Строка легенды кольцевой диаграммы: цвет, название, сумма и доля.
@@ -60,6 +61,7 @@ class BreakdownCard extends StatelessWidget {
                   width: 118,
                   height: 118,
                   child: DonutChart(
+                    semanticsLabel: context.l10n.a11yDonutChart,
                     values: [
                       for (final e in top) e.value,
                       if (restValue > 0) restValue,

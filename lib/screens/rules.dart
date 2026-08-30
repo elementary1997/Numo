@@ -80,6 +80,7 @@ class RulesScreen extends ConsumerWidget {
                     subtitle:
                         Text(categories.byId(rule.categoryId).title),
                     trailing: IconButton(
+                      tooltip: context.l10n.a11yDeleteRule,
                       icon: Icon(Icons.delete_outline_rounded,
                           color: theme.colorScheme.onSurfaceVariant),
                       onPressed: () => ref

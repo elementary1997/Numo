@@ -2059,6 +2059,77 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Доступна {version}'**
   String updateAvailableShort(String version);
+
+  /// No description provided for @a11yPrevMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предыдущий месяц'**
+  String get a11yPrevMonth;
+
+  /// No description provided for @a11yNextMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'Следующий месяц'**
+  String get a11yNextMonth;
+
+  /// No description provided for @a11yDeleteRule.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить правило'**
+  String get a11yDeleteRule;
+
+  /// No description provided for @a11yRemoveMember.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить участника'**
+  String get a11yRemoveMember;
+
+  /// No description provided for @a11yExpenseAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расход {amount}'**
+  String a11yExpenseAmount(String amount);
+
+  /// No description provided for @a11yIncomeAmount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Доход {amount}'**
+  String a11yIncomeAmount(String amount);
+
+  /// No description provided for @a11yDonutChart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Круговая диаграмма расходов по категориям'**
+  String get a11yDonutChart;
+
+  /// No description provided for @a11yDailyChart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Столбчатая диаграмма расходов по дням, максимум {amount}'**
+  String a11yDailyChart(String amount);
+
+  /// No description provided for @a11yCapitalChart.
+  ///
+  /// In ru, this message translates to:
+  /// **'График капитала, сейчас {amount}'**
+  String a11yCapitalChart(String amount);
+
+  /// No description provided for @a11yBudgetProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'{category}: потрачено {spent} из {limit}, {percent} процентов'**
+  String a11yBudgetProgress(
+    String category,
+    String spent,
+    String limit,
+    String percent,
+  );
+
+  /// No description provided for @a11yGoalProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'{title}: накоплено {saved} из {target}'**
+  String a11yGoalProgress(String title, String saved, String target);
 }
 
 class _AppLocalizationsDelegate

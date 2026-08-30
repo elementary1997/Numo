@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:numo/data/accounts_repository.dart';
 import 'package:numo/data/budgets_repository.dart';
 import 'package:numo/data/categories_repository.dart';
@@ -81,6 +82,14 @@ void main() {
   setUpAll(() async {
     GoogleFonts.config.allowRuntimeFetching = false;
     await initializeDateFormatting('ru');
+    // Без этого «Что нового» падает на MissingPluginException.
+    PackageInfo.setMockInitialValues(
+      appName: 'Numo',
+      packageName: 'ru.numo.app',
+      version: '1.10.0',
+      buildNumber: '20',
+      buildSignature: '',
+    );
   });
 
   final sampleTxs = [
@@ -294,6 +303,77 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Доступна версия'), findsNothing);
+    });
+  });
+
+  group('доступность', () {
+    final sample = [
+      Tx(
+        id: 'a11y-1',
+        type: TxType.expense,
+        amount: 350.5,
+        categoryId: 'groceries',
+        date: DateTime.now(),
+        note: 'Пятёрочка',
+      ),
+      Tx(
+        id: 'a11y-2',
+        type: TxType.income,
+        amount: 145000,
+        categoryId: 'salary',
+        date: DateTime.now(),
+        note: 'Зарплата',
+      ),
+    ];
+
+    testWidgets('суммы и графики подписаны для скринридера',
+        (tester) async {
+      useMobileViewport(tester);
+      await tester.pumpWidget(await buildApp(transactions: sample));
+      await tester.pumpAndSettle();
+
+      // Пробелы в деньгах неразрывные — сравниваем нормализованный вид.
+      final labels = tester
+          .widgetList<Semantics>(find.byType(Semantics))
+          .map((w) => w.properties.label)
+          .whereType<String>()
+          .map((l) => l.replaceAll(RegExp(r'\s+'), ' '))
+          .toList();
+
+      expect(labels, contains('Доход 145 000 ₽'));
+      expect(labels, contains('Круговая диаграмма расходов по категориям'));
+      expect(labels.any((l) => l.startsWith('Расход ')), isTrue,
+          reason: 'расходы тоже должны читаться словами: $labels');
+    });
+
+    testWidgets('дашборд проходит проверки доступности Flutter',
+        (tester) async {
+      useMobileViewport(tester);
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(await buildApp(transactions: sample));
+      await tester.pumpAndSettle();
+
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(iOSTapTargetGuideline));
+      // Каждый интерактивный элемент должен иметь подпись.
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      handle.dispose();
+    });
+
+    testWidgets('лента операций проходит проверки доступности',
+        (tester) async {
+      useMobileViewport(tester);
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(await buildApp(transactions: sample));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Операции'));
+      await tester.pumpAndSettle();
+
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      handle.dispose();
     });
   });
 }

@@ -1119,4 +1119,54 @@ class AppLocalizationsEn extends AppLocalizations {
   String updateAvailableShort(String version) {
     return '$version available';
   }
+
+  @override
+  String get a11yPrevMonth => 'Previous month';
+
+  @override
+  String get a11yNextMonth => 'Next month';
+
+  @override
+  String get a11yDeleteRule => 'Delete rule';
+
+  @override
+  String get a11yRemoveMember => 'Remove member';
+
+  @override
+  String a11yExpenseAmount(String amount) {
+    return 'Expense $amount';
+  }
+
+  @override
+  String a11yIncomeAmount(String amount) {
+    return 'Income $amount';
+  }
+
+  @override
+  String get a11yDonutChart => 'Donut chart of spending by category';
+
+  @override
+  String a11yDailyChart(String amount) {
+    return 'Bar chart of daily spending, peak $amount';
+  }
+
+  @override
+  String a11yCapitalChart(String amount) {
+    return 'Net worth chart, currently $amount';
+  }
+
+  @override
+  String a11yBudgetProgress(
+    String category,
+    String spent,
+    String limit,
+    String percent,
+  ) {
+    return '$category: $spent of $limit spent, $percent percent';
+  }
+
+  @override
+  String a11yGoalProgress(String title, String saved, String target) {
+    return '$title: $saved of $target saved';
+  }
 }

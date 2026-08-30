@@ -202,6 +202,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: context.l10n.addTransaction,
         onPressed: () => showAddTransactionSheet(context),
         child: const Icon(Icons.add_rounded, size: 28),
       ),

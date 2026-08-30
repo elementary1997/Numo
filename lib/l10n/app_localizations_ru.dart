@@ -1119,4 +1119,54 @@ class AppLocalizationsRu extends AppLocalizations {
   String updateAvailableShort(String version) {
     return 'Доступна $version';
   }
+
+  @override
+  String get a11yPrevMonth => 'Предыдущий месяц';
+
+  @override
+  String get a11yNextMonth => 'Следующий месяц';
+
+  @override
+  String get a11yDeleteRule => 'Удалить правило';
+
+  @override
+  String get a11yRemoveMember => 'Удалить участника';
+
+  @override
+  String a11yExpenseAmount(String amount) {
+    return 'Расход $amount';
+  }
+
+  @override
+  String a11yIncomeAmount(String amount) {
+    return 'Доход $amount';
+  }
+
+  @override
+  String get a11yDonutChart => 'Круговая диаграмма расходов по категориям';
+
+  @override
+  String a11yDailyChart(String amount) {
+    return 'Столбчатая диаграмма расходов по дням, максимум $amount';
+  }
+
+  @override
+  String a11yCapitalChart(String amount) {
+    return 'График капитала, сейчас $amount';
+  }
+
+  @override
+  String a11yBudgetProgress(
+    String category,
+    String spent,
+    String limit,
+    String percent,
+  ) {
+    return '$category: потрачено $spent из $limit, $percent процентов';
+  }
+
+  @override
+  String a11yGoalProgress(String title, String saved, String target) {
+    return '$title: накоплено $saved из $target';
+  }
 }

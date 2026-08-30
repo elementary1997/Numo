@@ -18,6 +18,17 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.11.0',
+    itemsRu: [
+      'Новая версия больше не проходит мимо: баннер на «Обзоре», точка у «Настроек» и понятное состояние в настройках',
+      'Доступность: суммы, графики и бюджеты читаются скринридером, кнопки-иконки подписаны',
+    ],
+    itemsEn: [
+      'A new release no longer slips past: a banner on the dashboard, a dot on Settings and a clear state in settings',
+      'Accessibility: amounts, charts and budgets are read out by screen readers, icon buttons are labelled',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.10.0',
     itemsRu: [
       'Код приглашения: покажите его близкому, он вставит код у себя — и участники сразу видят друг друга по именам',

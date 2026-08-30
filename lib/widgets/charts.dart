@@ -82,6 +82,7 @@ void _paintChip(
 class DonutChart extends StatelessWidget {
   const DonutChart({
     super.key,
+    this.semanticsLabel,
     required this.values,
     required this.colors,
     this.strokeWidth = 22,
@@ -93,9 +94,14 @@ class DonutChart extends StatelessWidget {
   final double strokeWidth;
   final Widget? child;
 
+  /// Что скажет скринридер вместо картинки.
+  final String? semanticsLabel;
+
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
+    return _labelled(
+        semanticsLabel,
+        TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 900),
       curve: Curves.easeOutCubic,
@@ -110,7 +116,7 @@ class DonutChart extends StatelessWidget {
         ),
         child: Center(child: child),
       ),
-    );
+    ));
   }
 }
 
@@ -172,6 +178,7 @@ class _DonutPainter extends CustomPainter {
 class Sparkline extends StatelessWidget {
   const Sparkline({
     super.key,
+    this.semanticsLabel,
     required this.values,
     required this.color,
     this.labels,
@@ -183,10 +190,15 @@ class Sparkline extends StatelessWidget {
   final List<double>? labels;
   final double strokeWidth;
 
+  /// Что скажет скринридер вместо картинки.
+  final String? semanticsLabel;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return TweenAnimationBuilder<double>(
+    return _labelled(
+        semanticsLabel,
+        TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: const Duration(milliseconds: 1100),
       curve: Curves.easeOutCubic,
@@ -204,7 +216,7 @@ class Sparkline extends StatelessWidget {
         ),
         size: Size.infinite,
       ),
-    );
+    ));
   }
 }
 
@@ -346,6 +358,7 @@ class _SparklinePainter extends CustomPainter {
 class DailyBars extends StatelessWidget {
   const DailyBars({
     super.key,
+    this.semanticsLabel,
     required this.values,
     required this.color,
     this.selectedIndex,
@@ -357,10 +370,14 @@ class DailyBars extends StatelessWidget {
   final int? selectedIndex;
   final ValueChanged<int>? onBarTap;
 
+  /// Что скажет скринридер вместо картинки.
+  final String? semanticsLabel;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return LayoutBuilder(builder: (context, constraints) {
+    return _labelled(semanticsLabel,
+        LayoutBuilder(builder: (context, constraints) {
       return GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: onBarTap == null
@@ -396,7 +413,7 @@ class DailyBars extends StatelessWidget {
           ),
         ),
       );
-    });
+    }));
   }
 }
 
@@ -517,3 +534,9 @@ class _BarsPainter extends CustomPainter {
       old.values != values ||
       old.selectedIndex != selectedIndex;
 }
+
+/// Оборачивает график в Semantics: сам по себе CustomPaint для
+/// скринридера — пустое место.
+Widget _labelled(String? label, Widget chart) => label == null
+    ? chart
+    : Semantics(label: label, image: true, excludeSemantics: true, child: chart);

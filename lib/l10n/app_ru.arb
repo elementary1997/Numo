@@ -389,5 +389,22 @@
   "updateInstalledVersion": "Установлена {version}",
   "@updateInstalledVersion": {"placeholders": {"version": {"type": "String"}}},
   "updateAvailableShort": "Доступна {version}",
-  "@updateAvailableShort": {"placeholders": {"version": {"type": "String"}}}
+  "@updateAvailableShort": {"placeholders": {"version": {"type": "String"}}},
+  "a11yPrevMonth": "Предыдущий месяц",
+  "a11yNextMonth": "Следующий месяц",
+  "a11yDeleteRule": "Удалить правило",
+  "a11yRemoveMember": "Удалить участника",
+  "a11yExpenseAmount": "Расход {amount}",
+  "@a11yExpenseAmount": {"placeholders": {"amount": {"type": "String"}}},
+  "a11yIncomeAmount": "Доход {amount}",
+  "@a11yIncomeAmount": {"placeholders": {"amount": {"type": "String"}}},
+  "a11yDonutChart": "Круговая диаграмма расходов по категориям",
+  "a11yDailyChart": "Столбчатая диаграмма расходов по дням, максимум {amount}",
+  "@a11yDailyChart": {"placeholders": {"amount": {"type": "String"}}},
+  "a11yCapitalChart": "График капитала, сейчас {amount}",
+  "@a11yCapitalChart": {"placeholders": {"amount": {"type": "String"}}},
+  "a11yBudgetProgress": "{category}: потрачено {spent} из {limit}, {percent} процентов",
+  "@a11yBudgetProgress": {"placeholders": {"category": {"type": "String"}, "spent": {"type": "String"}, "limit": {"type": "String"}, "percent": {"type": "String"}}},
+  "a11yGoalProgress": "{title}: накоплено {saved} из {target}",
+  "@a11yGoalProgress": {"placeholders": {"title": {"type": "String"}, "saved": {"type": "String"}, "target": {"type": "String"}}}
 }
