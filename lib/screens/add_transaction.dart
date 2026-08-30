@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../core/money.dart';
 import '../core/theme.dart';
+import '../data/settlements.dart';
 import '../models/category.dart';
 import '../models/account.dart';
 import '../models/transaction.dart';
@@ -125,6 +126,61 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
     if (chosen != null) setState(() => _currencyOverride = chosen);
   }
 
+  /// Между кем делится трата; пусто — не делится.
+  late Set<String> _sharedWith = widget.initial?.split?.keys.toSet() ?? {};
+
+  /// Чипы участников: кто делит эту трату. Показывается, только если
+  /// выбранный счёт общий и участники заведены.
+  Widget _splitPicker(ThemeData theme) {
+    final account = ref.watch(accountsProvider).byId(_accountId);
+    final members = ref.watch(membersProvider);
+    if (!account.shared || members.length < 2) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.l10n.splitTitle,
+              style: theme.textTheme.labelLarge
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 2),
+          Text(context.l10n.splitHint,
+              style: theme.textTheme.bodySmall
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final member in members)
+                FilterChip(
+                  selected: _sharedWith.contains(member.id),
+                  onSelected: (on) => setState(() {
+                    if (on) {
+                      _sharedWith = {..._sharedWith, member.id};
+                    } else {
+                      _sharedWith = {..._sharedWith}..remove(member.id);
+                    }
+                  }),
+                  avatar: CircleAvatar(
+                    backgroundColor: member.color,
+                    child: Text(member.initial.toUpperCase(),
+                        style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700)),
+                  ),
+                  label: Text(member.name),
+                  showCheckmark: false,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final category = _category;
     if (_amount <= 0 || category == null) return;
@@ -161,6 +217,8 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
       date: _date,
       accountId: _accountId,
       note: note,
+      // Делится только то, что отмечено: остальное платит автор целиком.
+      split: _sharedWith.isEmpty ? null : splitEqually(_sharedWith),
     );
     final notifier = ref.read(transactionsProvider.notifier);
     await (_isEditing ? notifier.update(tx) : notifier.add(tx));
@@ -403,6 +461,9 @@ class _AddTransactionSheetState extends ConsumerState<_AddTransactionSheet> {
                 ),
               ],
             ),
+            // Раскладка по участникам — только для общих счетов
+            // и только для трат (ADR-0014).
+            if (_type == TxType.expense) _splitPicker(theme),
             const SizedBox(height: 16),
             _Keypad(onTap: _tap),
             const SizedBox(height: 16),

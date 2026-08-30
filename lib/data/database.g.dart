@@ -123,6 +123,15 @@ class $TransactionRowsTable extends TransactionRows
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _splitMeta = const VerificationMeta('split');
+  @override
+  late final GeneratedColumn<String> split = GeneratedColumn<String>(
+    'split',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -136,6 +145,7 @@ class $TransactionRowsTable extends TransactionRows
     updatedAt,
     deletedAt,
     authorId,
+    split,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -222,6 +232,12 @@ class $TransactionRowsTable extends TransactionRows
         authorId.isAcceptableOrUnknown(data['author_id']!, _authorIdMeta),
       );
     }
+    if (data.containsKey('split')) {
+      context.handle(
+        _splitMeta,
+        split.isAcceptableOrUnknown(data['split']!, _splitMeta),
+      );
+    }
     return context;
   }
 
@@ -275,6 +291,10 @@ class $TransactionRowsTable extends TransactionRows
         DriftSqlType.string,
         data['${effectivePrefix}author_id'],
       ),
+      split: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split'],
+      ),
     );
   }
 
@@ -306,6 +326,11 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
 
   /// Участник, внёсший операцию.
   final String? authorId;
+
+  /// Доли участников в трате, JSON `{"memberId": вес}`; null — трата
+  /// не делится. Лежит в самой операции, чтобы уезжать в общий файл
+  /// и сливаться вместе с ней (ADR-0014).
+  final String? split;
   const TransactionRow({
     required this.id,
     required this.type,
@@ -318,6 +343,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     this.updatedAt,
     this.deletedAt,
     this.authorId,
+    this.split,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -338,6 +364,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     }
     if (!nullToAbsent || authorId != null) {
       map['author_id'] = Variable<String>(authorId);
+    }
+    if (!nullToAbsent || split != null) {
+      map['split'] = Variable<String>(split);
     }
     return map;
   }
@@ -361,6 +390,9 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       authorId: authorId == null && nullToAbsent
           ? const Value.absent()
           : Value(authorId),
+      split: split == null && nullToAbsent
+          ? const Value.absent()
+          : Value(split),
     );
   }
 
@@ -381,6 +413,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       authorId: serializer.fromJson<String?>(json['authorId']),
+      split: serializer.fromJson<String?>(json['split']),
     );
   }
   @override
@@ -398,6 +431,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'authorId': serializer.toJson<String?>(authorId),
+      'split': serializer.toJson<String?>(split),
     };
   }
 
@@ -413,6 +447,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     Value<DateTime?> updatedAt = const Value.absent(),
     Value<DateTime?> deletedAt = const Value.absent(),
     Value<String?> authorId = const Value.absent(),
+    Value<String?> split = const Value.absent(),
   }) => TransactionRow(
     id: id ?? this.id,
     type: type ?? this.type,
@@ -425,6 +460,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     authorId: authorId.present ? authorId.value : this.authorId,
+    split: split.present ? split.value : this.split,
   );
   TransactionRow copyWithCompanion(TransactionRowsCompanion data) {
     return TransactionRow(
@@ -441,6 +477,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       authorId: data.authorId.present ? data.authorId.value : this.authorId,
+      split: data.split.present ? data.split.value : this.split,
     );
   }
 
@@ -457,7 +494,8 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           ..write('accountId: $accountId, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('authorId: $authorId')
+          ..write('authorId: $authorId, ')
+          ..write('split: $split')
           ..write(')'))
         .toString();
   }
@@ -475,6 +513,7 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
     updatedAt,
     deletedAt,
     authorId,
+    split,
   );
   @override
   bool operator ==(Object other) =>
@@ -490,7 +529,8 @@ class TransactionRow extends DataClass implements Insertable<TransactionRow> {
           other.accountId == this.accountId &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.authorId == this.authorId);
+          other.authorId == this.authorId &&
+          other.split == this.split);
 }
 
 class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
@@ -505,6 +545,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
   final Value<DateTime?> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<String?> authorId;
+  final Value<String?> split;
   final Value<int> rowid;
   const TransactionRowsCompanion({
     this.id = const Value.absent(),
@@ -518,6 +559,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.authorId = const Value.absent(),
+    this.split = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TransactionRowsCompanion.insert({
@@ -532,6 +574,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.authorId = const Value.absent(),
+    this.split = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        type = Value(type),
@@ -550,6 +593,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<String>? authorId,
+    Expression<String>? split,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -564,6 +608,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (authorId != null) 'author_id': authorId,
+      if (split != null) 'split': split,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -580,6 +625,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     Value<DateTime?>? updatedAt,
     Value<DateTime?>? deletedAt,
     Value<String?>? authorId,
+    Value<String?>? split,
     Value<int>? rowid,
   }) {
     return TransactionRowsCompanion(
@@ -594,6 +640,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       authorId: authorId ?? this.authorId,
+      split: split ?? this.split,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -634,6 +681,9 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
     if (authorId.present) {
       map['author_id'] = Variable<String>(authorId.value);
     }
+    if (split.present) {
+      map['split'] = Variable<String>(split.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -654,6 +704,7 @@ class TransactionRowsCompanion extends UpdateCompanion<TransactionRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('authorId: $authorId, ')
+          ..write('split: $split, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3970,6 +4021,7 @@ typedef $$TransactionRowsTableCreateCompanionBuilder =
       Value<DateTime?> updatedAt,
       Value<DateTime?> deletedAt,
       Value<String?> authorId,
+      Value<String?> split,
       Value<int> rowid,
     });
 typedef $$TransactionRowsTableUpdateCompanionBuilder =
@@ -3985,6 +4037,7 @@ typedef $$TransactionRowsTableUpdateCompanionBuilder =
       Value<DateTime?> updatedAt,
       Value<DateTime?> deletedAt,
       Value<String?> authorId,
+      Value<String?> split,
       Value<int> rowid,
     });
 
@@ -4049,6 +4102,11 @@ class $$TransactionRowsTableFilterComposer
 
   ColumnFilters<String> get authorId => $composableBuilder(
     column: $table.authorId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get split => $composableBuilder(
+    column: $table.split,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4116,6 +4174,11 @@ class $$TransactionRowsTableOrderingComposer
     column: $table.authorId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get split => $composableBuilder(
+    column: $table.split,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionRowsTableAnnotationComposer
@@ -4161,6 +4224,9 @@ class $$TransactionRowsTableAnnotationComposer
 
   GeneratedColumn<String> get authorId =>
       $composableBuilder(column: $table.authorId, builder: (column) => column);
+
+  GeneratedColumn<String> get split =>
+      $composableBuilder(column: $table.split, builder: (column) => column);
 }
 
 class $$TransactionRowsTableTableManager
@@ -4211,6 +4277,7 @@ class $$TransactionRowsTableTableManager
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<String?> authorId = const Value.absent(),
+                Value<String?> split = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionRowsCompanion(
                 id: id,
@@ -4224,6 +4291,7 @@ class $$TransactionRowsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 authorId: authorId,
+                split: split,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4239,6 +4307,7 @@ class $$TransactionRowsTableTableManager
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<String?> authorId = const Value.absent(),
+                Value<String?> split = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TransactionRowsCompanion.insert(
                 id: id,
@@ -4252,6 +4321,7 @@ class $$TransactionRowsTableTableManager
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
                 authorId: authorId,
+                split: split,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

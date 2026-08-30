@@ -358,5 +358,13 @@
   "notificationsDenied": "The system did not grant notification permission",
   "reminderPaymentTitle": "Tomorrow: {title}",
   "reminderOverspentTitle": "Budget exceeded",
-  "reminderOverspentBody": "{category}: {spent} spent against a {limit} limit"
+  "reminderOverspentBody": "{category}: {spent} spent against a {limit} limit",
+  "splitTitle": "Split the expense",
+  "splitHint": "Pick who shares it — split equally",
+  "debtsTitle": "Who owes whom",
+  "debtsSettled": "All settled",
+  "debtLine": "{from} → {to}",
+  "settleAction": "Settle",
+  "settleNote": "Settlement: {from} → {to}",
+  "settleDone": "Debt marked as settled"
 }

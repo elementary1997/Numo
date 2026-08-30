@@ -12,6 +12,7 @@ import '../data/repository.dart';
 import '../data/backup.dart';
 import '../data/members_repository.dart';
 import '../data/rules_repository.dart';
+import '../data/settlements.dart';
 import '../data/security_repository.dart';
 import '../data/statement_import.dart' show categorizeByBankCategory;
 import '../data/shared_sync.dart';
@@ -616,6 +617,15 @@ final myMemberIdProvider =
 /// Участники, кроме меня, — люди, с которыми ведутся общие счета.
 final otherMembersProvider = Provider<List<Member>>((ref) =>
     ref.watch(membersProvider).where((m) => !m.isMe).toList());
+
+/// Кто кому должен по общим тратам, в рублях (ADR-0014).
+final debtsProvider = Provider<List<Debt>>((ref) {
+  final toRub = ref.watch(rubAmountProvider);
+  return settleDebts(
+    transactions: ref.watch(transactionsProvider),
+    amountOf: (tx) => toRub(tx).amount,
+  );
+});
 
 /// Есть ли хотя бы один общий счёт.
 final hasSharedAccountsProvider = Provider<bool>(

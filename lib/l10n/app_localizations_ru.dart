@@ -1192,4 +1192,32 @@ class AppLocalizationsRu extends AppLocalizations {
   String reminderOverspentBody(String category, String spent, String limit) {
     return '$category: потрачено $spent при лимите $limit';
   }
+
+  @override
+  String get splitTitle => 'Разделить трату';
+
+  @override
+  String get splitHint => 'Отметьте, между кем делится: поровну';
+
+  @override
+  String get debtsTitle => 'Кто кому должен';
+
+  @override
+  String get debtsSettled => 'Все в расчёте';
+
+  @override
+  String debtLine(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get settleAction => 'Погасить';
+
+  @override
+  String settleNote(String from, String to) {
+    return 'Расчёт: $from → $to';
+  }
+
+  @override
+  String get settleDone => 'Долг отмечен погашенным';
 }

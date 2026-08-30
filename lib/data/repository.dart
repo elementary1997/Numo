@@ -244,7 +244,21 @@ class TransactionsRepository {
         updatedAt: row.updatedAt,
         deletedAt: row.deletedAt,
         authorId: row.authorId,
+        split: _splitFromJson(row.split),
       );
+
+  /// Доли лежат JSON-строкой: набор участников у операции меняется,
+  /// отдельная таблица ради двух-трёх пар ключ-значение не окупается.
+  static Map<String, double>? _splitFromJson(String? raw) {
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final json = jsonDecode(raw) as Map<String, dynamic>;
+      if (json.isEmpty) return null;
+      return json.map((k, v) => MapEntry(k, (v as num).toDouble()));
+    } catch (_) {
+      return null;
+    }
+  }
 
   static TransactionRowsCompanion _toRow(Tx tx) => TransactionRowsCompanion(
         id: Value(tx.id),
@@ -258,6 +272,7 @@ class TransactionsRepository {
         updatedAt: Value(tx.updatedAt),
         deletedAt: Value(tx.deletedAt),
         authorId: Value(tx.authorId),
+        split: Value(tx.isSplit ? jsonEncode(tx.split) : null),
       );
 
   /// Демо-данные первого запуска: пример живого месяца, чтобы дашборд

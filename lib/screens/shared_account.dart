@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../core/money.dart';
 import '../core/l10n.dart';
 import '../data/members_repository.dart';
+import '../data/settlements.dart';
 import '../data/shared_sync.dart';
 import '../models/category.dart';
+import '../models/transaction.dart';
+import '../models/account.dart';
 import '../models/member.dart';
 import '../state/providers.dart';
 import '../state/shared_sync_actions.dart';
@@ -169,6 +173,9 @@ class _SharedAccountScreenState
                     ),
 
                 const SizedBox(height: 20),
+                _DebtsSection(onSettle: _settle),
+
+                const SizedBox(height: 20),
                 // Какие счета уже общие — чтобы было видно, что уедет.
                 if (sharedAccounts.isNotEmpty) ...[
                   Text(context.l10n.menuAccounts,
@@ -309,6 +316,32 @@ class _SharedAccountScreenState
   void _toast(String message) => ScaffoldMessenger.of(context)
     ..clearSnackBars()
     ..showSnackBar(SnackBar(content: Text(message)));
+
+  /// Погашение долга: платёж должника кредитору. В расчёте это трата
+  /// должника, целиком приходящаяся на кредитора, — она и обнуляет счёт.
+  Future<void> _settle(Debt debt) async {
+    final members = ref.read(membersProvider);
+    final from = members.tryById(debt.from);
+    final to = members.tryById(debt.to);
+    if (from == null || to == null) return;
+    final account = ref
+        .read(accountsProvider)
+        .firstWhere((a) => a.shared, orElse: () => Accounts.main);
+
+    await ref.read(transactionsProvider.notifier).add(Tx(
+          id: 'settle-${DateTime.now().microsecondsSinceEpoch}',
+          type: TxType.expense,
+          amount: debt.amount,
+          categoryId: Categories.adjustment.id,
+          date: DateTime.now(),
+          accountId: account.id,
+          note: context.l10n.settleNote(from.name, to.name),
+          authorId: from.id,
+          split: {to.id: 1},
+        ));
+    if (!mounted) return;
+    _toast(context.l10n.settleDone);
+  }
 
   Future<void> _removeMember(Member member) async {
     final confirmed = await showDialog<bool>(
@@ -516,4 +549,52 @@ class _InviteCodeDialogState extends State<_InviteCodeDialog> {
           ),
         ],
       );
+}
+
+/// «Кто кому должен»: итог взаимных трат и кнопка расчёта.
+class _DebtsSection extends ConsumerWidget {
+  const _DebtsSection({required this.onSettle});
+
+  final Future<void> Function(Debt debt) onSettle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final debts = ref.watch(debtsProvider);
+    final members = ref.watch(membersProvider);
+    if (members.length < 2) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(context.l10n.debtsTitle,
+            style: theme.textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w800)),
+        const SizedBox(height: 8),
+        if (debts.isEmpty)
+          Text(context.l10n.debtsSettled,
+              style: theme.textTheme.bodyMedium
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant))
+        else
+          for (final debt in debts)
+            Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading: Icon(Icons.swap_horiz_rounded,
+                    color: theme.colorScheme.primary),
+                title: Text(context.l10n.debtLine(
+                  members.tryById(debt.from)?.name ?? debt.from,
+                  members.tryById(debt.to)?.name ?? debt.to,
+                )),
+                subtitle: Text(formatMoney(debt.amount),
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                trailing: TextButton(
+                  onPressed: () => onSettle(debt),
+                  child: Text(context.l10n.settleAction),
+                ),
+              ),
+            ),
+      ],
+    );
+  }
 }

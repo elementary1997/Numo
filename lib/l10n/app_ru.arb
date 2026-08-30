@@ -414,5 +414,15 @@
   "@reminderPaymentTitle": {"placeholders": {"title": {"type": "String"}}},
   "reminderOverspentTitle": "Бюджет превышен",
   "reminderOverspentBody": "{category}: потрачено {spent} при лимите {limit}",
-  "@reminderOverspentBody": {"placeholders": {"category": {"type": "String"}, "spent": {"type": "String"}, "limit": {"type": "String"}}}
+  "@reminderOverspentBody": {"placeholders": {"category": {"type": "String"}, "spent": {"type": "String"}, "limit": {"type": "String"}}},
+  "splitTitle": "Разделить трату",
+  "splitHint": "Отметьте, между кем делится: поровну",
+  "debtsTitle": "Кто кому должен",
+  "debtsSettled": "Все в расчёте",
+  "debtLine": "{from} → {to}",
+  "@debtLine": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "settleAction": "Погасить",
+  "settleNote": "Расчёт: {from} → {to}",
+  "@settleNote": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "settleDone": "Долг отмечен погашенным"
 }

@@ -35,6 +35,11 @@ class TransactionRows extends Table {
   /// Участник, внёсший операцию.
   TextColumn get authorId => text().nullable()();
 
+  /// Доли участников в трате, JSON `{"memberId": вес}`; null — трата
+  /// не делится. Лежит в самой операции, чтобы уезжать в общий файл
+  /// и сливаться вместе с ней (ADR-0014).
+  TextColumn get split => text().nullable()();
+
   @override
   Set<Column<Object>> get primaryKey => {id};
 }
@@ -173,7 +178,7 @@ class NumoDatabase extends _$NumoDatabase {
   NumoDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -231,6 +236,10 @@ class NumoDatabase extends _$NumoDatabase {
             // Поисковая колонка; существующие строки нормализует
             // репозиторий при открытии — SQL этого не умеет.
             await m.addColumn(transactionRows, transactionRows.noteLower);
+          }
+          if (from < 13) {
+            // Разделение трат по долям (v1.13).
+            await m.addColumn(transactionRows, transactionRows.split);
           }
         },
       );

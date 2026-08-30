@@ -1193,4 +1193,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String reminderOverspentBody(String category, String spent, String limit) {
     return '$category: $spent spent against a $limit limit';
   }
+
+  @override
+  String get splitTitle => 'Split the expense';
+
+  @override
+  String get splitHint => 'Pick who shares it — split equally';
+
+  @override
+  String get debtsTitle => 'Who owes whom';
+
+  @override
+  String get debtsSettled => 'All settled';
+
+  @override
+  String debtLine(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get settleAction => 'Settle';
+
+  @override
+  String settleNote(String from, String to) {
+    return 'Settlement: $from → $to';
+  }
+
+  @override
+  String get settleDone => 'Debt marked as settled';
 }

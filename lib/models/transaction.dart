@@ -14,6 +14,7 @@ class Tx {
     this.updatedAt,
     this.deletedAt,
     this.authorId,
+    this.split,
   });
 
   final String id;
@@ -35,6 +36,14 @@ class Tx {
   /// Участник, внёсший операцию; null — операция заведена до появления
   /// общих счетов или на этом же устройстве без участников.
   final String? authorId;
+
+  /// Как трата делится между участниками: id участника → его доля
+  /// (веса, не суммы). null — операция не делится, платит автор
+  /// целиком. Платит всегда [authorId] — он и кредитор.
+  final Map<String, double>? split;
+
+  /// Делится ли трата между людьми.
+  bool get isSplit => split != null && split!.isNotEmpty;
 
   /// Время последнего изменения для слияния: у старых записей его нет,
   /// тогда за отметку сходит дата операции.
@@ -68,6 +77,8 @@ class Tx {
     DateTime? updatedAt,
     DateTime? deletedAt,
     String? authorId,
+    Map<String, double>? split,
+    bool clearSplit = false,
   }) =>
       Tx(
         id: id,
@@ -80,6 +91,7 @@ class Tx {
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt ?? this.deletedAt,
         authorId: authorId ?? this.authorId,
+        split: clearSplit ? null : (split ?? this.split),
       );
 
   Map<String, dynamic> toJson() => {
@@ -93,6 +105,7 @@ class Tx {
         if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
         if (deletedAt != null) 'deletedAt': deletedAt!.toIso8601String(),
         if (authorId != null) 'authorId': authorId,
+        if (split != null) 'split': split,
       };
 
   factory Tx.fromJson(Map<String, dynamic> json) => Tx(
@@ -106,5 +119,7 @@ class Tx {
         updatedAt: DateTime.tryParse((json['updatedAt'] as String?) ?? ''),
         deletedAt: DateTime.tryParse((json['deletedAt'] as String?) ?? ''),
         authorId: json['authorId'] as String?,
+        split: (json['split'] as Map?)?.map(
+            (k, v) => MapEntry(k as String, (v as num).toDouble())),
       );
 }

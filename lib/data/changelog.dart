@@ -18,6 +18,19 @@ class ChangelogEntry {
 
 const changelog = <ChangelogEntry>[
   ChangelogEntry(
+    version: '1.12.0',
+    itemsRu: [
+      'Общие траты делятся по долям: видно, кто кому должен, и долг можно отметить погашенным',
+      'Напоминания: накануне регулярного платежа и при перерасходе бюджета',
+      'Лента операций читается страницами из базы — быстрее на больших историях',
+    ],
+    itemsEn: [
+      'Shared expenses split by shares: see who owes whom and mark a debt settled',
+      'Reminders: the day before a recurring payment and when a budget is exceeded',
+      'The transactions feed loads pages from the database — faster on long histories',
+    ],
+  ),
+  ChangelogEntry(
     version: '1.11.0',
     itemsRu: [
       'Новая версия больше не проходит мимо: баннер на «Обзоре», точка у «Настроек» и понятное состояние в настройках',

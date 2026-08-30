@@ -2166,6 +2166,54 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'{category}: потрачено {spent} при лимите {limit}'**
   String reminderOverspentBody(String category, String spent, String limit);
+
+  /// No description provided for @splitTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разделить трату'**
+  String get splitTitle;
+
+  /// No description provided for @splitHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отметьте, между кем делится: поровну'**
+  String get splitHint;
+
+  /// No description provided for @debtsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кто кому должен'**
+  String get debtsTitle;
+
+  /// No description provided for @debtsSettled.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все в расчёте'**
+  String get debtsSettled;
+
+  /// No description provided for @debtLine.
+  ///
+  /// In ru, this message translates to:
+  /// **'{from} → {to}'**
+  String debtLine(String from, String to);
+
+  /// No description provided for @settleAction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Погасить'**
+  String get settleAction;
+
+  /// No description provided for @settleNote.
+  ///
+  /// In ru, this message translates to:
+  /// **'Расчёт: {from} → {to}'**
+  String settleNote(String from, String to);
+
+  /// No description provided for @settleDone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Долг отмечен погашенным'**
+  String get settleDone;
 }
 
 class _AppLocalizationsDelegate
